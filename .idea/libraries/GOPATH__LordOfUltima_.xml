@@ -1,0 +1,23 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;LordOfUltima&gt;">
+    <CLASSES>
+      <root url="file://$USER_HOME$/go/src/github.com" />
+      <root url="file://$USER_HOME$/go/src/golang.org" />
+      <root url="file://$USER_HOME$/go/src/sourcegraph.com" />
+      <root url="file://$USER_HOME$/go/src/Obelisco" />
+      <root url="file://$USER_HOME$/go/src/gopkg.in" />
+      <root url="file://$USER_HOME$/go/src/Cube" />
+    </CLASSES>
+    <SOURCES>
+      <root url="file://$USER_HOME$/go/src/github.com" />
+      <root url="file://$USER_HOME$/go/src/golang.org" />
+      <root url="file://$USER_HOME$/go/src/sourcegraph.com" />
+      <root url="file://$USER_HOME$/go/src/Obelisco" />
+      <root url="file://$USER_HOME$/go/src/gopkg.in" />
+      <root url="file://$USER_HOME$/go/src/Cube" />
+    </SOURCES>
+    <excluded>
+      <root url="file://$PROJECT_DIR$" />
+    </excluded>
+  </library>
+</component>

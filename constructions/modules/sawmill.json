@@ -1,12 +1,12 @@
-{
-    "name": "stonemason",
+  {
+    "name": "sawMill",
     "adjascent": [{
-        "builds": ["quarry"],
+        "builds": ["woodCutter"],
         "bonus": [30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
       },
       {
         "builds": ["storage"],
-        "resource": "stone",
+        "resource": "wood",
         "bonus": [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
       }
     ],

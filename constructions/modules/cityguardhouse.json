@@ -1,12 +1,8 @@
 {
-    "name": "barracks",
+    "name": "cityGuardHouse",
     "bonus": [{
-      "name": "armySize",
-      "value": [10, 30, 60, 100, 160, 240, 350, 500, 700, 1000]
-    }],
-    "adjascent": [{
-      "builds": ["trainingGround", "stable", "moonglow", "temple", "workshop", "shipyard"],
-      "bonus": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
+      "name": "guardsRecruitment",
+      "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
     }],
     "resourceCost": [
       [15, 30],
@@ -22,5 +18,4 @@
       [19840, 39680]
     ],
     "score": [1, 2, 4, 7, 12, 18, 25, 34, 45, 60]
-
   }

@@ -1,5 +1,6 @@
 {
-    "name": "townhouse",
+  "id":8,
+    "name": "Townhouse",
     "bonus": [{
       "name": "goldh",
       "value": [25, 50, 75, 100, 130, 170, 210, 260, 320, 400]

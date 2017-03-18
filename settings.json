@@ -1,4 +1,6 @@
 {
+  "connection": "127.0.0.1",
+  "dbname":"lordofultima",
   "parameters": {
     "speed": {
       "resource": "1",
@@ -7,6 +9,7 @@
       "caveSpawn": "1"
     },
     "general": {
+		"worldSize":1024,
       "onlyCastle": "false",
       "noMoral": "false",
       "continentSize": "200",

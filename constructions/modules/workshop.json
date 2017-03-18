@@ -1,5 +1,6 @@
 {
-    "name": "workshop",
+  "id":19,
+    "name": "Workshop",
     "bonus": [{
       "name": "siegeRecruitment",
       "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]

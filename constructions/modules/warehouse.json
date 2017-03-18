@@ -1,5 +1,6 @@
 {
-    "name": "warehouse",
+  "id":3,
+    "name": "Warehouse",
     "bonus": [{
       "name": "storage",
       "value": [2500, 5000, 9000, 16000, 26000, 42000, 65000, 100000, 145000, 200000]

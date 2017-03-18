@@ -1,5 +1,6 @@
 {
-    "name": "castle",
+  "id":22,
+    "name": "Castle",
     "resourcecost": [
       [0, 20000],
       [0, 25000],

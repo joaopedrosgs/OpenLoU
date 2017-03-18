@@ -1,0 +1,9 @@
+{
+  "id":1,
+  "name": "woodcutter",
+  "bonus": [{
+    "name": "woodh",
+    "value": [5, 10, 15, 20, 30, 45, 75, 120, 200, 300]
+  }],
+  "shared": "prod"
+}

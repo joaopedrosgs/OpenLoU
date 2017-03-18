@@ -1,5 +1,6 @@
 {
-    "name": "harbor",
+  "id":10,
+    "name": "Harbor",
     "bonus": [{
       "name": "ships",
       "value": [1, 2, 4, 6, 9, 12, 15, 19, 24, 30]

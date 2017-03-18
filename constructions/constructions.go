@@ -16,7 +16,9 @@ type bonus struct {
 	Name  string
 	Value []uint
 }
-type construction struct {
+
+type ConstructionType struct {
+	Id           uint8
 	Name         string
 	Image        string
 	Bonus        []bonus
@@ -26,26 +28,29 @@ type construction struct {
 	Shared       string
 }
 
-var constructions []construction
+var registeredConstructions map[uint]ConstructionType
 
-func RegisterConstructions() {
+func RegisterAll() {
 	defer println("Construções carregadas!")
-
+	println("Carregando Construções")
+	registeredConstructions = make(map[uint]ConstructionType)
 	dir := "constructions/modules/"
+
 	modules, err := ioutil.ReadDir(dir)
 	if err != nil {
 		fmt.Print("Erro ao ler o diretorio:", dir, " - ", err)
 	}
 	for _, module := range modules {
-		var element construction
+		var element ConstructionType
 		fileContent, err := ioutil.ReadFile(string(dir + module.Name()))
 		if err != nil {
 			println("Erro ao ler o arquivo", dir, module.Name(), "-", err)
 		}
 
-		json.Unmarshal([]byte(string(fileContent)), &element)
-		constructions = append(constructions, element)
-		fmt.Printf("Construção carregada: %s\n", strings.Title(element.Name))
+		json.Unmarshal(fileContent, &element)
+
+		registeredConstructions[uint(element.Id)] = element
+		fmt.Printf("Construção carregada: %.2d => %s\n", element.Id, strings.Title(element.Name))
 	}
 
 }

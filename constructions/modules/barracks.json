@@ -1,5 +1,6 @@
 {
-    "name": "barracks",
+  "id":17,
+    "name": "Barracks",
     "bonus": [{
       "name": "armySize",
       "value": [10, 30, 60, 100, 160, 240, 350, 500, 700, 1000]

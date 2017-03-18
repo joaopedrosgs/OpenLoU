@@ -1,5 +1,6 @@
 {
-    "name": "trainingGround",
+  "id":18,
+    "name": "Training Ground",
     "bonus": [{
       "name": "infantryRecruitment",
       "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]

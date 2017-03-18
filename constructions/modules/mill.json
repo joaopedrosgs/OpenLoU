@@ -1,5 +1,6 @@
 {
-    "name": "mill",
+  "id":13,
+    "name": "Mill",
     "adjascent": [{
         "builds": ["farm"],
         "bonus": [30, 35, 40, 45, 50, 55, 60, 65, 70, 75]

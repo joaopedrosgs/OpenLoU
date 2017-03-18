@@ -1,5 +1,6 @@
  {
-    "name": "quarry",
+   "id":4,
+    "name": "Quarry",
     "bonus": [{
       "name": "ironh",
       "value": [20, 40, 60, 85, 110, 140, 175, 210, 250, 300]

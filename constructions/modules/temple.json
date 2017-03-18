@@ -1,5 +1,6 @@
 {
-    "name": "temple",
+  "id":20,
+    "name": "Trinsic Temple",
     "bonus": [{
       "name": "blessedRecruitment",
       "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]

@@ -1,5 +1,6 @@
 {
-  "name": "townHall",
+  "id":0,
+  "name": "Town Hall",
   "bonus": [{
     "name": "woodh",
     "value": [300]

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 )
 
 type troopType struct {
@@ -21,29 +22,17 @@ type troopType struct {
 		Id    string `json:"id"`
 		Value string `json:"value"`
 	} `json:"requires"`
-	Cost struct {
-		Food  uint `json:"food"`
-		Wood  uint `json:"wood"`
-		Iron  uint `json:"iron"`
-		Stone uint `json:"stone"`
-		Gold  uint `json:"gold"`
-	} `json:"cost"`
-	Upkeep struct {
-		Food  uint `json:"food"`
-		Wood  uint `json:"wood"`
-		Iron  uint `json:"iron"`
-		Stone uint `json:"stone"`
-		Gold  uint `json:"gold"`
-	} `json:"upkeep"`
+	Cost   [5]uint
+	Upkeep [5]uint
 }
 
-var registeredTroops map[uint]troopType
+var RegisteredTroops map[uint]troopType
 
 func RegisterAll() {
 
 	defer println("Tropas carregadas!")
 	println("Carregando Tropas")
-	registeredTroops = make(map[uint]troopType)
+	RegisteredTroops = make(map[uint]troopType)
 	dir := "military/modules/"
 
 	modules, err := ioutil.ReadDir(dir)
@@ -59,7 +48,18 @@ func RegisterAll() {
 
 		json.Unmarshal(fileContent, &element)
 
-		registeredTroops[element.Id] = element
+		RegisteredTroops[element.Id] = element
 		fmt.Printf("Tropa carregada: %s\n", strings.Title(element.Name))
 	}
+}
+
+type MilitaryAction struct {
+	Id     uint
+	Type   uint8
+	Troops []struct {
+		ID    uint8
+		Quant uint
+	}
+	Depart   time.Time
+	Duration time.Duration
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"LordOfUltima/configuration"
+	"LordOfUltima/config"
 	"LordOfUltima/constructions"
 	"LordOfUltima/database"
 	"LordOfUltima/military"
@@ -10,7 +10,7 @@ import (
 var MapServer mapServer
 
 func StartUp() {
-	configuration.Load("settings.json")
+	config.Load()
 	database.Open()
 	constructions.RegisterAll()
 	military.RegisterAll()

@@ -3,7 +3,7 @@ package database
 import (
 	"fmt"
 
-	"LordOfUltima/configuration"
+	"LordOfUltima/config"
 
 	"gopkg.in/mgo.v2"
 	_ "gopkg.in/mgo.v2/bson"
@@ -14,7 +14,7 @@ var Session *mgo.Session
 func Open() {
 	var err error
 	println("Conectando ao banco de dados")
-	Session, err = mgo.Dial(configuration.Parameters.Connection)
+	Session, err = mgo.Dial(config.Parameters.Connection)
 	if err != nil {
 		panic(err)
 	}

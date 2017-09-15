@@ -43,7 +43,9 @@ func (s *LoginServer) NewAttempt(info LoginAttempt) (answer Answer) {
 	} else {
 		key := genUniqueKey(KeySize)
 		s.CreateSession(info, key)
-		answer = Answer{Ok, LoggedIn, string(json.Marshal(key))}
+		body, _ := json.Marshal(key)
+
+		answer = Answer{Ok, LoggedIn, string(body)}
 	}
 	return
 }

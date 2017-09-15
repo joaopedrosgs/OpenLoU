@@ -1,4 +1,4 @@
-![Build status](https://travis-ci.org/joaopedrosgs/LordOfUltima.svg?branch=master)
+![Build status](https://travis-ci.org/joaopedrosgs/OpenLoU.svg?branch=master)
 
 # About
  This is a reimplementation of a dead game called Lord of Ultima

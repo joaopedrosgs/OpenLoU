@@ -1,6 +1,5 @@
 package main
 
-import ()
 
 var configuration Config
 var loginServer LoginServer

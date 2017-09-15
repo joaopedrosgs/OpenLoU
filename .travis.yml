@@ -1,15 +1,7 @@
 language: go
+
 go:
- - 1.8.x
- - 1.9.x
- - release
- - tip
-
- install:
-   - go get gopkg.in/mgo.v2/bson
-   - go get gopkg.in/gemnasium/logrus-airbrake-hook.v2
-   - go get golang.org/x/sys/unix
-   - go get golang.org/x/sys/windows
-
-script:
- - go test -v ./...
+  - 1.x
+  - 1.6
+  - 1.7.x
+  - master

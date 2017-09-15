@@ -1,7 +1,7 @@
 package main
 
 import (
-	"LordOfUltima/gameEntities"
+	"./gameEntities"
 	"encoding/json"
 	"errors"
 	log "github.com/sirupsen/logrus"

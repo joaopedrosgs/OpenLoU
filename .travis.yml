@@ -9,7 +9,7 @@ env:
 install:
   - go get golang.org/x/sys/unix
   - go get golang.org/x/sys/windows
-  - go get github.com/sirupsen/logruszg
+  - go get github.com/sirupsen/logrus
   - go get github.com/joaopedrosgs/LordOfUltima/database
   - go get github.com/joaopedrosgs/LordOfUltima/gameEntities
   - go get gopkg.in/mgo.v2

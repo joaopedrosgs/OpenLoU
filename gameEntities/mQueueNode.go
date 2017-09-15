@@ -1,8 +1,8 @@
-package military
+package gameEntities
 
 import "time"
 
-type QueueNode struct {
+type mQueueNode struct {
 	troopType  uint
 	completion time.Time
 	quantity   uint

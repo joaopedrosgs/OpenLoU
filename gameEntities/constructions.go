@@ -1,4 +1,4 @@
-package constructions
+package gameEntities
 
 import (
 	"encoding/json"
@@ -30,9 +30,9 @@ type ConstructionType struct {
 
 var registeredConstructions map[uint]ConstructionType
 
-func RegisterAll() {
+func LoadAllConstructions() {
 	defer println("Construções carregadas!")
-	println("Carregando Construções")
+	println("-- Carregando Construções --")
 	registeredConstructions = make(map[uint]ConstructionType)
 	dir := "constructions/modules/"
 

@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 )
 
-type config struct {
+type Config struct {
 	Connection string `json:"connection"`
 	DbName     string `json:"dbname"`
 	Parameters struct {
@@ -16,7 +16,7 @@ type config struct {
 			CaveSpawn    string `json:"caveSpawn"`
 		} `json:"speed"`
 		General struct {
-			WorldSize       uint   `json:worldSize`
+			WorldSize       uint   `json:"worldSize"`
 			OnlyCastle      string `json:"onlyCastle"`
 			NoMoral         string `json:"noMoral"`
 			ContinentSize   string `json:"continentSize"`
@@ -38,11 +38,9 @@ type config struct {
 	} `json:"parameters"`
 }
 
-var Parameters config
+func (Parameters *Config) Load(fileName string) {
 
-func Load() {
-
-	arquivo, err := ioutil.ReadFile("settings.json")
+	arquivo, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		println("Erro ao carregar as configurações: " + err.Error())
 	}

@@ -1,20 +1,17 @@
 package main
 
 import (
-	"LordOfUltima/city"
 	"LordOfUltima/database"
-	"LordOfUltima/dungeon"
-	"LordOfUltima/military"
 
 	_ "time"
 )
 
 type mapServer struct {
-	Cities          []city.City
-	Dungeons        []dungeon.Dungeon
+	Cities          []City
+	Dungeons        []Dungeon
 	Resources       []Resource
-	transports      []*city.Transport
-	militaryActions []*military.MilitaryAction
+	transports      []*Transport
+	militaryActions []*MilitaryAction
 
 	Requests chan Request
 	Answers  chan Answer

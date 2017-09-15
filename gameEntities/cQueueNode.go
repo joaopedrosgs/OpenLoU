@@ -1,8 +1,8 @@
-package constructions
+package gameEntities
 
 import "time"
 
-type QueueNode struct {
+type cQueueNode struct {
 	ContructionType uint
 	Completion      time.Time
 	PosX            uint8

@@ -1,8 +1,6 @@
-package city
+package gameEntities
 
 import (
-	"LordOfUltima/constructions"
-	"LordOfUltima/military"
 	"errors"
 	"time"
 
@@ -48,7 +46,7 @@ type Transport struct {
 }
 
 type cityData struct {
-	Constructions constructions.ConstructionType
+	Constructions ConstructionType
 	Comentary     string
 	Queue         Queue
 	Production    [4]int
@@ -98,7 +96,7 @@ func (c *City) BuildEnqueue(_due Due) bool {
 func (c *City) TroopEnqueue(_due Due) error {
 
 	for res := 0; res < 4; res++ {
-		if military.RegisteredTroops[uint(_due.Type)].Cost[res]*uint(_due.Value) > c.data.ActualRes[res] {
+		if RegisteredTroops[uint(_due.Type)].Cost[res]*uint(_due.Value) > c.data.ActualRes[res] {
 			return errors.New("Insufficient resources!")
 		}
 	}

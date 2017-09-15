@@ -1,4 +1,4 @@
-package military
+package gameEntities
 
 import (
 	"encoding/json"

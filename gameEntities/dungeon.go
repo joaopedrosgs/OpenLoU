@@ -1,4 +1,4 @@
-package dungeon
+package gameEntities
 
 type Dungeon struct {
 	Id         uint

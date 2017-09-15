@@ -1,3 +1,4 @@
+![Build status](https://travis-ci.org/joaopedrosgs/LordOfUltima.svg?branch=master)
 
 # Guidelines
 	1. Todo request autorizado requer a struct autor, que contém o login e o cookie de sessão.

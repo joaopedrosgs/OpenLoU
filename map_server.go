@@ -1,8 +1,8 @@
 package main
 
 import (
-	"LordOfUltima/database"
-	"LordOfUltima/gameEntities"
+	"github.com/joaopedrosgs/LordOfUltima/database"
+	"github.com/joaopedrosgs/LordOfUltima/gameEntities"
 
 	_ "time"
 )

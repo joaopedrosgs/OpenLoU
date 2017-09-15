@@ -1,9 +1,7 @@
 package main
 
 import (
-	"github.com/joaopedrosgs/LordOfUltima/database"
-	"github.com/joaopedrosgs/LordOfUltima/gameEntities"
-
+	"github.com/joaopedrosgs/OpenLoU/gameEntities"
 	_ "time"
 )
 
@@ -19,11 +17,13 @@ type mapServer struct {
 }
 
 func (m *mapServer) LoadAndStart() {
-	m.Requests = make(chan Request)
-	m.Answers = make(chan Answer)
-	db := database.Session.DB("lordofultima")
-	db.C("cities").Find(nil).All(&m.Cities)
-	go m.RequestProcessor()
+	/*
+		m.Requests = make(chan Request)
+		m.Answers = make(chan Answer)
+		db := database.Session.DB("lordofultima")
+		db.C("cities").Find(nil).All(&m.Cities)
+		go m.RequestProcessor()
+	*/
 }
 
 func (m *mapServer) getCities(posX uint, posY uint, rang uint) *[]gameEntities.City {

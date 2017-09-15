@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"github.com/joaopedrosgs/LordOfUltima/gameEntities"
 	log "github.com/sirupsen/logrus"
 	"time"
+	"github.com/joaopedrosgs/OpenLoU/gameEntities"
 )
 
 var loadedConstructions gameEntities.ConstructionsMap

@@ -9,5 +9,8 @@ env:
 install:
   - go get golang.org/x/sys/unix
   - go get golang.org/x/sys/windows
+  - go get github.com/sirupsen/logrus
+  - go get gopkg.in/mgo.v2
+  - go get gopkg.in/mgo.v2/bson
 script:
-  - go test -race -v ./...
+  - go install

@@ -1,17 +1,13 @@
 package main
 
-import (
-	"LordOfUltima/config"
-	"LordOfUltima/database"
-)
+import ()
 
-Config config
+var configuration Config
+var loginServer LoginServer
 
 func main() {
-	config.Load("settings.json")
-	constructions.RegisterAll()
-
-	military.RegisterAll()
-	MapServer.LoadAndStart()
+	configuration.Load("settings.json")
+	loadedConstructions.LoadAllConstructions()
+	LoginServer.StartAndListen(1234)
 
 }

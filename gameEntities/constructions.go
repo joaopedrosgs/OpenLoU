@@ -27,10 +27,9 @@ type ConstructionType struct {
 	Score        []uint
 	Shared       string
 }
+type ConstructionsMap map[uint]ConstructionType
 
-var registeredConstructions map[uint]ConstructionType
-
-func LoadAllConstructions() {
+func (registeredConstructions ConstructionsMap) LoadAllConstructions() {
 	defer println("Construções carregadas!")
 	println("-- Carregando Construções --")
 	registeredConstructions = make(map[uint]ConstructionType)

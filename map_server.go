@@ -2,16 +2,17 @@ package main
 
 import (
 	"LordOfUltima/database"
+	"LordOfUltima/gameEntities"
 
 	_ "time"
 )
 
 type mapServer struct {
-	Cities          []City
-	Dungeons        []Dungeon
+	Cities          []gameEntities.City
+	Dungeons        []gameEntities.Dungeon
 	Resources       []Resource
-	transports      []*Transport
-	militaryActions []*MilitaryAction
+	transports      []*gameEntities.Transport
+	militaryActions []*gameEntities.MilitaryAction
 
 	Requests chan Request
 	Answers  chan Answer
@@ -25,8 +26,8 @@ func (m *mapServer) LoadAndStart() {
 	go m.RequestProcessor()
 }
 
-func (m *mapServer) getCities(posX uint, posY uint, rang uint) *[]city.City {
-	var listReturn []city.City
+func (m *mapServer) getCities(posX uint, posY uint, rang uint) *[]gameEntities.City {
+	var listReturn []gameEntities.City
 	for i := range m.Cities {
 		if m.Cities[i].InRange(posX, posY, rang) {
 			listReturn = append(listReturn, m.Cities[i])

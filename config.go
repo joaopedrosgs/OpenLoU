@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"encoding/json"
@@ -38,13 +38,13 @@ type Config struct {
 	} `json:"parameters"`
 }
 
-func (Parameters *Config) Load(fileName string) {
+func (instance *Config) Load(fileName string) {
 
 	arquivo, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		println("Erro ao carregar as configurações: " + err.Error())
 	}
-	json.Unmarshal(arquivo, &Parameters)
+	json.Unmarshal(arquivo, &instance)
 	println("Configurações carregadas!")
 
 }

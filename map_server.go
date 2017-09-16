@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/gameEntities"
+	"github.com/joaopedrosgs/OpenLoU/entities"
 	_ "time"
 )
 
 type mapServer struct {
-	Cities          []gameEntities.City
-	Dungeons        []gameEntities.Dungeon
+	Cities          []entities.City
+	Dungeons        []entities.Dungeon
 	Resources       []Resource
-	transports      []*gameEntities.Transport
-	militaryActions []*gameEntities.MilitaryAction
+	transports      []*entities.Transport
+	militaryActions []*entities.MilitaryAction
 
 	Requests chan Request
 	Answers  chan Answer
@@ -26,8 +26,8 @@ func (m *mapServer) LoadAndStart() {
 	*/
 }
 
-func (m *mapServer) getCities(posX uint, posY uint, rang uint) *[]gameEntities.City {
-	var listReturn []gameEntities.City
+func (m *mapServer) getCities(posX uint, posY uint, rang uint) *[]entities.City {
+	var listReturn []entities.City
 	for i := range m.Cities {
 		if m.Cities[i].InRange(posX, posY, rang) {
 			listReturn = append(listReturn, m.Cities[i])

@@ -1,10 +1,10 @@
-package gameEntities
+package entities
 
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
-	"strings"
 )
 
 type adjascent struct {
@@ -30,10 +30,10 @@ type ConstructionType struct {
 type ConstructionsMap map[uint]ConstructionType
 
 func (registeredConstructions ConstructionsMap) LoadAllConstructions() {
-	defer println("Construções carregadas!")
-	println("-- Carregando Construções --")
+
+	log.Info("Loading constructions")
 	registeredConstructions = make(map[uint]ConstructionType)
-	dir := "constructions/modules/"
+	dir := "modules/constructions/"
 
 	modules, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -45,11 +45,13 @@ func (registeredConstructions ConstructionsMap) LoadAllConstructions() {
 		if err != nil {
 			println("Erro ao ler o arquivo", dir, module.Name(), "-", err)
 		}
-
-		json.Unmarshal(fileContent, &element)
-
-		registeredConstructions[uint(element.Id)] = element
-		fmt.Printf("Construção carregada: %.2d => %s\n", element.Id, strings.Title(element.Name))
+		err = json.Unmarshal(fileContent, &element)
+		if err == nil {
+			registeredConstructions[uint(element.Id)] = element
+			log.WithFields(log.Fields{"Construction": element.Name, "Id": element.Id}).Info("Successful")
+		} else {
+			log.WithFields(log.Fields{"File Name": module.Name()}).Debug("Error")
+		}
 	}
-
+	log.Info("Loading constructions ended")
 }

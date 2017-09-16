@@ -1,4 +1,4 @@
-package gameEntities
+package entities
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ type troopType struct {
 	Defense   uint   `json:"defense"`
 	Loot      uint   `json:"loot"`
 	Speed     uint   `json:"speed"`
-	Requires  []struct {
+	Requires []struct {
 		Name  string `json:"name"`
 		Id    string `json:"id"`
 		Value string `json:"value"`
@@ -54,8 +54,8 @@ func RegisterAll() {
 }
 
 type MilitaryAction struct {
-	Id     uint
-	Type   uint8
+	Id   uint
+	Type uint8
 	Troops []struct {
 		ID    uint8
 		Quant uint

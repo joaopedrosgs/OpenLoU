@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 )
 
@@ -39,12 +40,17 @@ type Config struct {
 }
 
 func (instance *Config) Load(fileName string) {
-
+	log.Info("Loading configuration")
 	arquivo, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		println("Erro ao carregar as configurações: " + err.Error())
+		log.Warn("Configuration file couldn't be loaded, using default settings")
+		arquivo, err = ioutil.ReadFile("default.json")
 	}
-	json.Unmarshal(arquivo, &instance)
-	println("Configurações carregadas!")
+	err = json.Unmarshal(arquivo, &instance)
+	if err != nil {
+		log.Fatal("The configuration file couldn't be loaded")
+	} else {
+		log.Info("Configuration loaded")
+	}
 
 }

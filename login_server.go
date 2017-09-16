@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"github.com/joaopedrosgs/OpenLoU/entities"
 	log "github.com/sirupsen/logrus"
 	"time"
-	"github.com/joaopedrosgs/OpenLoU/gameEntities"
 )
 
-var loadedConstructions gameEntities.ConstructionsMap
+var loadedConstructions entities.ConstructionsMap
 
 type Session struct {
 	LoggedIn   time.Time

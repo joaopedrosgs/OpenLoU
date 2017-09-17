@@ -1,4 +1,4 @@
-package main
+package loginserver
 
 import (
 	"math/rand"

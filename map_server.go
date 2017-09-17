@@ -17,6 +17,8 @@ type mapServer struct {
 }
 
 func (m *mapServer) LoadAndStart() {
+	var loadedConstructions entities.ConstructionsMap
+	loadedConstructions.LoadAllConstructions()
 	/*
 		m.Requests = make(chan Request)
 		m.Answers = make(chan Answer)

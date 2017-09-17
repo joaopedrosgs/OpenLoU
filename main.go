@@ -1,12 +1,13 @@
 package main
 
 import (
+	"github.com/joaopedrosgs/OpenLoU/loginserver"
 	log "github.com/sirupsen/logrus"
 	"os"
 )
 
 var configuration Config
-var loginServer LoginServer
+var loginServer loginserver.LoginServer
 
 func main() {
 
@@ -14,7 +15,6 @@ func main() {
 	log.SetLevel(log.DebugLevel)
 	log.Info("OpenLou has been started!")
 	configuration.Load("settings.json")
-	loadedConstructions.LoadAllConstructions()
 	loginServer.StartAndListen(1234)
 
 }

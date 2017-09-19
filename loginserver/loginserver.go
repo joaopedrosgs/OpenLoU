@@ -27,6 +27,10 @@ var DBAddress = []string{"127.0.0.1"}
 type loginServer struct {
 	Database *mgo.Session
 }
+
+func (server *loginServer) Start() {
+
+}
 type LoginAttempt struct {
 	Ip       string
 	Login    string

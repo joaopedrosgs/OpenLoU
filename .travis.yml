@@ -12,5 +12,9 @@ install:
   - go get github.com/sirupsen/logrus
   - go get gopkg.in/mgo.v2
   - go get gopkg.in/mgo.v2/bson
+services:
+  - mongodb
+before_script:
+  - sleep 15
 script:
  - go test -v ./...

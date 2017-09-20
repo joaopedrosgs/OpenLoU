@@ -28,9 +28,10 @@ type loginServer struct {
 	Database *mgo.Session
 }
 
-func (server *loginServer) Start() {
+func (server *loginServer) StartListening() {
 
 }
+
 type LoginAttempt struct {
 	Ip       string
 	Login    string
@@ -52,7 +53,6 @@ func New(maxSessions int) *loginServer {
 		Password: DBPassword,
 	}
 	database, err := mgo.DialWithInfo(dialInfo)
-
 	if err != nil {
 		log.WithFields(log.Fields{"Error": err.Error()}).Fatal("Couldn't connect to the login database")
 

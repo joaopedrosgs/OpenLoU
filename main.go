@@ -15,6 +15,6 @@ func main() {
 	log.Info("OpenLou has been started!")
 	configuration.Load("settings.json")
 	LoginServer := loginserver.New(1000)
-	LoginServer.Start()
+	LoginServer.StartListening()
 
 }

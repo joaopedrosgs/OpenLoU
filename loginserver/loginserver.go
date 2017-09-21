@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Const values
 const (
 	KeySize      = 64
 	DBName       = "OpenLoU"
@@ -23,6 +24,15 @@ const (
 )
 
 var DBAddress = []string{"127.0.0.1"}
+
+// Const errors
+const (
+	EmptyFields       = "Empty fields"
+	ShortPassword     = "Password is too short"
+	DBError           = "Failed to access database"
+	AccountInexistent = "Account not found"
+	AccountExists     = "An account already exists with that information"
+)
 
 type loginServer struct {
 	Database *mgo.Session
@@ -68,70 +78,32 @@ func (s *loginServer) NewAttempt(info LoginAttempt) (answer Answer) {
 	err, user := s.CheckCredentials(info)
 	if err != nil {
 		answer.Auth = false
-		log.WithFields(log.Fields{"User failed ip": info.Ip, "Error": err.Error()}).Info("Login Server")
+		log.WithFields(log.Fields{"user failed ip": info.Ip, "Error": err.Error()}).Info("Login Server")
 	} else {
-		key := genUniqueKey(KeySize)
+		key := GenUniqueKey(KeySize)
 		s.CreateSession(user, key, info.Ip)
 		answer = Answer{true, key}
-		log.WithFields(log.Fields{"User logged in": info.Login}).Info("Login Server")
+		log.WithFields(log.Fields{"user logged in": info.Login}).Info("Login Server")
 	}
 	return
 }
 
-//CreateSessions returns nil if it was able to connect to the database and store the session created
-func (s *loginServer) CreateSession(user *User, key string, ip string) error {
-	newsession := Session{LoggedIn: time.Now(), LastAction: time.Now(), Login: user.Login, Key: key, Ip: ip}
-	db := s.Database.Copy()
-	defer db.Close()
-	sessions := db.DB(DBName).C(DBSessions)
-	n, _ := sessions.Find(bson.M{"login": user.Login}).Count()
-	if n >= SessionLimit {
-		i := sessions.Find(bson.M{"login": user.Login}).Sort("lastaction").Limit(n - (SessionLimit - 1)).Iter()
-		ele := User{}
-		for i.Next(&ele) {
-			sessions.RemoveId(ele.Id)
-		}
-	}
-	err := sessions.Insert(newsession)
-	if err != nil {
-		log.WithFields(log.Fields{"Failed to create session to": user.Login}).Info("Login Server")
-	}
-	return err
-}
-
 //CheckCredentials returns nil if the credentials are correct
-func (s *loginServer) CheckCredentials(attempt LoginAttempt) (error, *User) {
+func (s *loginServer) CheckCredentials(attempt LoginAttempt) (error, *user) {
 	if len(attempt.Password) == 0 || len(attempt.Login) == 0 || len(attempt.Ip) == 0 {
 		return errors.New("Empty fields"), nil
 	} else {
 		db := s.Database.Copy().DB(DBName).C(DBUsers)
-		user := User{}
+		user := user{}
 		err := db.Find(bson.M{"login": attempt.Login}).One(&user)
 		if err != nil {
 			return errors.New("Account doesn't exist"), nil
 		}
-		err = bcrypt.CompareHashAndPassword([]byte(user.Pass), []byte(attempt.Password))
+		err = bcrypt.CompareHashAndPassword(user.Pass, []byte(attempt.Password))
 		if err != nil {
-			return errors.New("Wrong password"), nil
+			return errors.New("Wrong password: " + err.Error()), nil
 		}
 		return nil, &user
 
 	}
-}
-
-//SessionExists returns an error if session doesn't exist
-func (s *loginServer) SessionExists(session Session) error {
-	sessionStored := Session{}
-	db := s.Database.Copy()
-	defer db.Close()
-	err := db.DB(DBName).C(DBSessions).Find(bson.M{"key": session.Key}).One(&sessionStored)
-
-	if err == nil {
-		if sessionStored.Ip == session.Ip {
-			return nil
-		}
-		return errors.New("Wrong IP")
-	}
-	return errors.New("Session could not be found")
-
 }

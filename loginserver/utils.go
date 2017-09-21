@@ -14,7 +14,7 @@ const (
 
 var src = rand.NewSource(time.Now().UnixNano())
 
-func genUniqueKey(n int) string {
+func GenUniqueKey(n int) string {
 	b := make([]byte, n)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
 	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {

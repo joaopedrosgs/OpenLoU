@@ -31,13 +31,11 @@ func (l *loginServer) NewUser(login, pass, email string) (*user, error) {
 		return nil, errors.New(ShortPassword)
 
 	}
-
 	hashpass, err := bcrypt.GenerateFromPassword([]byte(pass), 4)
 	if err != nil {
 		return nil, errors.New("There was a problem with the hash function")
 	}
 	user := user{Login: login, Pass: hashpass, Email: email, Created: time.Now()}
-
 	db := l.Database.Clone()
 	defer db.Close()
 	err = storeUser(user, db)
@@ -46,7 +44,7 @@ func (l *loginServer) NewUser(login, pass, email string) (*user, error) {
 	}
 	err = db.DB(DBName).C(DBUsers).Find(bson.M{"login": login}).One(&user)
 
-	return nil, nil
+	return &user, err
 }
 
 func (l *loginServer) LoadUserByLogin(login string) (*user, error) {

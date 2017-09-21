@@ -2,13 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0fdd9c90-51d9-4fc3-b3b0-3f3780e503f7" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/loginserver/user_test.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/loginserver/loginserver.go" afterPath="$PROJECT_DIR$/loginserver/loginserver.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/loginserver/loginserver_test.go" afterPath="$PROJECT_DIR$/loginserver/loginserver_test.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/loginserver/session.go" afterPath="$PROJECT_DIR$/loginserver/session.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/loginserver/user.go" afterPath="$PROJECT_DIR$/loginserver/user.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/loginserver/utils.go" afterPath="$PROJECT_DIR$/loginserver/utils.go" />
     </list>
     <ignored path="$PROJECT_DIR$/.idea/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -109,8 +104,8 @@
           <file leaf-file-name="user_test.go" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/loginserver/user_test.go">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="288">
-                  <caret line="16" column="19" lean-forward="true" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
+                <state relative-caret-position="252">
+                  <caret line="14" column="36" lean-forward="false" selection-start-line="14" selection-start-column="36" selection-end-line="14" selection-end-column="36" />
                   <folding>
                     <element signature="e#26#105#0" expanded="true" />
                   </folding>
@@ -175,8 +170,8 @@
           <file leaf-file-name="user.go" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/loginserver/user.go">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="229">
-                  <caret line="34" column="64" lean-forward="false" selection-start-line="34" selection-start-column="64" selection-end-line="34" selection-end-column="64" />
+                <state relative-caret-position="286">
+                  <caret line="38" column="28" lean-forward="true" selection-start-line="38" selection-start-column="28" selection-end-line="38" selection-end-column="28" />
                   <folding>
                     <element signature="e#21#123#0" expanded="true" />
                   </folding>
@@ -184,10 +179,10 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="loginserver_test.go" pinned="false" current-in-tab="true">
+          <file leaf-file-name="loginserver_test.go" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/loginserver/loginserver_test.go">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="445">
+                <state relative-caret-position="90">
                   <caret line="26" column="38" lean-forward="true" selection-start-line="26" selection-start-column="38" selection-end-line="26" selection-end-column="38" />
                   <folding>
                     <element signature="e#26#94#0" expanded="true" />
@@ -196,11 +191,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="user_test.go" pinned="false" current-in-tab="false">
+          <file leaf-file-name="user_test.go" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/loginserver/user_test.go">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="288">
-                  <caret line="16" column="19" lean-forward="true" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
+                <state relative-caret-position="322">
+                  <caret line="19" column="43" lean-forward="true" selection-start-line="19" selection-start-column="43" selection-end-line="19" selection-end-column="43" />
                   <folding>
                     <element signature="e#26#105#0" expanded="true" />
                   </folding>
@@ -261,10 +256,10 @@
         <option value="$PROJECT_DIR$/main.go" />
         <option value="$PROJECT_DIR$/loginserver/user_test.go" />
         <option value="$PROJECT_DIR$/loginserver/utils.go" />
-        <option value="$PROJECT_DIR$/loginserver/user.go" />
         <option value="$PROJECT_DIR$/loginserver/loginserver_test.go" />
         <option value="$PROJECT_DIR$/loginserver/loginserver.go" />
         <option value="$PROJECT_DIR$/loginserver/session.go" />
+        <option value="$PROJECT_DIR$/loginserver/user.go" />
       </list>
     </option>
   </component>
@@ -418,18 +413,6 @@
     <option name="remove_strategy" value="false" />
   </component>
   <component name="TestHistory">
-    <history-entry file="loginserver_test_go - 2017.09.21 at 14h 46m 02s.xml">
-      <configuration name="loginserver_test.go" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="loginserver_test_go - 2017.09.21 at 14h 47m 39s.xml">
-      <configuration name="loginserver_test.go" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="loginserver_test_go - 2017.09.21 at 14h 51m 58s.xml">
-      <configuration name="loginserver_test.go" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="loginserver_test_go - 2017.09.21 at 14h 52m 18s.xml">
-      <configuration name="loginserver_test.go" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="loginserver_test_go - 2017.09.21 at 14h 52m 27s.xml">
       <configuration name="loginserver_test.go" configurationId="GoTestRunConfiguration" />
     </history-entry>
@@ -447,6 +430,18 @@
     </history-entry>
     <history-entry file="loginserver_test_go - 2017.09.21 at 14h 56m 11s.xml">
       <configuration name="loginserver_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="loginserver_test_go - 2017.09.21 at 15h 36m 54s.xml">
+      <configuration name="loginserver_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="user_test_go - 2017.09.21 at 15h 34m 23s.xml">
+      <configuration name="user_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="user_test_go - 2017.09.21 at 15h 35m 51s.xml">
+      <configuration name="user_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="user_test_go - 2017.09.21 at 15h 36m 44s.xml">
+      <configuration name="user_test.go" configurationId="GoTestRunConfiguration" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">
@@ -488,7 +483,8 @@
     <MESSAGE value="Logrus implemented" />
     <MESSAGE value="Default Settings" />
     <MESSAGE value="New session management" />
-    <option name="LAST_COMMIT_MESSAGE" value="New session management" />
+    <MESSAGE value="New user management" />
+    <option name="LAST_COMMIT_MESSAGE" value="New user management" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
@@ -770,32 +766,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/loginserver/user.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="229">
-          <caret line="34" column="64" lean-forward="false" selection-start-line="34" selection-start-column="64" selection-end-line="34" selection-end-column="64" />
-          <folding>
-            <element signature="e#21#123#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/loginserver/session.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-379">
           <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
           <folding>
             <element signature="e#21#107#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/loginserver/user_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="16" column="19" lean-forward="true" selection-start-line="16" selection-start-column="19" selection-end-line="16" selection-end-column="19" />
-          <folding>
-            <element signature="e#26#105#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -808,12 +784,32 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/loginserver/user.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="38" column="28" lean-forward="true" selection-start-line="38" selection-start-column="28" selection-end-line="38" selection-end-column="28" />
+          <folding>
+            <element signature="e#21#123#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/loginserver/loginserver_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="445">
+        <state relative-caret-position="90">
           <caret line="26" column="38" lean-forward="true" selection-start-line="26" selection-start-column="38" selection-end-line="26" selection-end-column="38" />
           <folding>
             <element signature="e#26#94#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/loginserver/user_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="322">
+          <caret line="19" column="43" lean-forward="true" selection-start-line="19" selection-start-column="43" selection-end-line="19" selection-end-column="43" />
+          <folding>
+            <element signature="e#26#105#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -1,4 +1,4 @@
-package main
+package configuration
 
 import (
 	"encoding/json"
@@ -7,8 +7,14 @@ import (
 )
 
 type Config struct {
-	Connection string `json:"connection"`
-	DbName     string `json:"dbname"`
+	Db struct {
+		Host     string `json:"host"`
+		Port     int    `json:"port"`
+		Name     string `json:"name"`
+		User     string `json:"user"`
+		Password string `json:"password"`
+		SSL      string `json:"SSL"`
+	} `json:"db"`
 	Parameters struct {
 		Speed struct {
 			Resource     string `json:"resource"`
@@ -17,7 +23,7 @@ type Config struct {
 			CaveSpawn    string `json:"caveSpawn"`
 		} `json:"speed"`
 		General struct {
-			WorldSize       uint   `json:"worldSize"`
+			WorldSize       int    `json:"worldSize"`
 			OnlyCastle      string `json:"onlyCastle"`
 			NoMoral         string `json:"noMoral"`
 			ContinentSize   string `json:"continentSize"`
@@ -49,6 +55,16 @@ func (instance *Config) Load(fileName string) {
 	err = json.Unmarshal(arquivo, &instance)
 	if err != nil {
 		log.Fatal("The configuration file couldn't be loaded")
+	} else {
+		log.Info("Configuration loaded")
+	}
+
+}
+func (instance *Config) LoadDefault() {
+	arquivo, err := ioutil.ReadFile("default.json")
+	err = json.Unmarshal(arquivo, &instance)
+	if err != nil {
+		log.Fatal("The default configuration couldn't be loaded")
 	} else {
 		log.Info("Configuration loaded")
 	}

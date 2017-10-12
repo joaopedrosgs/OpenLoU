@@ -1,10 +1,13 @@
 package loginserver_test
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/loginserver"
 	"testing"
+
+	"github.com/joaopedrosgs/OpenLoU/configuration"
+	"github.com/joaopedrosgs/OpenLoU/loginserver"
 )
 
+var config configuration.Config
 var attemptsArray = []struct {
 	in  loginserver.LoginAttempt
 	out bool
@@ -16,28 +19,32 @@ var attemptsArray = []struct {
 	{loginserver.LoginAttempt{"127.0.0.1", "test", "12345678"}, true}}
 
 func TestLoginServer_NewAttempt(t *testing.T) {
-
-	ls := loginserver.New(10)
+	config.Load("../default.json")
+	ls := loginserver.New(false, &config)
 	answer := loginserver.Answer{}
-	ls.NewUser("test", "12345678", "testing@purpose.com")
-
-	for _, ele := range attemptsArray {
-		answer = ls.NewAttempt(ele.in)
-		if answer.Auth != ele.out {
-			t.Error("Unexpected result: (%s) != (%s)", answer.Auth, ele.out)
+	_, err := ls.NewUser("test", "12345678", "testing@purpose.com")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	for _, attempt := range attemptsArray {
+		answer = ls.NewAttempt(attempt.in)
+		if answer.Auth != attempt.out {
+			t.Error("Unexpected result: (%s) != (%s)", answer.Auth, attempt.out)
 		}
 	}
 	ls.DeleteUserByLogin("test")
 
 }
 func TestLoginServer_SessionExists(t *testing.T) {
-
-	ls := loginserver.New(10)
-	ls.NewUser("test", "12345678", "testing@purpose.com")
-	loginAttempt := loginserver.LoginAttempt{"127.0.0.1", "test", "12345678"}
+	ls := loginserver.New(false, &config)
+	user, err := ls.NewUser("test", "12345678", "testing@purpose.com")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	loginAttempt := loginserver.LoginAttempt{"127.0.0.1", user.Login, "12345678"}
 	a := ls.NewAttempt(loginAttempt)
 	if a.Auth {
-		err := ls.SessionExists(loginserver.Session{Login: "login", Key: a.Key, Ip: "127.0.0.1"})
+		err := ls.SessionExists(loginserver.Session{UID: user.Id, Key: a.Key, Ip: "127.0.0.1"})
 		if err != nil {
 			t.Error("Expected session to exist, error: " + err.Error())
 		}

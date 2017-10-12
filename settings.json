@@ -1,6 +1,12 @@
 {
-  "connection": "127.0.0.1",
-  "dbname":"lordofultima",
+  "db": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "openlou",
+    "user": "postgres",
+    "password": "",
+    "SSL": "disable"
+  },
   "parameters": {
     "speed": {
       "resource": "1",
@@ -9,7 +15,7 @@
       "caveSpawn": "1"
     },
     "general": {
-		"worldSize":1024,
+      "worldSize": 1024,
       "onlyCastle": "false",
       "noMoral": "false",
       "continentSize": "200",

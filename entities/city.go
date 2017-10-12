@@ -53,7 +53,7 @@ type cityData struct {
 	TotalRes      [4]uint
 	ActualRes     [4]uint
 	Transports    []*Transport
-	Troops []struct {
+	Troops        []struct {
 		AtBase []struct {
 			Type     uint8
 			Quantity uint

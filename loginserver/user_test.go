@@ -7,7 +7,8 @@ import (
 )
 
 func TestLoginServer_User(t *testing.T) {
-	l := loginserver.New(10)
+	config.LoadDefault()
+	l := loginserver.New(false, &config)
 	user1, err := l.NewUser("test", "1235678", "testing@purposes.com")
 	if err != nil {
 		t.Fatal(err.Error())
@@ -30,7 +31,7 @@ func TestLoginServer_User(t *testing.T) {
 	}
 	err = l.UserExists("test", "testing@purposes.com")
 	if err == nil {
-		t.Fatal("User should have been deleted, error:" + err.Error())
+		t.Fatal("User should have been deleted, error: %s", err.Error())
 	}
 
 }

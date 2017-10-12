@@ -5,7 +5,7 @@ const (
 	Ok
 )
 const (
-	EmptyFields  = iota
+	EmptyFields = iota
 	UserNotFound
 	LoggedIn
 )

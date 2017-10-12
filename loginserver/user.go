@@ -4,101 +4,71 @@ import (
 	"errors"
 
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+
 	"time"
 )
 
 const MinPassSize = 7
 
 type user struct {
-	Id         bson.ObjectId   `json:"_id" bson:"_id,omitempty"`
-	Login      string          `json:"login" bson:"login"`
-	Pass       []byte          `json:"pass" bson:"pass"`
-	Email      string          `json:"email" bson:"email"`
-	Created    time.Time       `json:"created" bson:"created"`
-	LastLogin  time.Time       `json:"last_login" bson:"last_login"`
-	CitiesId   []bson.ObjectId `json:"cities_id" bson:"cities_id,omitempty"`
-	SessionsId []bson.ObjectId `json:"sessions_id" bson:"sessions_id,omitempty"`
+	Id         int
+	Login      string
+	Email      string
+	Created    time.Time
+	LastLogin  time.Time
+	CitiesId   []int
+	SessionsId []int
 }
 
-func (l *loginServer) NewUser(login, pass, email string) (*user, error) {
+func (s *server) NewUser(login, pass, email string) (*user, error) {
 
 	if len(login) == 0 || len(email) == 0 {
-		return nil, errors.New(EmptyFields)
+		return nil, errors.New(emptyFields)
 	}
 	if len(pass) < MinPassSize {
-		return nil, errors.New(ShortPassword)
+		return nil, errors.New(shortPassword)
 
 	}
 	hashpass, err := bcrypt.GenerateFromPassword([]byte(pass), 4)
 	if err != nil {
 		return nil, errors.New("There was a problem with the hash function")
 	}
-	user := user{Login: login, Pass: hashpass, Email: email, Created: time.Now()}
-	db := l.Database.Clone()
-	defer db.Close()
-	err = storeUser(user, db)
+	user := user{Login: login, Email: email, Created: time.Now()}
+	id := -1
+	err = s.Database.QueryRow(newUserQuery, user.Login, hashpass, user.Email).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
-	err = db.DB(DBName).C(DBUsers).Find(bson.M{"login": login}).One(&user)
-
+	user.Id = id
 	return &user, err
 }
 
-func (l *loginServer) LoadUserByLogin(login string) (*user, error) {
+func (s *server) LoadUserByLogin(login string) (*user, error) {
 	if len(login) == 0 {
-		return nil, errors.New(EmptyFields)
+		return nil, errors.New(emptyFields)
 	}
-	db := l.Database.Clone()
-	defer db.Close()
-	users := db.DB(DBName).C(DBUsers)
 	u := user{}
-	err := users.Find(bson.M{"login": login}).One(&u)
+	err := s.Database.QueryRow(loginQuery, login).Scan(&u.Id, &u.Login)
 	return &u, err
 }
 
-func (l *loginServer) SaveUserChanges(u *user) error {
-	db := l.Database.Clone()
-	defer db.Close()
-	users := db.DB(DBName).C(DBUsers)
-	return users.UpdateId(u.Id, u)
+func (l *server) SaveUserChanges(u *user) error {
+	return nil
 }
 
-func (l *loginServer) UserExists(login, email string) error {
-	db := l.Database.Clone()
-	defer db.Close()
-	users := db.DB(DBName).C(DBUsers)
-	account, err := users.Find(bson.M{"$or": []bson.M{bson.M{"login": login}, bson.M{"email": email}}}).Count()
+func (s *server) UserExists(login, email string) error {
+	res := 0
+	err := s.Database.QueryRow(userExists, login).Scan(&res)
 	if err != nil {
-		return errors.New(DBError)
+		return errors.New(dbError)
 	}
-	if account == 0 {
-		return errors.New(AccountInexistent)
+	if res == 0 {
+		return errors.New(accountInexistent)
 	}
 	return nil
 
 }
-func (l *loginServer) DeleteUserByLogin(login string) error {
-	db := l.Database.Clone()
-	defer db.Close()
-	users := db.DB(DBName).C(DBUsers)
-	db.DB(DBName).C(DBSessions).RemoveAll(bson.M{"login": login})
-	return users.Remove(bson.M{"login": login})
-}
-
-func storeUser(u user, db *mgo.Session) error {
-	users := db.DB(DBName).C(DBUsers)
-
-	account, err := users.Find(bson.M{"$or": []bson.M{bson.M{"login": u.Login}, bson.M{"email": u.Email}}}).Count()
-
-	if err != nil {
-		return errors.New(DBError)
-	}
-	if account > 0 {
-		return errors.New(AccountExists)
-	}
-	users.Insert(u)
-	return nil
+func (s *server) DeleteUserByLogin(login string) error {
+	_, err := s.Database.Exec(deleteUserByLogin, login)
+	return err
 }

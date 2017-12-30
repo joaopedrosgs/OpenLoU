@@ -5,10 +5,16 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"net"
 	"time"
 )
 
 const MinPassSize = 7
+
+type UserConnInfo struct {
+	Connection *net.Conn
+	UserID     int
+}
 
 type user struct {
 	Id         int
@@ -20,7 +26,7 @@ type user struct {
 	SessionsId []int
 }
 
-func (s *server) NewUser(login, pass, email string) (*user, error) {
+func (s *LoginServer) NewUser(login, pass, email string) (*user, error) {
 
 	if len(login) == 0 || len(email) == 0 {
 		return nil, errors.New(emptyFields)
@@ -43,7 +49,7 @@ func (s *server) NewUser(login, pass, email string) (*user, error) {
 	return &user, err
 }
 
-func (s *server) LoadUserByLogin(login string) (*user, error) {
+func (s *LoginServer) LoadUserByLogin(login string) (*user, error) {
 	if len(login) == 0 {
 		return nil, errors.New(emptyFields)
 	}
@@ -52,13 +58,13 @@ func (s *server) LoadUserByLogin(login string) (*user, error) {
 	return &u, err
 }
 
-func (l *server) SaveUserChanges(u *user) error {
+func (l *LoginServer) SaveUserChanges(u *user) error {
 	return nil
 }
 
-func (s *server) UserExists(login, email string) error {
+func (s *LoginServer) UserExists(login, email string) error {
 	res := 0
-	err := s.Database.QueryRow(userExists, login).Scan(&res)
+	err := s.Database.QueryRow(userExistsQuery, login).Scan(&res)
 	if err != nil {
 		return errors.New(dbError)
 	}
@@ -68,7 +74,7 @@ func (s *server) UserExists(login, email string) error {
 	return nil
 
 }
-func (s *server) DeleteUserByLogin(login string) error {
-	_, err := s.Database.Exec(deleteUserByLogin, login)
+func (s *LoginServer) DeleteUserByLogin(login string) error {
+	_, err := s.Database.Exec(deleteUserByLoginQuery, login)
 	return err
 }

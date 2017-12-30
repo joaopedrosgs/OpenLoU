@@ -1,14 +1,14 @@
 package loginserver_test
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/loginserver"
+	"OpenLoU/loginserver"
 	"strings"
 	"testing"
 )
 
 func TestLoginServer_User(t *testing.T) {
 	config.LoadDefault()
-	l := loginserver.New(false, &config)
+	l, _ := loginserver.CreateAndConnect(&config)
 	user1, err := l.NewUser("test", "1235678", "testing@purposes.com")
 	if err != nil {
 		t.Fatal(err.Error())

@@ -3,12 +3,10 @@ package entities
 import (
 	"errors"
 	"time"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 type City struct {
-	ID          bson.ObjectId `bson:"_id,omitempty"`
+	ID          int
 	OwnerID     uint
 	CityName    string
 	Points      uint

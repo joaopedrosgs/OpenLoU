@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/configuration"
-	"github.com/joaopedrosgs/OpenLoU/loginserver"
+	"OpenLoU/configuration"
+	"OpenLoU/hermes"
+	"OpenLoU/loginserver"
+	"OpenLoU/mapserver"
 	log "github.com/sirupsen/logrus"
 	"os"
 )
@@ -14,8 +16,19 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
 	log.Info("OpenLou has been started!")
-	config.Load("settings.json")
-	LoginServer := loginserver.New(true, &config)
-	LoginServer.StartListening()
 
+	config.Load("settings.json")
+
+	LoginServer, err := loginserver.CreateAndConnect(&config)
+	if err != nil {
+		panic("Login server could not be started")
+	}
+
+	MapServer, err := mapserver.CreateAndConnect(&config)
+	if err != nil {
+		panic("Map server could not be started")
+	}
+
+	Hermes := hermes.Create(&MapServer.In, &LoginServer.In, &LoginServer.In)
+	Hermes.StartListening()
 }

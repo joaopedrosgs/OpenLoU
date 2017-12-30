@@ -3,8 +3,8 @@ package loginserver_test
 import (
 	"testing"
 
-	"github.com/joaopedrosgs/OpenLoU/configuration"
-	"github.com/joaopedrosgs/OpenLoU/loginserver"
+	"OpenLoU/configuration"
+	"OpenLoU/loginserver"
 )
 
 var config configuration.Config
@@ -20,7 +20,7 @@ var attemptsArray = []struct {
 
 func TestLoginServer_NewAttempt(t *testing.T) {
 	config.Load("../default.json")
-	ls := loginserver.New(false, &config)
+	ls, _ := loginserver.CreateAndConnect(&config)
 	answer := loginserver.Answer{}
 	_, err := ls.NewUser("test", "12345678", "testing@purpose.com")
 	if err != nil {
@@ -36,7 +36,7 @@ func TestLoginServer_NewAttempt(t *testing.T) {
 
 }
 func TestLoginServer_SessionExists(t *testing.T) {
-	ls := loginserver.New(false, &config)
+	ls, _ := loginserver.CreateAndConnect(&config)
 	user, err := ls.NewUser("test", "12345678", "testing@purpose.com")
 	if err != nil {
 		t.Error(err.Error())

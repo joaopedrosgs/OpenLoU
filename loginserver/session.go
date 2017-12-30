@@ -16,7 +16,7 @@ type Session struct {
 }
 
 //CreateSessions returns nil if it was able to connect to the database and store the session created
-func (s *server) CreateSession(user *user, key string, ip string) error {
+func (s *LoginServer) CreateSession(user *user, key string, ip string) error {
 	if user == nil || len(key) == 0 || len(ip) == 0 {
 		return errors.New(emptyFields)
 	}
@@ -29,7 +29,7 @@ func (s *server) CreateSession(user *user, key string, ip string) error {
 }
 
 //SessionExists returns an error if session doesn't exist
-func (s *server) SessionExists(session Session) error {
+func (s *LoginServer) SessionExists(session Session) error {
 	res := 0
 	err := s.Database.QueryRow(findSessionQuery, session.Key, session.UID, session.Ip).Scan(&res)
 	if err != nil {

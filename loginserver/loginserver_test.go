@@ -11,12 +11,12 @@ var config configuration.Config
 var attemptsArray = []struct {
 	in  loginserver.LoginAttempt
 	out bool
-}{{loginserver.LoginAttempt{"127.0.0.1", "", ""}, false},
-	{loginserver.LoginAttempt{"127.0.0.1", "wrong", "12345678"}, false},
-	{loginserver.LoginAttempt{"127.0.0.1", "test", "wrong"}, false},
-	{loginserver.LoginAttempt{"127.0.0.1", "test", ""}, false},
-	{loginserver.LoginAttempt{"127.0.0.1", "", "wrong"}, false},
-	{loginserver.LoginAttempt{"127.0.0.1", "test", "12345678"}, true}}
+}{{loginserver.LoginAttempt{"", ""}, false},
+	{loginserver.LoginAttempt{"wrong", "12345678"}, false},
+	{loginserver.LoginAttempt{"test", "wrong"}, false},
+	{loginserver.LoginAttempt{"test", ""}, false},
+	{loginserver.LoginAttempt{"", "wrong"}, false},
+	{loginserver.LoginAttempt{"test", "12345678"}, true}}
 
 func TestLoginServer_NewAttempt(t *testing.T) {
 	config.Load("../default.json")

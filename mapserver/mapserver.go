@@ -4,14 +4,17 @@ import (
 	"OpenLoU/communication"
 	"OpenLoU/configuration"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
+	"strconv"
 )
 
 const (
-	GET_CITIES  = 100
-	CREATE_CITY = 200
+	MAPSERVER            = 1
+	GET_REGION_CITIES    = 100
+	GET_USER_CITY_LIST   = 101
+	GET_REGION_CITY_INFO = 102
+	CREATE_CITY          = 103
 )
 
 type dataGetCities struct {
@@ -28,7 +31,7 @@ type dataCreateCity struct {
 type Mapserver struct {
 	database *sql.DB
 	In       chan communication.Request
-	Out      chan communication.Answer
+	Out      *chan communication.Answer
 }
 
 func CreateAndConnect(config *configuration.Config) (*Mapserver, error) {
@@ -39,38 +42,41 @@ func CreateAndConnect(config *configuration.Config) (*Mapserver, error) {
 		return nil, err
 	}
 
-	return &Mapserver{database, make(chan communication.Request), make(chan communication.Answer)}, nil
+	return &Mapserver{database, make(chan communication.Request), nil}, nil
 }
 func (ms *Mapserver) StartListening() {
+	println("Map server started listening")
+
 	for {
 		request := <-ms.In
 		go ms.ProcessRequest(request)
 	}
 }
 func (ms *Mapserver) ProcessRequest(request communication.Request) {
-	answer := communication.Answer{UserID: request.UserID, Type: request.Type, Result: false}
+	answer := request.ToAnswer()
 	switch request.Type {
-	case GET_CITIES:
+	case GET_REGION_CITIES:
 		{
-			data := dataGetCities{}
-			err := json.Unmarshal([]byte(request.Data), &data)
-			if err == nil {
-				answer.Result = true
-				answer.Data = getCitiesJson(data.X, data.X)
-			}
 
-		}
-	case CREATE_CITY:
-		{
-			data := dataCreateCity{}
-			err := json.Unmarshal([]byte(request.Data), &data)
-			if err == nil {
-				answer.Result = triesToCreateCity(data.X, data.Y, request.UserID)
+			answer.Result = true
+			x, err := strconv.Atoi(request.Data["X"])
+			if err != nil {
+				break
 			}
+			y, err := strconv.Atoi(request.Data["Y"])
+			if err != nil {
+				break
+			}
+			answer.Data = getCitiesJson(x, y)
 
 		}
 	default:
 	}
-	ms.Out <- answer
+	*ms.Out <- answer
+
+}
+
+func (m *Mapserver) SetEndPoint(outChan *chan communication.Answer) {
+	m.Out = outChan
 
 }

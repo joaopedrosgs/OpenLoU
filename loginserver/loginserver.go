@@ -10,10 +10,18 @@ import (
 	_ "github.com/lib/pq" // Postgresql Driver
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
+	_ "golang.org/x/crypto/bcrypt"
 )
 
 // Const values
 const (
+
+	//ANSWER RETURN VALUES
+
+	NEW_LOGIN = 301
+
+	///////////////////////////
+
 	KeySize    = 64
 	DBSessions = "sessions"
 	DBUsers    = "users"
@@ -31,11 +39,10 @@ const (
 type LoginServer struct {
 	Database *sql.DB
 	In       chan communication.Request
-	Out      chan communication.Answer
+	Out      *chan communication.Answer
 }
 
 type LoginAttempt struct {
-	IP       string
 	Login    string
 	Password string
 }
@@ -46,6 +53,12 @@ type Answer struct {
 }
 
 func (s *LoginServer) StartListening() {
+	println("Login server started listening")
+	for {
+		request := <-s.In
+		go s.NewAttempt(request)
+
+	}
 }
 
 // CreateAndConnect returns an LoginServer that deals with the authentication of the user
@@ -66,40 +79,50 @@ func CreateAndConnect(config *configuration.Config) (*LoginServer, error) {
 	}
 	log.WithFields(log.Fields{"From": "Login Server"}).Info("Database connection established")
 
-	return &LoginServer{database, make(chan communication.Request), make(chan communication.Answer)}, nil
+	return &LoginServer{database, make(chan communication.Request), nil}, nil
 
 }
 
 //NewAttempt returns an Answer which contains the auth info from the attempt
-func (s *LoginServer) NewAttempt(info LoginAttempt) (answer Answer) {
+func (s *LoginServer) NewAttempt(request communication.Request) {
+	answer := request.ToAnswer()
+	loginAttempt := LoginAttempt{request.Data["Login"], request.Data["Password"]}
 
-	user, err := s.CheckCredentials(info)
+	err := s.CheckCredentials(loginAttempt)
 	if err != nil {
-		answer.Auth = false
-		log.WithFields(log.Fields{userWrongIP: info.IP, "Error": err.Error()}).Info("Login Server")
+		answer.Result = false
+
+		answer.Data = string(err.Error())
 	} else {
+
 		key := GenUniqueKey(KeySize)
-		s.CreateSession(user, key, info.IP)
-		answer = Answer{true, key}
-		log.WithFields(log.Fields{userLogged: info.Login}).Info("Login Server")
+		answer.Result = true
+		answer.Data = key
+		answer.Type = NEW_LOGIN
+
 	}
-	return
+	*s.Out <- answer
 }
 
 //CheckCredentials returns the user and nil if the credentials are correct
-func (s *LoginServer) CheckCredentials(attempt LoginAttempt) (*user, error) {
-	if len(attempt.Password) == 0 || len(attempt.Login) == 0 || len(attempt.IP) == 0 {
-		return nil, errors.New(emptyFields)
+func (s *LoginServer) CheckCredentials(attempt LoginAttempt) error {
+	if len(attempt.Password) == 0 || len(attempt.Login) == 0 {
+		return errors.New(emptyFields)
+
 	}
 	user := user{}
 	var pass string
 	err := s.Database.QueryRow(loginQuery, attempt.Login).Scan(&user.Id, &user.Login, &pass)
 	if err != nil {
-		return nil, errors.New(accountInexistent)
+		return errors.New(accountInexistent)
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(pass), []byte(attempt.Password))
 	if err != nil {
-		return nil, errors.New(wrongPass + err.Error())
+		return errors.New(wrongPass + err.Error())
 	}
-	return &user, nil
+	return nil
+}
+func (l *LoginServer) SetEndPoint(answers *chan communication.Answer) {
+	l.Out = answers
+
 }

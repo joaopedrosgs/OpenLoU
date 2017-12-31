@@ -4,7 +4,7 @@
     "port": 5432,
     "name": "openlou",
     "user": "postgres",
-    "password": "",
+    "password": "postgres",
     "SSL": "disable"
   },
   "parameters": {

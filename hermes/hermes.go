@@ -9,11 +9,11 @@ import (
 	"encoding/json"
 	"errors"
 	"net"
-	"strconv"
 	"sync"
 )
 
 const (
+	HERMES = 0
 	// Map Server requests always start with 1
 	MAPSERVER            = 1
 	GET_REGION_CITIES    = 100
@@ -41,13 +41,14 @@ type IRequest interface {
 }
 
 type Hermes struct {
-	listener                net.Listener
-	AuthorizedConnections   sync.Map
-	UnauthorizedConnections sync.Map
-	MapChanIn               *chan communication.Request
-	LoginChanIn             *chan communication.Request
-	CityChanIn              *chan communication.Request
-	InChan                  chan communication.Answer
+	listener          net.Listener
+	Connections       map[string]*communication.Connection
+	UnauthConnections map[*net.Conn]*communication.Connection
+	MapChanIn         *chan communication.Request
+	LoginChanIn       *chan communication.Request
+	CityChanIn        *chan communication.Request
+	InChan            chan communication.Answer
+	Mutex             sync.RWMutex
 }
 
 func Create(mapChanIn *chan communication.Request, loginChanIn *chan communication.Request, cityChanIn *chan communication.Request) Hermes {
@@ -55,6 +56,8 @@ func Create(mapChanIn *chan communication.Request, loginChanIn *chan communicati
 	h.MapChanIn = mapChanIn
 	h.LoginChanIn = loginChanIn
 	h.CityChanIn = cityChanIn
+	h.InChan = make(chan communication.Answer)
+	h.Connections = make(map[string]*communication.Connection)
 	println("Hermes has been started!")
 	return h
 
@@ -80,79 +83,90 @@ func (h *Hermes) StartListening() {
 func (h *Hermes) HandleReturn() {
 	for {
 		answer := <-h.InChan
-		if answer.Type/100 == LOGINSERVER && answer.Result == true {
-			user, ok := h.UnauthorizedConnections.Load(answer.UserID)
-			if ok {
-				h.UnauthorizedConnections.Delete(answer.UserID)
-				h.AuthorizedConnections.Store(answer.UserID, user)
-			}
+		userConn := answer.GetConn()
+		if answer.Type/100 == LOGINSERVER && answer.Result == true { // if the login went Ok
+			h.Mutex.Lock()
+			userConn.Key = answer.Data
+			h.Connections[userConn.Key] = answer.GetConn() // Como recuperar a conexáo se ela nao foi inserida?
+			h.Mutex.Unlock()
 
 		}
 
-		userConn, ok := h.AuthorizedConnections.Load(answer.UserID)
-		if !ok {
-
-			h.AuthorizedConnections.Delete(answer.UserID)
-			continue
-		}
-		write := bufio.NewWriter(userConn.(net.Conn))
-		n := 0
-		err := errors.New("")
-		if answer.Result {
-			n, err = write.Write([]byte(answer.Data))
-		} else {
-			n, err = write.Write([]byte(strconv.FormatBool(answer.Result)))
-		}
-		if err != nil || n == 0 {
-			h.AuthorizedConnections.Delete(answer.UserID)
-			continue
+		if userConn != nil {
+			h.writeBackToUser(userConn, answer)
 		}
 	}
-
+}
+func (h *Hermes) writeBackToUser(userConn *communication.Connection, answer communication.Answer) {
+	if userConn.Conn == nil {
+		println("User connection is invalid")
+		return
+	}
+	n := 0
+	err := errors.New("")
+	if answer.Result {
+		n, err = userConn.Writer.Write([]byte(answer.Data))
+	} else {
+		res, _ := json.Marshal(answer)
+		n, err = userConn.Writer.Write([]byte(res))
+	}
+	if err != nil || n == 0 {
+		h.Mutex.Lock()
+		delete(h.Connections, answer.GetKey())
+		h.Mutex.Unlock()
+		return
+	}
+	userConn.Writer.Flush()
 }
 func (h *Hermes) HandleUser(conn *net.Conn) {
 	println("Hermes handled a new user")
-
 	tries := 0
-
-	buffer := make([]byte, 1024)
-	read := bufio.NewReader(*conn)
-	request := communication.Request{UserID: -1}
+	user := &communication.Connection{conn, bufio.NewWriter(*conn), make([]byte, 1024), bufio.NewReader(*conn), make([]byte, 1024), ""}
+	request := &communication.Request{}
+	request.SetConn(user)
 
 	for {
-		received, err := read.Read(buffer)
+		received, err := user.Reader.Read(user.BufferRead)
 		if err != nil || tries > 5 {
 			break
 		} else {
-			err := json.Unmarshal(buffer[:received], request)
+			err := json.Unmarshal(user.BufferRead[:received], request)
 			if err != nil {
+				h.writeBackToUser(user, communication.BadRequest())
 				tries++
-				break
+				continue
 			}
-			_, ok := h.AuthorizedConnections.Load(request.UserID)
-			if !ok {
-				h.HandleUnauthorizedUser(conn, request)
+			println(request.Data["Login"])
+			h.Mutex.RLock()
+			_, ok := h.Connections[request.Key]
+			h.Mutex.RUnlock()
+			if ok && request.Key != "" {
+				println("Calling Auth request")
+				h.HandleAuthorizedUser(*request)
 			} else {
-				h.HandleAuthorizedUser(conn, request)
+				println("Calling unauth request")
+				h.HandleUnauthorizedUser(user, request)
 			}
+
 		}
 	}
 
 	(*conn).Close()
 }
-func (h *Hermes) HandleUnauthorizedUser(conn *net.Conn, request communication.Request) {
-	h.UnauthorizedConnections.Store(request.UserID, conn)
-	*h.LoginChanIn <- request
+func (h *Hermes) HandleUnauthorizedUser(conn *communication.Connection, request *communication.Request) {
+	*h.LoginChanIn <- *request
 }
-func (h *Hermes) HandleAuthorizedUser(conn *net.Conn, request communication.Request) {
+func (h *Hermes) HandleAuthorizedUser(request communication.Request) {
 	server := request.Type / 100
 	switch server {
 	case MAPSERVER:
 		{
+			println("Going to mapchan")
 			*h.MapChanIn <- request
 		}
 	case CITYSERVER:
 		{
+			println("Going to citychan")
 			*h.CityChanIn <- request
 		}
 	}

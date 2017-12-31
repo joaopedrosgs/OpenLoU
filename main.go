@@ -30,5 +30,13 @@ func main() {
 	}
 
 	Hermes := hermes.Create(&MapServer.In, &LoginServer.In, &LoginServer.In)
+
+	MapServer.SetEndPoint(&Hermes.InChan)
+	LoginServer.SetEndPoint(&Hermes.InChan)
+
+	go MapServer.StartListening()
+	go LoginServer.StartListening()
+
 	Hermes.StartListening()
+
 }

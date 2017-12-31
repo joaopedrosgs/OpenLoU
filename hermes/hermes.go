@@ -10,12 +10,25 @@ import (
 	"errors"
 	"net"
 	"strconv"
+	"sync"
 )
 
 const (
-	MAPSERVER   = 2
-	LOGINSERVER = 1
-	CITYSERVER  = 3
+	// Map Server requests always start with 1
+	MAPSERVER            = 1
+	GET_REGION_CITIES    = 100
+	GET_USER_CITY_LIST   = 101
+	GET_REGION_CITY_INFO = 102
+
+	// City Server requests always start with 2
+	CITYSERVER             = 2
+	GET_CITY_CONSTRUCTIONS = 200
+	GET_CITY_INFO          = 201
+	UPGRADE_CONSTRUCTION   = 202
+	DEGRADE_CONSTRUCTION   = 203
+
+	// Login Server requests always start with 3
+	LOGINSERVER = 3
 )
 
 type IAnswer interface {
@@ -29,8 +42,8 @@ type IRequest interface {
 
 type Hermes struct {
 	listener                net.Listener
-	AuthorizedConnections   map[int]*net.Conn
-	UnauthorizedConnections map[int]*net.Conn
+	AuthorizedConnections   sync.Map
+	UnauthorizedConnections sync.Map
 	MapChanIn               *chan communication.Request
 	LoginChanIn             *chan communication.Request
 	CityChanIn              *chan communication.Request
@@ -42,8 +55,6 @@ func Create(mapChanIn *chan communication.Request, loginChanIn *chan communicati
 	h.MapChanIn = mapChanIn
 	h.LoginChanIn = loginChanIn
 	h.CityChanIn = cityChanIn
-	h.AuthorizedConnections = make(map[int]*net.Conn)
-	h.UnauthorizedConnections = make(map[int]*net.Conn)
 	println("Hermes has been started!")
 	return h
 
@@ -69,19 +80,22 @@ func (h *Hermes) StartListening() {
 func (h *Hermes) HandleReturn() {
 	for {
 		answer := <-h.InChan
-		if answer.Type%100 == LOGINSERVER && answer.Result == true {
-			user, ok := h.UnauthorizedConnections[answer.UserID]
+		if answer.Type/100 == LOGINSERVER && answer.Result == true {
+			user, ok := h.UnauthorizedConnections.Load(answer.UserID)
 			if ok {
-				delete(h.UnauthorizedConnections, answer.UserID)
-				h.AuthorizedConnections[answer.UserID] = user
+				h.UnauthorizedConnections.Delete(answer.UserID)
+				h.AuthorizedConnections.Store(answer.UserID, user)
 			}
+
 		}
-		userConn, ok := h.AuthorizedConnections[answer.UserID]
+
+		userConn, ok := h.AuthorizedConnections.Load(answer.UserID)
 		if !ok {
-			delete(h.AuthorizedConnections, answer.UserID)
+
+			h.AuthorizedConnections.Delete(answer.UserID)
 			continue
 		}
-		write := bufio.NewWriter(*userConn)
+		write := bufio.NewWriter(userConn.(net.Conn))
 		n := 0
 		err := errors.New("")
 		if answer.Result {
@@ -90,7 +104,7 @@ func (h *Hermes) HandleReturn() {
 			n, err = write.Write([]byte(strconv.FormatBool(answer.Result)))
 		}
 		if err != nil || n == 0 {
-			delete(h.AuthorizedConnections, answer.UserID)
+			h.AuthorizedConnections.Delete(answer.UserID)
 			continue
 		}
 	}
@@ -115,7 +129,7 @@ func (h *Hermes) HandleUser(conn *net.Conn) {
 				tries++
 				break
 			}
-			_, ok := h.AuthorizedConnections[request.UserID]
+			_, ok := h.AuthorizedConnections.Load(request.UserID)
 			if !ok {
 				h.HandleUnauthorizedUser(conn, request)
 			} else {
@@ -127,11 +141,11 @@ func (h *Hermes) HandleUser(conn *net.Conn) {
 	(*conn).Close()
 }
 func (h *Hermes) HandleUnauthorizedUser(conn *net.Conn, request communication.Request) {
-	h.UnauthorizedConnections[request.UserID] = conn
+	h.UnauthorizedConnections.Store(request.UserID, conn)
 	*h.LoginChanIn <- request
 }
 func (h *Hermes) HandleAuthorizedUser(conn *net.Conn, request communication.Request) {
-	server := request.Type % 100
+	server := request.Type / 100
 	switch server {
 	case MAPSERVER:
 		{

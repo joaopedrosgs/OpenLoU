@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net"
-	"sync"
 )
 
 const (
@@ -27,37 +26,31 @@ const (
 	UPGRADE_CONSTRUCTION   = 202
 	DEGRADE_CONSTRUCTION   = 203
 
-	// Login Server requests always start with 3
+	// Email Server requests always start with 3
 	LOGINSERVER = 3
 )
 
-type IAnswer interface {
-	ToJson() string
-	GetUserId() int
-}
-type IRequest interface {
-	GetType() int
-	GetUserId() int
+type ISessionBackend interface {
+	NewSession(id int, key string)
+
+	SessionExists(key string) bool
+
+	DeleteSession(key string)
 }
 
 type Hermes struct {
-	listener          net.Listener
-	Connections       map[string]*communication.Connection
-	UnauthConnections map[*net.Conn]*communication.Connection
-	MapChanIn         *chan communication.Request
-	LoginChanIn       *chan communication.Request
-	CityChanIn        *chan communication.Request
-	InChan            chan communication.Answer
-	Mutex             sync.RWMutex
+	listener   net.Listener
+	mapChanIn  *chan *communication.Request
+	cityChanIn *chan *communication.Request
+	inChan     chan *communication.Answer
+	sessions   ISessionBackend
 }
 
-func Create(mapChanIn *chan communication.Request, loginChanIn *chan communication.Request, cityChanIn *chan communication.Request) Hermes {
+func Create(mapChanIn *chan *communication.Request, backend ISessionBackend) Hermes {
 	h := Hermes{}
-	h.MapChanIn = mapChanIn
-	h.LoginChanIn = loginChanIn
-	h.CityChanIn = cityChanIn
-	h.InChan = make(chan communication.Answer)
-	h.Connections = make(map[string]*communication.Connection)
+	h.mapChanIn = mapChanIn
+	h.inChan = make(chan *communication.Answer)
+	h.sessions = backend
 	println("Hermes has been started!")
 	return h
 
@@ -71,64 +64,52 @@ func (h *Hermes) StartListening() {
 		return
 	}
 	println("Hermes started listening")
-	go h.HandleReturn()
+	go h.handleReturn()
 	for {
 		client, err := h.listener.Accept()
 		if err == nil {
-			go h.HandleUser(&client)
+			go h.handleUser(&client)
 		}
 	}
 }
 
-func (h *Hermes) HandleReturn() {
+func (h *Hermes) handleReturn() {
 	for {
-		answer := <-h.InChan
-		userConn := answer.GetConn()
-		if answer.Type/100 == LOGINSERVER && answer.Result == true { // if the login went Ok
-			h.Mutex.Lock()
-			userConn.Key = answer.Data
-			h.Connections[userConn.Key] = answer.GetConn() // Como recuperar a conexáo se ela nao foi inserida?
-			h.Mutex.Unlock()
-
-		}
-
-		if userConn != nil {
-			h.writeBackToUser(userConn, answer)
+		answer := <-h.inChan
+		exists := h.sessions.SessionExists(answer.GetKey())
+		h.writeBackToUser(answer.GetConn(), answer)
+		if !exists {
+			answer.GetConn().Close()
 		}
 	}
 }
-func (h *Hermes) writeBackToUser(userConn *communication.Connection, answer communication.Answer) {
+func (h *Hermes) writeBackToUser(userConn *communication.User, answer *communication.Answer) {
 	if userConn.Conn == nil {
 		println("User connection is invalid")
 		return
 	}
 	n := 0
 	err := errors.New("")
-	if answer.Result {
-		n, err = userConn.Writer.Write([]byte(answer.Data))
-	} else {
-		res, _ := json.Marshal(answer)
-		n, err = userConn.Writer.Write([]byte(res))
-	}
-	if err != nil || n == 0 {
-		h.Mutex.Lock()
-		delete(h.Connections, answer.GetKey())
-		h.Mutex.Unlock()
+	res, _ := json.Marshal(answer)
+	n, err = userConn.Writer.Write([]byte(res))
+
+	if (err != nil || n == 0) && answer.GetKey() != "" {
+		h.sessions.DeleteSession(answer.GetKey())
 		return
 	}
 	userConn.Writer.Flush()
 }
-func (h *Hermes) HandleUser(conn *net.Conn) {
+func (h *Hermes) handleUser(conn *net.Conn) {
 	println("Hermes handled a new user")
 	tries := 0
-	user := &communication.Connection{conn, bufio.NewWriter(*conn), make([]byte, 1024), bufio.NewReader(*conn), make([]byte, 1024), ""}
+	user := &communication.User{conn, bufio.NewWriter(*conn), make([]byte, 1024), bufio.NewReader(*conn), make([]byte, 1024), ""}
 	request := &communication.Request{}
 	request.SetConn(user)
 
 	for {
 		received, err := user.Reader.Read(user.BufferRead)
 		if err != nil || tries > 5 {
-			break
+			break // conexao caiu ou mtas tentativas
 		} else {
 			err := json.Unmarshal(user.BufferRead[:received], request)
 			if err != nil {
@@ -136,39 +117,42 @@ func (h *Hermes) HandleUser(conn *net.Conn) {
 				tries++
 				continue
 			}
-			println(request.Data["Login"])
-			h.Mutex.RLock()
-			_, ok := h.Connections[request.Key]
-			h.Mutex.RUnlock()
-			if ok && request.Key != "" {
-				println("Calling Auth request")
-				h.HandleAuthorizedUser(*request)
+			ok := h.sessions.SessionExists(request.Key)
+			if ok {
+				user.Key = request.Key
+				h.handleAuthorizedUser(request)
 			} else {
-				println("Calling unauth request")
-				h.HandleUnauthorizedUser(user, request)
+				h.writeBackToUser(user, communication.Unauthorized())
 			}
 
 		}
 	}
-
+	ok := h.sessions.SessionExists(user.Key)
+	if ok {
+		h.sessions.DeleteSession(user.Key)
+	}
 	(*conn).Close()
 }
-func (h *Hermes) HandleUnauthorizedUser(conn *communication.Connection, request *communication.Request) {
-	*h.LoginChanIn <- *request
-}
-func (h *Hermes) HandleAuthorizedUser(request communication.Request) {
+
+func (h *Hermes) handleAuthorizedUser(request *communication.Request) {
 	server := request.Type / 100
 	switch server {
 	case MAPSERVER:
 		{
 			println("Going to mapchan")
-			*h.MapChanIn <- request
+			*h.mapChanIn <- request
 		}
 	case CITYSERVER:
 		{
 			println("Going to citychan")
-			*h.CityChanIn <- request
+			*h.cityChanIn <- request
 		}
+	default:
+		h.writeBackToUser(request.GetConn(), communication.BadRequest())
 	}
 
+}
+
+func (h *Hermes) GetEntryPoint() *chan *communication.Answer {
+	return &h.inChan
 }

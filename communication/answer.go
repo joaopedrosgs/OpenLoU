@@ -6,21 +6,27 @@ type Answer struct {
 	Result   bool
 	Data     string
 	isSystem bool
-	connptr  *Connection
+	connptr  *User
 }
 
 func (answer *Answer) GetKey() string {
 	return answer.key
 }
 
-func BadRequest() Answer {
-	return Answer{"", -1, false, "Bad request", false, nil}
+var badRequest = Answer{"", -1, false, "Bad request", false, nil}
+var unauthorizedRequest = Answer{"", -1, false, "Unauthorized", false, nil}
+
+func BadRequest() *Answer {
+	return &badRequest
+}
+func Unauthorized() *Answer {
+	return &unauthorizedRequest
 }
 
 func (answer *Answer) IsSystem() bool {
 	return answer.isSystem
 }
 
-func (answer *Answer) GetConn() *Connection {
+func (answer *Answer) GetConn() *User {
 	return answer.connptr
 }

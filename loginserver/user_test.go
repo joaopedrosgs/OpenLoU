@@ -8,7 +8,7 @@ import (
 
 func TestLoginServer_User(t *testing.T) {
 	config.LoadDefault()
-	l, _ := loginserver.CreateAndConnect(&config)
+	l, _ := loginserver.New(&config)
 	user1, err := l.NewUser("test", "1235678", "testing@purposes.com")
 	if err != nil {
 		t.Fatal(err.Error())

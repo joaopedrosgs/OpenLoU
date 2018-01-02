@@ -4,7 +4,6 @@ import (
 	"OpenLoU/communication"
 	"OpenLoU/configuration"
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
 	"strconv"
 )
@@ -28,31 +27,30 @@ type dataCreateCity struct {
 	Y int
 }
 
-type Mapserver struct {
+type mapserver struct {
 	database *sql.DB
-	In       chan communication.Request
-	Out      *chan communication.Answer
+	in       chan *communication.Request
+	out      *chan *communication.Answer
 }
 
-func CreateAndConnect(config *configuration.Config) (*Mapserver, error) {
-	connectionString := "user=%s password=%s host=%s port=%d dbname=%s sslmode=%s"
-	connectionString = fmt.Sprintf(connectionString, config.Db.User, config.Db.Password, config.Db.Host, config.Db.Port, config.Db.Name, config.Db.SSL)
-	database, err := sql.Open("postgres", connectionString)
+func New() (*mapserver, error) {
+
+	database, err := sql.Open("postgres", configuration.GetConnectionString())
 	if err != nil {
 		return nil, err
 	}
 
-	return &Mapserver{database, make(chan communication.Request), nil}, nil
+	return &mapserver{database, make(chan *communication.Request), nil}, nil
 }
-func (ms *Mapserver) StartListening() {
+func (ms *mapserver) StartListening() {
 	println("Map server started listening")
 
 	for {
-		request := <-ms.In
+		request := <-ms.in
 		go ms.ProcessRequest(request)
 	}
 }
-func (ms *Mapserver) ProcessRequest(request communication.Request) {
+func (ms *mapserver) ProcessRequest(request *communication.Request) {
 	answer := request.ToAnswer()
 	switch request.Type {
 	case GET_REGION_CITIES:
@@ -72,11 +70,16 @@ func (ms *Mapserver) ProcessRequest(request communication.Request) {
 		}
 	default:
 	}
-	*ms.Out <- answer
+	*ms.out <- answer
 
 }
 
-func (m *Mapserver) SetEndPoint(outChan *chan communication.Answer) {
-	m.Out = outChan
+func (m *mapserver) SetEndPoint(outChan *chan *communication.Answer) {
+	m.out = outChan
+
+}
+
+func (m *mapserver) GetEntryPoint() *chan *communication.Request {
+	return &m.in
 
 }

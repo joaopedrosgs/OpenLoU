@@ -5,11 +5,15 @@ import (
 	"net"
 )
 
-type Connection struct {
+type User struct {
 	Conn        *net.Conn
 	Writer      *bufio.Writer
 	BufferWrite []byte
 	Reader      *bufio.Reader
 	BufferRead  []byte
 	Key         string
+}
+
+func (c *User) Close() {
+	(*c.Conn).Close()
 }

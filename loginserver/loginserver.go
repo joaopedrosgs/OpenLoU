@@ -7,10 +7,13 @@ import (
 	"fmt"
 
 	"OpenLoU/communication"
+	"OpenLoU/hermes"
+	"encoding/json"
 	_ "github.com/lib/pq" // Postgresql Driver
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
+	"net/http"
 )
 
 // Const values
@@ -21,29 +24,22 @@ const (
 	NEW_LOGIN = 301
 
 	///////////////////////////
-
-	KeySize    = 64
-	DBSessions = "sessions"
-	DBUsers    = "users"
+	DBUsers = "users"
 
 	//Queries
 	newUserQuery           = "INSERT INTO " + DBUsers + "(login, password, email) VALUES ($1, $2, $3)  RETURNING id"
-	loginQuery             = "SELECT id, login, password FROM " + DBUsers + " WHERE login =  $1 LIMIT 1 "
-	userExistsQuery        = "SELECT 1 FROM " + DBUsers + " WHERE login=$1 LIMIT 1"
-	deleteUserByLoginQuery = "DELETE from " + DBUsers + " WHERE login=$1"
-	newSessionQuery        = "INSERT INTO " + DBSessions + " VALUES($1, $2, $3)"
-	findSessionQuery       = "SELECT 1 FROM " + DBSessions + " WHERE key=$1 AND user_id=$2 AND ip=$3 LIMIT 1"
-	connectionString       = "user=%s password=%s host=%s port=%d dbname=%s sslmode=%s"
+	loginQuery             = "SELECT password, id FROM " + DBUsers + " WHERE email =  $1 LIMIT 1 "
+	userExistsQuery        = "SELECT 1 FROM " + DBUsers + " WHERE email=$1 LIMIT 1"
+	deleteUserByLoginQuery = "DELETE from " + DBUsers + " WHERE email=$1"
 )
 
 type LoginServer struct {
 	Database *sql.DB
-	In       chan communication.Request
-	Out      *chan communication.Answer
+	sessions hermes.ISessionBackend
 }
 
 type LoginAttempt struct {
-	Login    string
+	Email    string
 	Password string
 }
 
@@ -53,76 +49,82 @@ type Answer struct {
 }
 
 func (s *LoginServer) StartListening() {
-	println("Login server started listening")
-	for {
-		request := <-s.In
-		go s.NewAttempt(request)
+	// Index Handler
+	http.HandleFunc("/login", s.loginHandler)
 
+	fmt.Printf("Starting server for testing HTTP POST...\n")
+	if err := http.ListenAndServe(":80", nil); err != nil {
+		log.Fatal(err)
 	}
 }
+func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
+	answer := communication.BadRequest()
 
-// CreateAndConnect returns an LoginServer that deals with the authentication of the user
-func CreateAndConnect(config *configuration.Config) (*LoginServer, error) {
-
-	connectionString := fmt.Sprintf(connectionString, config.Db.User, config.Db.Password, config.Db.Host, config.Db.Port, config.Db.Name, config.Db.SSL)
-	database, err := sql.Open("postgres", connectionString)
-
-	if err != nil {
-		log.WithFields(log.Fields{"Error": err.Error()}).Fatal(dbError)
-		return nil, err
-
+	if request.Method == "POST" {
+		jsonRequest := request.PostFormValue("data")
+		attempt := &LoginAttempt{}
+		err := json.Unmarshal([]byte(jsonRequest), &attempt)
+		if err == nil {
+			answer = s.NewAttempt(attempt)
+		}
 	}
-	err = database.Ping()
+
+	json, _ := json.Marshal(answer)
+	fmt.Fprintf(writer, string(json))
+
+}
+
+// New returns an LoginServer that deals with the authentication of the user
+func New(backend hermes.ISessionBackend) (*LoginServer, error) {
+	database, err := sql.Open("postgres", configuration.GetConnectionString())
+
 	if err != nil {
 		log.WithFields(log.Fields{"Error": err.Error()}).Fatal(dbError)
 		return nil, err
+
 	}
 	log.WithFields(log.Fields{"From": "Login Server"}).Info("Database connection established")
 
-	return &LoginServer{database, make(chan communication.Request), nil}, nil
+	return &LoginServer{database, backend}, nil
 
 }
 
 //NewAttempt returns an Answer which contains the auth info from the attempt
-func (s *LoginServer) NewAttempt(request communication.Request) {
-	answer := request.ToAnswer()
-	loginAttempt := LoginAttempt{request.Data["Login"], request.Data["Password"]}
+func (s *LoginServer) NewAttempt(attempt *LoginAttempt) *communication.Answer {
+	answer := &communication.Answer{}
+	id, err := s.CheckCredentials(attempt)
 
-	err := s.CheckCredentials(loginAttempt)
 	if err != nil {
 		answer.Result = false
-
-		answer.Data = string(err.Error())
+		answer.Data = err.Error()
 	} else {
 
-		key := GenUniqueKey(KeySize)
+		key := GenUniqueKey()
 		answer.Result = true
 		answer.Data = key
 		answer.Type = NEW_LOGIN
-
+		s.sessions.NewSession(id, key)
 	}
-	*s.Out <- answer
+
+	return answer
 }
 
 //CheckCredentials returns the user and nil if the credentials are correct
-func (s *LoginServer) CheckCredentials(attempt LoginAttempt) error {
-	if len(attempt.Password) == 0 || len(attempt.Login) == 0 {
-		return errors.New(emptyFields)
+func (s *LoginServer) CheckCredentials(attempt *LoginAttempt) (int, error) {
+	if len(attempt.Password) == 0 || len(attempt.Email) == 0 {
+		return -1, errors.New(emptyFields)
+	}
 
-	}
-	user := user{}
-	var pass string
-	err := s.Database.QueryRow(loginQuery, attempt.Login).Scan(&user.Id, &user.Login, &pass)
+	pass := ""
+	id := -1
+	err := s.Database.QueryRow(loginQuery, attempt.Email).Scan(&pass, &id)
 	if err != nil {
-		return errors.New(accountInexistent)
+		return -1, errors.New(accountInexistent)
 	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(pass), []byte(attempt.Password))
 	if err != nil {
-		return errors.New(wrongPass + err.Error())
+		return -1, errors.New(wrongPass)
 	}
-	return nil
-}
-func (l *LoginServer) SetEndPoint(answers *chan communication.Answer) {
-	l.Out = answers
-
+	return id, nil
 }

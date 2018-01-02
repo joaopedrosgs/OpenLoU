@@ -20,7 +20,7 @@ var attemptsArray = []struct {
 
 func TestLoginServer_NewAttempt(t *testing.T) {
 	config.Load("../default.json")
-	ls, _ := loginserver.CreateAndConnect(&config)
+	ls, _ := loginserver.New(&config)
 	answer := loginserver.Answer{}
 	_, err := ls.NewUser("test", "12345678", "testing@purpose.com")
 	if err != nil {
@@ -36,7 +36,7 @@ func TestLoginServer_NewAttempt(t *testing.T) {
 
 }
 func TestLoginServer_SessionExists(t *testing.T) {
-	ls, _ := loginserver.CreateAndConnect(&config)
+	ls, _ := loginserver.New(&config)
 	user, err := ls.NewUser("test", "12345678", "testing@purpose.com")
 	if err != nil {
 		t.Error(err.Error())

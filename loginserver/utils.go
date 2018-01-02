@@ -1,6 +1,7 @@
 package loginserver
 
 import (
+	"OpenLoU/configuration"
 	"math/rand"
 	"time"
 )
@@ -14,10 +15,11 @@ const (
 
 var src = rand.NewSource(time.Now().UnixNano())
 
-func GenUniqueKey(n int) string {
-	b := make([]byte, n)
+func GenUniqueKey() string {
+	keysize := configuration.GetInstance().Parameters.Security.KeySize
+	b := make([]byte, keysize)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
-	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+	for i, cache, remain := keysize-1, src.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
 			cache, remain = src.Int63(), letterIdxMax
 		}

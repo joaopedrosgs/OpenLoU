@@ -5,10 +5,12 @@ package hermes
 
 import (
 	"OpenLoU/communication"
-	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
+	"sync/atomic"
+	"time"
 )
 
 const (
@@ -30,27 +32,37 @@ const (
 	LOGINSERVER = 3
 )
 
+var request_internal_id int32 = -1
+
 type ISessionBackend interface {
 	NewSession(id int, key string)
 
 	SessionExists(key string) bool
 
 	DeleteSession(key string)
+
+	NewTry(key string)
+}
+type IWorker interface {
+	GetInChan() *chan *communication.Request
+	SetOutChan(*chan *communication.Answer)
+	GetCode() int
 }
 
 type Hermes struct {
-	listener   net.Listener
-	mapChanIn  *chan *communication.Request
-	cityChanIn *chan *communication.Request
-	inChan     chan *communication.Answer
-	sessions   ISessionBackend
+	listener net.Listener
+	inChan   chan *communication.Answer
+	sessions ISessionBackend
+	stats    map[int32]time.Time
+	workers  map[int]*chan *communication.Request
 }
 
-func Create(mapChanIn *chan *communication.Request, backend ISessionBackend) Hermes {
+func Create(backend ISessionBackend) Hermes {
 	h := Hermes{}
-	h.mapChanIn = mapChanIn
+	h.workers = make(map[int]*chan *communication.Request)
 	h.inChan = make(chan *communication.Answer)
 	h.sessions = backend
+	h.stats = make(map[int32]time.Time)
 	println("Hermes has been started!")
 	return h
 
@@ -68,7 +80,7 @@ func (h *Hermes) StartListening() {
 	for {
 		client, err := h.listener.Accept()
 		if err == nil {
-			go h.handleUser(&client)
+			go h.handleUser(client)
 		}
 	}
 }
@@ -77,82 +89,89 @@ func (h *Hermes) handleReturn() {
 	for {
 		answer := <-h.inChan
 		exists := h.sessions.SessionExists(answer.GetKey())
-		h.writeBackToUser(answer.GetConn(), answer)
+		h.writeBackToUser(answer)
 		if !exists {
-			answer.GetConn().Close()
+			answer.GetConn()
 		}
+
 	}
 }
-func (h *Hermes) writeBackToUser(userConn *communication.User, answer *communication.Answer) {
-	if userConn.Conn == nil {
+func (h *Hermes) writeBackToUser(answer *communication.Answer) {
+	start := time.Now()
+	if answer.GetConn() == nil {
 		println("User connection is invalid")
 		return
 	}
 	n := 0
 	err := errors.New("")
-	res, _ := json.Marshal(answer)
-	n, err = userConn.Writer.Write([]byte(res))
+
+	buffer, _ := json.Marshal(answer)
+	n, err = answer.GetWriter().Write(buffer)
 
 	if (err != nil || n == 0) && answer.GetKey() != "" {
 		h.sessions.DeleteSession(answer.GetKey())
 		return
 	}
-	userConn.Writer.Flush()
+	answer.GetWriter().Flush()
+	fmt.Println(answer.GetInternalID(), " - ", (time.Now().Sub(h.stats[answer.GetInternalID()])).Round(time.Millisecond), "Result: ", answer.Result)
+	fmt.Println("end of writebacktouser: ", time.Now().Sub(start))
 }
-func (h *Hermes) handleUser(conn *net.Conn) {
-	println("Hermes handled a new user")
-	tries := 0
-	user := &communication.User{conn, bufio.NewWriter(*conn), make([]byte, 1024), bufio.NewReader(*conn), make([]byte, 1024), ""}
+func (h *Hermes) handleUser(conn net.Conn) {
+	defer conn.Close()
 	request := &communication.Request{}
-	request.SetConn(user)
+	atomic.AddInt32(&request_internal_id, 1)
+	request.SetInternalID(request_internal_id)
+	request.SetConn(conn)
+	h.stats[request.GetInternalID()] = time.Now()
 
 	for {
-		received, err := user.Reader.Read(user.BufferRead)
-		if err != nil || tries > 5 {
-			break // conexao caiu ou mtas tentativas
+		received, err := request.Reader.Read(request.BufferRead) // blocks until all the data is available
+
+		if err != nil { // failed to read
+			break
 		} else {
-			err := json.Unmarshal(user.BufferRead[:received], request)
-			if err != nil {
-				h.writeBackToUser(user, communication.BadRequest())
-				tries++
-				continue
+
+			err := json.Unmarshal(request.BufferRead[:received], request)
+
+			if err != nil { // faiiled do unmarshal
+				h.writeBackToUser(communication.BadRequest(conn))
+				break
 			}
 			ok := h.sessions.SessionExists(request.Key)
+
 			if ok {
-				user.Key = request.Key
 				h.handleAuthorizedUser(request)
 			} else {
-				h.writeBackToUser(user, communication.Unauthorized())
+				h.writeBackToUser(communication.Unauthorized(conn))
 			}
 
 		}
+
 	}
-	ok := h.sessions.SessionExists(user.Key)
-	if ok {
-		h.sessions.DeleteSession(user.Key)
+	exists := h.sessions.SessionExists(request.Key)
+	if exists {
+		h.sessions.DeleteSession(request.Key)
 	}
-	(*conn).Close()
+
 }
 
 func (h *Hermes) handleAuthorizedUser(request *communication.Request) {
 	server := request.Type / 100
-	switch server {
-	case MAPSERVER:
-		{
-			println("Going to mapchan")
-			*h.mapChanIn <- request
-		}
-	case CITYSERVER:
-		{
-			println("Going to citychan")
-			*h.cityChanIn <- request
-		}
-	default:
-		h.writeBackToUser(request.GetConn(), communication.BadRequest())
+	workerChan, ok := h.workers[server]
+	if ok {
+		*workerChan <- request
+	} else {
+		h.writeBackToUser(communication.BadRequest(request.GetConn()))
+		h.sessions.NewTry(request.Key)
 	}
 
 }
 
 func (h *Hermes) GetEntryPoint() *chan *communication.Answer {
 	return &h.inChan
+}
+
+func (h *Hermes) RegisterWorker(worker IWorker) {
+	h.workers[worker.GetCode()] = worker.GetInChan()
+	worker.SetOutChan(&h.inChan)
 }

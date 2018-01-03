@@ -58,7 +58,7 @@ func (s *LoginServer) StartListening() {
 	}
 }
 func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
-	answer := communication.BadRequest()
+	answer := communication.BadRequest(nil)
 
 	if request.Method == "POST" {
 		jsonRequest := request.PostFormValue("data")

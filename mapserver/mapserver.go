@@ -31,6 +31,19 @@ type mapserver struct {
 	database *sql.DB
 	in       chan *communication.Request
 	out      *chan *communication.Answer
+	code     int
+}
+
+func (ms *mapserver) GetInChan() *chan *communication.Request {
+	return &ms.in
+}
+
+func (ms *mapserver) SetOutChan(out *chan *communication.Answer) {
+	ms.out = out
+}
+
+func (ms *mapserver) GetCode() int {
+	return ms.code
 }
 
 func New() (*mapserver, error) {
@@ -40,7 +53,7 @@ func New() (*mapserver, error) {
 		return nil, err
 	}
 
-	return &mapserver{database, make(chan *communication.Request), nil}, nil
+	return &mapserver{database, make(chan *communication.Request), nil, 1}, nil
 }
 func (ms *mapserver) StartListening() {
 	println("Map server started listening")
@@ -71,15 +84,5 @@ func (ms *mapserver) ProcessRequest(request *communication.Request) {
 	default:
 	}
 	*ms.out <- answer
-
-}
-
-func (m *mapserver) SetEndPoint(outChan *chan *communication.Answer) {
-	m.out = outChan
-
-}
-
-func (m *mapserver) GetEntryPoint() *chan *communication.Request {
-	return &m.in
 
 }

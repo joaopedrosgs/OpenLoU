@@ -7,15 +7,18 @@ import (
 	"OpenLoU/session"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"runtime/pprof"
 )
 
 func main() {
-
+	pprof.StartCPUProfile(os.Stdout)
+	defer pprof.StopCPUProfile()
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.DebugLevel)
 	log.Info("OpenLou has been started!")
 
 	Sessions := session.New()
+	Hermes := hermes.Create(Sessions)
 
 	LoginServer, err := loginserver.New(Sessions)
 	if err != nil {
@@ -27,9 +30,8 @@ func main() {
 		panic("Map server could not be started")
 	}
 
-	Hermes := hermes.Create(MapServer.GetEntryPoint(), Sessions)
+	Hermes.RegisterWorker(MapServer)
 
-	MapServer.SetEndPoint(Hermes.GetEntryPoint())
 	go MapServer.StartListening()
 	go LoginServer.StartListening()
 

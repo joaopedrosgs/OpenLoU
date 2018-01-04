@@ -34,21 +34,6 @@ const (
 
 var request_internal_id int32 = -1
 
-type ISessionBackend interface {
-	NewSession(id int, key string)
-
-	SessionExists(key string) bool
-
-	DeleteSession(key string)
-
-	NewTry(key string)
-}
-type IWorker interface {
-	GetInChan() *chan *communication.Request
-	SetOutChan(*chan *communication.Answer)
-	GetCode() int
-}
-
 type Hermes struct {
 	listener net.Listener
 	inChan   chan *communication.Answer
@@ -97,7 +82,6 @@ func (h *Hermes) handleReturn() {
 	}
 }
 func (h *Hermes) writeBackToUser(answer *communication.Answer) {
-	start := time.Now()
 	if answer.GetConn() == nil {
 		println("User connection is invalid")
 		return
@@ -114,7 +98,6 @@ func (h *Hermes) writeBackToUser(answer *communication.Answer) {
 	}
 	answer.GetWriter().Flush()
 	fmt.Println(answer.GetInternalID(), " - ", (time.Now().Sub(h.stats[answer.GetInternalID()])).Round(time.Millisecond), "Result: ", answer.Result)
-	fmt.Println("end of writebacktouser: ", time.Now().Sub(start))
 }
 func (h *Hermes) handleUser(conn net.Conn) {
 	defer conn.Close()
@@ -174,4 +157,5 @@ func (h *Hermes) GetEntryPoint() *chan *communication.Answer {
 func (h *Hermes) RegisterWorker(worker IWorker) {
 	h.workers[worker.GetCode()] = worker.GetInChan()
 	worker.SetOutChan(&h.inChan)
+	println("Entity: Hermes, Message: A worker has been registered")
 }

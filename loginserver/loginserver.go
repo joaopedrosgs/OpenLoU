@@ -10,7 +10,6 @@ import (
 	"OpenLoU/hermes"
 	"encoding/json"
 	_ "github.com/lib/pq" // Postgresql Driver
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -52,10 +51,10 @@ func (s *LoginServer) StartListening() {
 	// Index Handler
 	http.HandleFunc("/login", s.loginHandler)
 
-	fmt.Printf("Starting server for testing HTTP POST...\n")
 	if err := http.ListenAndServe(":80", nil); err != nil {
-		log.Fatal(err)
+		println(err.Error())
 	}
+	println("Login server has been started")
 }
 func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
 	answer := communication.BadRequest(nil)
@@ -79,11 +78,11 @@ func New(backend hermes.ISessionBackend) (*LoginServer, error) {
 	database, err := sql.Open("postgres", configuration.GetConnectionString())
 
 	if err != nil {
-		log.WithFields(log.Fields{"Error": err.Error()}).Fatal(dbError)
+		println(err.Error())
 		return nil, err
 
 	}
-	log.WithFields(log.Fields{"From": "Login Server"}).Info("Database connection established")
+	println("Login server: Database connection established")
 
 	return &LoginServer{database, backend}, nil
 

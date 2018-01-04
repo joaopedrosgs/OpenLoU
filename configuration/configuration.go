@@ -3,7 +3,6 @@ package configuration
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 )
 
@@ -55,9 +54,9 @@ func (instance *Config) Load() {
 	arquivo, err := ioutil.ReadFile("default.json")
 	err = json.Unmarshal(arquivo, &instance)
 	if err != nil {
-		log.Fatal("The default configuration couldn't be loaded")
+		println("The default configuration couldn't be loaded")
 	} else {
-		log.Info("Configuration loaded")
+		println("Configuration loaded")
 	}
 
 }

@@ -46,7 +46,7 @@ func (s *sessionDB) DeleteSession(key string) {
 	s.db.Query(deleteSessionQuery, key)
 }
 
-func New() *sessionDB {
+func NewSessionInDB() *sessionDB {
 	database, err := sql.Open("postgres", configuration.GetConnectionString())
 	if err != nil {
 		return nil

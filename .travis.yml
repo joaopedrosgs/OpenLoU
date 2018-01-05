@@ -9,9 +9,9 @@ env:
 install:
   - go get golang.org/x/sys/unix
   - go get golang.org/x/sys/windows
+  - go get github.com/lib/pq
+  - go get golang.org/x/crypto/bcrypt
 services:
   - postgresql
-before_script:
-  - sleep 15
 script:
  - go install -v ./...

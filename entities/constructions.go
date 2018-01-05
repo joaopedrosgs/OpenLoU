@@ -3,7 +3,6 @@ package entities
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 )
 
@@ -31,7 +30,7 @@ type ConstructionsMap map[uint]ConstructionType
 
 func (registeredConstructions ConstructionsMap) LoadAllConstructions() {
 
-	log.Info("Loading constructions")
+	println("Loading constructions")
 	registeredConstructions = make(map[uint]ConstructionType)
 	dir := "modules/constructions/"
 
@@ -48,10 +47,10 @@ func (registeredConstructions ConstructionsMap) LoadAllConstructions() {
 		err = json.Unmarshal(fileContent, &element)
 		if err == nil {
 			registeredConstructions[uint(element.Id)] = element
-			log.WithFields(log.Fields{"Construction": element.Name, "Id": element.Id}).Info("Successful")
+			println("Construction:", element.Name, " Id: ", element.Id, " - Successfull")
 		} else {
-			log.WithFields(log.Fields{"File Name": module.Name()}).Debug("Error")
+			println("File Name: ", module.Name(), " - Error")
 		}
 	}
-	log.Info("Loading constructions ended")
+	println("Loading constructions ended")
 }

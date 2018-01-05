@@ -1,14 +1,14 @@
 package loginserver
 
 import (
-	"OpenLoU/configuration"
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/joaopedrosgs/OpenLoU/configuration"
 
-	"OpenLoU/communication"
-	"OpenLoU/hermes"
 	"encoding/json"
+	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/hermes"
 	_ "github.com/lib/pq" // Postgresql Driver
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"

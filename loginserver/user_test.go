@@ -1,7 +1,7 @@
 package loginserver_test
 
 import (
-	"OpenLoU/loginserver"
+	"github.com/joaopedrosgs/OpenLoU/loginserver"
 	"strings"
 	"testing"
 )

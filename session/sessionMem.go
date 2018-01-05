@@ -1,7 +1,7 @@
 package session
 
 import (
-	"OpenLoU/configuration"
+	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"time"
 )
 

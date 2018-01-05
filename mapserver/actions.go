@@ -1,8 +1,8 @@
 package mapserver
 
 import (
-	"OpenLoU/entities"
 	"encoding/json"
+	"github.com/joaopedrosgs/OpenLoU/entities"
 )
 
 func triesToCreateCity(x int, y int, user_id int) bool {

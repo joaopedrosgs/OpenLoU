@@ -1,9 +1,9 @@
 package mapserver
 
 import (
-	"OpenLoU/communication"
-	"OpenLoU/configuration"
 	"database/sql"
+	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/configuration"
 	_ "github.com/lib/pq"
 	"strconv"
 )

@@ -1,6 +1,6 @@
 package hermes
 
-import "OpenLoU/communication"
+import "github.com/joaopedrosgs/OpenLoU/communication"
 
 type ISessionBackend interface {
 	NewSession(id int, key string)

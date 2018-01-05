@@ -4,10 +4,10 @@
 package hermes
 
 import (
-	"OpenLoU/communication"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/joaopedrosgs/OpenLoU/communication"
 	"net"
 	"sync/atomic"
 	"time"

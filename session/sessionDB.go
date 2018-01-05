@@ -1,9 +1,9 @@
 package session
 
 import (
-	"OpenLoU/configuration"
 	"database/sql"
 	"fmt"
+	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"time"
 )
 

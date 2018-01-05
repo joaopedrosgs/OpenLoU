@@ -1,7 +1,7 @@
 package loginserver
 
 import (
-	"OpenLoU/configuration"
+	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"math/rand"
 	"time"
 )

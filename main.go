@@ -1,10 +1,10 @@
 package main
 
 import (
-	"OpenLoU/hermes"
-	"OpenLoU/loginserver"
-	"OpenLoU/mapserver"
-	"OpenLoU/session"
+	"github.com/joaopedrosgs/OpenLoU/hermes"
+	"github.com/joaopedrosgs/OpenLoU/loginserver"
+	"github.com/joaopedrosgs/OpenLoU/mapserver"
+	"github.com/joaopedrosgs/OpenLoU/session"
 )
 
 func main() {

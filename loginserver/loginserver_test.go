@@ -3,8 +3,8 @@ package loginserver_test
 import (
 	"testing"
 
-	"OpenLoU/configuration"
-	"OpenLoU/loginserver"
+	"github.com/joaopedrosgs/OpenLoU/configuration"
+	"github.com/joaopedrosgs/OpenLoU/loginserver"
 )
 
 var config configuration.Config

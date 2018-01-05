@@ -1,20 +1,17 @@
 language: go
 go:
-  - 1.6.x
   - 1.7.x
   - 1.8.x
+  - 1.9.x
   - tip
 env:
   - GOMAXPROCS=4 GORACE=halt_on_error=1
 install:
   - go get golang.org/x/sys/unix
   - go get golang.org/x/sys/windows
-  - go get github.com/sirupsen/logrus
-  - go get gopkg.in/mgo.v2
-  - go get gopkg.in/mgo.v2/bson
 services:
   - postgresql
 before_script:
   - sleep 15
 script:
- - go test -v ./...
+ - go install -v ./...

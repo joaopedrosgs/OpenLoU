@@ -1,8 +1,6 @@
 package communication
 
 import (
-	"bufio"
-	"net"
 	"sync/atomic"
 )
 
@@ -12,26 +10,11 @@ type Request struct {
 	Type        int
 	Data        map[string]string
 	isSystem    bool
-	conn        net.Conn
-	Reader      *bufio.Reader
-	BufferRead  []byte
 }
 
 func (r *Request) ToAnswer() *Answer {
 
-	return &Answer{r.internal_id, r.Key, r.Type, false, "", false, r.conn, bufio.NewWriter(r.conn), make([]byte, 1024)}
-
-}
-func (r *Request) GetConn() net.Conn {
-	return r.conn
-}
-
-func (r *Request) SetConn(conn net.Conn) {
-	r.Reader = bufio.NewReader(conn)
-	if r.BufferRead == nil {
-		r.BufferRead = make([]byte, 1024)
-	}
-	r.conn = conn
+	return &Answer{r.internal_id, r.Key, r.Type, false, nil, false}
 }
 
 func (r *Request) SetInternalID(id int32) {

@@ -57,7 +57,7 @@ func (s *LoginServer) StartListening() {
 	println("Login server has been started")
 }
 func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
-	answer := communication.BadRequest(nil)
+	answer := communication.BadRequest()
 
 	if request.Method == "POST" {
 		jsonRequest := request.PostFormValue("data")
@@ -91,16 +91,17 @@ func New(backend hermes.ISessionBackend) (*LoginServer, error) {
 //NewAttempt returns an Answer which contains the auth info from the attempt
 func (s *LoginServer) NewAttempt(attempt *LoginAttempt) *communication.Answer {
 	answer := &communication.Answer{}
+	answer.Data = make(map[string]string)
 	id, err := s.CheckCredentials(attempt)
 
 	if err != nil {
 		answer.Result = false
-		answer.Data = err.Error()
+		answer.Data["Result"] = err.Error()
 	} else {
 
 		key := GenUniqueKey()
 		answer.Result = true
-		answer.Data = key
+		answer.Data["Key"] = key
 		answer.Type = NEW_LOGIN
 		s.sessions.NewSession(id, key)
 	}
@@ -118,6 +119,11 @@ func (s *LoginServer) CheckCredentials(attempt *LoginAttempt) (int, error) {
 	id := -1
 	err := s.Database.QueryRow(loginQuery, attempt.Email).Scan(&pass, &id)
 	if err != nil {
+		println(err.Error())
+		return -1, errors.New(InternalError)
+
+	}
+	if id < 0 {
 		return -1, errors.New(accountInexistent)
 	}
 

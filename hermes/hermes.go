@@ -4,17 +4,17 @@
 package hermes
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
+
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"net"
-	"sync/atomic"
-	"time"
 )
 
 const (
-	HERMES = 0
+	MSG_SIZE = 1024
+	HERMES   = 0
 	// Map Server requests always start with 1
 	MAPSERVER            = 1
 	GET_REGION_CITIES    = 100
@@ -32,13 +32,10 @@ const (
 	LOGINSERVER = 3
 )
 
-var request_internal_id int32 = -1
-
 type Hermes struct {
 	listener net.Listener
 	inChan   chan *communication.Answer
 	sessions ISessionBackend
-	stats    map[int32]time.Time
 	workers  map[int]*chan *communication.Request
 }
 
@@ -47,7 +44,6 @@ func Create(backend ISessionBackend) Hermes {
 	h.workers = make(map[int]*chan *communication.Request)
 	h.inChan = make(chan *communication.Answer)
 	h.sessions = backend
-	h.stats = make(map[int32]time.Time)
 	println("Hermes has been started!")
 	return h
 
@@ -73,78 +69,85 @@ func (h *Hermes) StartListening() {
 func (h *Hermes) handleReturn() {
 	for {
 		answer := <-h.inChan
-		exists := h.sessions.SessionExists(answer.GetKey())
-		h.writeBackToUser(answer)
-		if !exists {
-			answer.GetConn()
-		}
+		conn := h.sessions.GetUserConnByKey(answer.GetKey())
+		go h.writeBackToUser(answer, conn)
 
 	}
 }
-func (h *Hermes) writeBackToUser(answer *communication.Answer) {
-	if answer.GetConn() == nil {
+func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn) {
+	if conn == nil {
 		println("User connection is invalid")
+		h.sessions.DeleteSession(answer.GetKey())
 		return
 	}
 	n := 0
 	err := errors.New("")
 
 	buffer, _ := json.Marshal(answer)
-	n, err = answer.GetWriter().Write(buffer)
+	writer := bufio.NewWriter(conn)
+	n, err = writer.Write(buffer)
 
-	if (err != nil || n == 0) && answer.GetKey() != "" {
+	if err != nil || n == 0 {
 		h.sessions.DeleteSession(answer.GetKey())
 		return
 	}
-	answer.GetWriter().Flush()
-	fmt.Println(answer.GetInternalID(), " - ", (time.Now().Sub(h.stats[answer.GetInternalID()])).Round(time.Millisecond), "Result: ", answer.Result)
+	writer.Flush()
 }
 func (h *Hermes) handleUser(conn net.Conn) {
 	defer conn.Close()
 	request := &communication.Request{}
-	atomic.AddInt32(&request_internal_id, 1)
-	request.SetInternalID(request_internal_id)
-	request.SetConn(conn)
-	h.stats[request.GetInternalID()] = time.Now()
+	reader := bufio.NewReader(conn)
+	buffer := make([]byte, MSG_SIZE)
+	received, err := reader.Read(buffer) // blocks until all the data is available
 
-	for {
-		received, err := request.Reader.Read(request.BufferRead) // blocks until all the data is available
+	if err == nil {
+		json.Unmarshal(buffer[:received], request)
+	}
+	if h.AuthRequest(request, conn) {
 
-		if err != nil { // failed to read
-			break
-		} else {
+		for {
+			if err == nil && received > 0 && received < MSG_SIZE {
 
-			err := json.Unmarshal(request.BufferRead[:received], request)
+				err := json.Unmarshal(buffer[:received], request)
 
-			if err != nil { // faiiled do unmarshal
-				h.writeBackToUser(communication.BadRequest(conn))
+				if err != nil { // failed do unmarshal
+					h.writeBackToUser(communication.BadRequest(), conn)
+				}
+
+				if h.sessions.SessionExists(request.Key) {
+					h.handleAuthorizedUser(request)
+				} else {
+					h.writeBackToUser(communication.Unauthorized(), conn)
+				}
+
+			} else {
 				break
 			}
-			ok := h.sessions.SessionExists(request.Key)
-
-			if ok {
-				h.handleAuthorizedUser(request)
-			} else {
-				h.writeBackToUser(communication.Unauthorized(conn))
-			}
-
+			received, err = reader.Read(buffer) // blocks until all the data is available
 		}
-
 	}
-	exists := h.sessions.SessionExists(request.Key)
-	if exists {
-		h.sessions.DeleteSession(request.Key)
-	}
+	h.sessions.DeleteSession(request.Key)
 
 }
 
+func (h *Hermes) AuthRequest(request *communication.Request, conn net.Conn) bool {
+	auth := false
+
+	auth = h.sessions.SessionExists(request.Key)
+	if auth {
+		h.sessions.SetConn(request.Key, conn)
+	}
+
+	return auth
+}
 func (h *Hermes) handleAuthorizedUser(request *communication.Request) {
 	server := request.Type / 100
 	workerChan, ok := h.workers[server]
 	if ok {
 		*workerChan <- request
 	} else {
-		h.writeBackToUser(communication.BadRequest(request.GetConn()))
+		conn := h.sessions.GetUserConnByKey(request.Key)
+		h.writeBackToUser(communication.BadRequest(), conn)
 		h.sessions.NewTry(request.Key)
 	}
 

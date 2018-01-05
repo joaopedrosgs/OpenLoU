@@ -65,6 +65,7 @@ func (ms *mapserver) StartListening() {
 }
 func (ms *mapserver) ProcessRequest(request *communication.Request) {
 	answer := request.ToAnswer()
+	answer.Data = make(map[string]string)
 	switch request.Type {
 	case GET_REGION_CITIES:
 		{
@@ -78,7 +79,7 @@ func (ms *mapserver) ProcessRequest(request *communication.Request) {
 			if err != nil {
 				break
 			}
-			answer.Data = getCitiesJson(x, y)
+			answer.Data["Cities"] = getCitiesJson(x, y)
 
 		}
 	default:

@@ -4,15 +4,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 
 	"encoding/json"
+	"net/http"
+
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/hermes"
 	_ "github.com/lib/pq" // Postgresql Driver
 	"golang.org/x/crypto/bcrypt"
 	_ "golang.org/x/crypto/bcrypt"
-	"net/http"
 )
 
 // Const values
@@ -51,7 +53,7 @@ func (s *LoginServer) StartListening() {
 	// Index Handler
 	http.HandleFunc("/login", s.loginHandler)
 
-	if err := http.ListenAndServe(":80", nil); err != nil {
+	if err := http.ListenAndServe(":12345", nil); err != nil {
 		println(err.Error())
 	}
 	println("Login server has been started")
@@ -95,12 +97,12 @@ func (s *LoginServer) NewAttempt(attempt *LoginAttempt) *communication.Answer {
 	id, err := s.CheckCredentials(attempt)
 
 	if err != nil {
-		answer.Result = false
-		answer.Data["Result"] = err.Error()
+		answer.Data["Result"] = "False"
+		answer.Data["Message"] = err.Error()
 	} else {
 
 		key := GenUniqueKey()
-		answer.Result = true
+		answer.Data["Result"] = "True"
 		answer.Data["Key"] = key
 		answer.Type = NEW_LOGIN
 		s.sessions.NewSession(id, key)
@@ -118,11 +120,6 @@ func (s *LoginServer) CheckCredentials(attempt *LoginAttempt) (int, error) {
 	pass := ""
 	id := -1
 	err := s.Database.QueryRow(loginQuery, attempt.Email).Scan(&pass, &id)
-	if err != nil {
-		println(err.Error())
-		return -1, errors.New(InternalError)
-
-	}
 	if id < 0 {
 		return -1, errors.New(accountInexistent)
 	}

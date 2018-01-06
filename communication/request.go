@@ -14,7 +14,7 @@ type Request struct {
 
 func (r *Request) ToAnswer() *Answer {
 
-	return &Answer{r.internal_id, r.Key, r.Type, false, nil, false}
+	return &Answer{r.internal_id, r.Key, r.Type, map[string]string{"Result": "False", "Message": "Bad request"}, false}
 }
 
 func (r *Request) SetInternalID(id int32) {

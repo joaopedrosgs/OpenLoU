@@ -4,7 +4,6 @@ type Answer struct {
 	internal_id int32
 	key         string
 	Type        int
-	Result      bool
 	Data        map[string]string
 	isSystem    bool
 }
@@ -13,8 +12,8 @@ func (answer *Answer) GetKey() string {
 	return answer.key
 }
 
-var badRequest = Answer{0, "", -1, false, map[string]string{"Error": "Bad request"}, false}
-var unauthorizedRequest = Answer{0, "", -1, false, map[string]string{"Error": "Bad request"}, false}
+var badRequest = Answer{0, "", -1, map[string]string{"Result": "False", "Message": "Bad request"}, false}
+var unauthorizedRequest = Answer{0, "", -1, map[string]string{"Result": "False", "Message": "Bad request"}, false}
 
 func BadRequest() *Answer {
 	return &badRequest

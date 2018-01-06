@@ -8,8 +8,9 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/joaopedrosgs/OpenLoU/communication"
 	"net"
+
+	"github.com/joaopedrosgs/OpenLoU/communication"
 )
 
 const (
@@ -74,7 +75,7 @@ func (h *Hermes) handleReturn() {
 
 	}
 }
-func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn) {
+func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn,) {
 	if conn == nil {
 		println("User connection is invalid")
 		h.sessions.DeleteSession(answer.GetKey())
@@ -92,45 +93,54 @@ func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn) {
 		return
 	}
 	writer.Flush()
+
 }
 func (h *Hermes) handleUser(conn net.Conn) {
+
 	defer conn.Close()
-	request := &communication.Request{}
+
 	reader := bufio.NewReader(conn)
 	buffer := make([]byte, MSG_SIZE)
 	received, err := reader.Read(buffer) // blocks until all the data is available
 
-	if err == nil {
-		json.Unmarshal(buffer[:received], request)
+	if (err != nil) {
+		h.writeBackToUser(communication.BadRequest(), conn)
+		return
 	}
-	if h.AuthRequest(request, conn) {
 
-		for {
-			if err == nil && received > 0 && received < MSG_SIZE {
+	request := &communication.Request{}
+	err = json.Unmarshal(buffer[:received], request)
 
-				err := json.Unmarshal(buffer[:received], request)
+	defer h.sessions.DeleteSession(request.Key)
 
-				if err != nil { // failed do unmarshal
-					h.writeBackToUser(communication.BadRequest(), conn)
-				}
+	if (err != nil) {
+		h.writeBackToUser(communication.BadRequest(), conn)
+		return
+	}
 
-				if h.sessions.SessionExists(request.Key) {
-					h.handleAuthorizedUser(request)
-				} else {
-					h.writeBackToUser(communication.Unauthorized(), conn)
-				}
+	if !h.Validate(request, conn) {
+		h.writeBackToUser(communication.Unauthorized(), conn)
+	}
 
-			} else {
-				break
-			}
-			received, err = reader.Read(buffer) // blocks until all the data is available
+	for err == nil && received > 0 && received < MSG_SIZE {
+
+		err := json.Unmarshal(buffer[:received], request)
+
+		if err != nil { // failed do unmarshal
+			h.writeBackToUser(communication.BadRequest(), conn)
 		}
-	}
-	h.sessions.DeleteSession(request.Key)
 
+		if h.sessions.SessionExists(request.Key) {
+			h.handleAuthorizedUser(request)
+		} else {
+			h.writeBackToUser(communication.Unauthorized(), conn)
+		}
+		received, err = reader.Read(buffer) // blocks until all the data is available
+
+	}
 }
 
-func (h *Hermes) AuthRequest(request *communication.Request, conn net.Conn) bool {
+func (h *Hermes) Validate(request *communication.Request, conn net.Conn) bool {
 	auth := false
 
 	auth = h.sessions.SessionExists(request.Key)

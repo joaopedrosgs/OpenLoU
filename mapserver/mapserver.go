@@ -2,10 +2,11 @@ package mapserver
 
 import (
 	"database/sql"
+	"strconv"
+
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	_ "github.com/lib/pq"
-	"strconv"
 )
 
 const (
@@ -69,8 +70,7 @@ func (ms *mapserver) ProcessRequest(request *communication.Request) {
 	switch request.Type {
 	case GET_REGION_CITIES:
 		{
-
-			answer.Result = true
+			answer.Data["Result"] = "True"
 			x, err := strconv.Atoi(request.Data["X"])
 			if err != nil {
 				break

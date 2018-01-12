@@ -11,7 +11,11 @@ import (
 	"net"
 
 	"github.com/joaopedrosgs/OpenLoU/communication"
+	log "github.com/sirupsen/logrus"
+	"strconv"
 )
+
+var context = log.WithFields(log.Fields{"Entity": "Hermes"})
 
 const (
 	MSG_SIZE = 1024
@@ -45,7 +49,7 @@ func Create(backend ISessionBackend) Hermes {
 	h.workers = make(map[int]*chan *communication.Request)
 	h.inChan = make(chan *communication.Answer)
 	h.sessions = backend
-	println("Hermes has been started!")
+	context.Info("Hermes has been started!")
 	return h
 
 }
@@ -54,10 +58,10 @@ func (h *Hermes) StartListening() {
 	err := errors.New("")
 	h.listener, err = net.Listen("tcp", ":8080")
 	if err != nil {
-		println("Hermes has failed to listen: " + err.Error())
+		context.Error("Hermes has failed to listen: " + err.Error())
 		return
 	}
-	println("Hermes started listening")
+	context.Info("Hermes started listening")
 	go h.handleReturn()
 	for {
 		client, err := h.listener.Accept()
@@ -75,9 +79,9 @@ func (h *Hermes) handleReturn() {
 
 	}
 }
-func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn,) {
+func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn) {
 	if conn == nil {
-		println("User connection is invalid")
+		context.Error("User connection is invalid")
 		h.sessions.DeleteSession(answer.GetKey())
 		return
 	}
@@ -103,7 +107,7 @@ func (h *Hermes) handleUser(conn net.Conn) {
 	buffer := make([]byte, MSG_SIZE)
 	received, err := reader.Read(buffer) // blocks until all the data is available
 
-	if (err != nil) {
+	if err != nil {
 		h.writeBackToUser(communication.BadRequest(), conn)
 		return
 	}
@@ -113,7 +117,7 @@ func (h *Hermes) handleUser(conn net.Conn) {
 
 	defer h.sessions.DeleteSession(request.Key)
 
-	if (err != nil) {
+	if err != nil {
 		h.writeBackToUser(communication.BadRequest(), conn)
 		return
 	}
@@ -151,10 +155,13 @@ func (h *Hermes) Validate(request *communication.Request, conn net.Conn) bool {
 	return auth
 }
 func (h *Hermes) handleAuthorizedUser(request *communication.Request) {
-	server := request.Type / 100
-	workerChan, ok := h.workers[server]
-	if ok {
-		*workerChan <- request
+	servertype, err := strconv.Atoi(request.Data["Type"])
+	if err != nil {
+		server := servertype / 100
+		workerChan, ok := h.workers[server]
+		if ok {
+			*workerChan <- request
+		}
 	} else {
 		conn := h.sessions.GetUserConnByKey(request.Key)
 		h.writeBackToUser(communication.BadRequest(), conn)
@@ -167,8 +174,12 @@ func (h *Hermes) GetEntryPoint() *chan *communication.Answer {
 	return &h.inChan
 }
 
-func (h *Hermes) RegisterWorker(worker IWorker) {
+func (h *Hermes) RegisterWorker(worker IWorker) error {
+	if _, exists := h.workers[worker.GetCode()]; exists {
+		return errors.New("Code already used")
+	}
 	h.workers[worker.GetCode()] = worker.GetInChan()
 	worker.SetOutChan(&h.inChan)
-	println("Entity: Hermes, Message: A worker has been registered")
+	context.WithField("Code", worker.GetCode()).Info("A worker has been registered")
+	return nil
 }

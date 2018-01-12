@@ -13,9 +13,12 @@ import (
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/hermes"
 	_ "github.com/lib/pq" // Postgresql Driver
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
-	_ "golang.org/x/crypto/bcrypt"
+	"time"
 )
+
+var context = log.WithFields(log.Fields{"Entity": "Login Server"})
 
 // Const values
 const (
@@ -49,14 +52,18 @@ type Answer struct {
 	Key  string
 }
 
-func (s *LoginServer) StartListening() {
+func (s *LoginServer) StartListening(address string) {
 	// Index Handler
 	http.HandleFunc("/login", s.loginHandler)
+	err := http.ListenAndServe(address, nil)
+	for err != nil {
+		context.Error("Failed to listen: " + err.Error())
+		context.Info("Trying again in 10 seconds...")
+		time.Sleep(10 * time.Second)
+		err = http.ListenAndServe(address, nil)
 
-	if err := http.ListenAndServe(":12345", nil); err != nil {
-		println(err.Error())
 	}
-	println("Login server has been started")
+	context.Info("Login Server has started listening")
 }
 func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
 	answer := communication.BadRequest()
@@ -80,11 +87,11 @@ func New(backend hermes.ISessionBackend) (*LoginServer, error) {
 	database, err := sql.Open("postgres", configuration.GetConnectionString())
 
 	if err != nil {
-		println(err.Error())
+		context.Error(err.Error())
 		return nil, err
 
 	}
-	println("Login server: Database connection established")
+	context.Info("Login server database connection established")
 
 	return &LoginServer{database, backend}, nil
 
@@ -93,19 +100,21 @@ func New(backend hermes.ISessionBackend) (*LoginServer, error) {
 //NewAttempt returns an Answer which contains the auth info from the attempt
 func (s *LoginServer) NewAttempt(attempt *LoginAttempt) *communication.Answer {
 	answer := &communication.Answer{}
-	answer.Data = make(map[string]string)
 	id, err := s.CheckCredentials(attempt)
 
 	if err != nil {
-		answer.Data["Result"] = "False"
-		answer.Data["Message"] = err.Error()
+		answer.Ok = false
+		answer.Data = err.Error()
 	} else {
 
-		key := GenUniqueKey()
-		answer.Data["Result"] = "True"
-		answer.Data["Key"] = key
-		answer.Type = NEW_LOGIN
-		s.sessions.NewSession(id, key)
+		key, err := GenerateRandomString(configuration.GetInstance().Parameters.Security.KeySize)
+		if err == nil {
+
+			answer.Ok = true
+			answer.Data = key
+			answer.Type = NEW_LOGIN
+			s.sessions.NewSession(id, key)
+		}
 	}
 
 	return answer

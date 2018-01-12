@@ -15,7 +15,7 @@
       "caveSpawn": "1"
     },
     "security": {
-      "keySize":64
+      "keySize":32
     },
     "general": {
       "worldSize": 1024,

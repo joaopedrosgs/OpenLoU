@@ -3,8 +3,11 @@ package configuration
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 )
+
+var context = log.WithFields(log.Fields{"Entity": "Configuration"})
 
 type Config struct {
 	Db struct {
@@ -54,9 +57,9 @@ func (instance *Config) Load() {
 	arquivo, err := ioutil.ReadFile("default.json")
 	err = json.Unmarshal(arquivo, &instance)
 	if err != nil {
-		println("The default configuration couldn't be loaded")
+		context.Info("The default configuration couldn't be loaded")
 	} else {
-		println("Configuration loaded")
+		context.Info("Configuration loaded")
 	}
 
 }

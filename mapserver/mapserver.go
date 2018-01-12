@@ -2,37 +2,21 @@ package mapserver
 
 import (
 	"database/sql"
-	"strconv"
-
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
+	"time"
 )
 
-const (
-	MAPSERVER            = 1
-	GET_REGION_CITIES    = 100
-	GET_USER_CITY_LIST   = 101
-	GET_REGION_CITY_INFO = 102
-	CREATE_CITY          = 103
-)
-
-type dataGetCities struct {
-	X     int
-	Y     int
-	Range int
-}
-
-type dataCreateCity struct {
-	X int
-	Y int
-}
+var context = log.WithFields(log.Fields{"Entity": "Map Server"})
 
 type mapserver struct {
-	database *sql.DB
-	in       chan *communication.Request
-	out      *chan *communication.Answer
-	code     int
+	database  *sql.DB
+	endPoints map[int]func(*communication.Request, *communication.Answer)
+	in        chan *communication.Request
+	out       *chan *communication.Answer
+	code      int
 }
 
 func (ms *mapserver) GetInChan() *chan *communication.Request {
@@ -50,14 +34,22 @@ func (ms *mapserver) GetCode() int {
 func New() (*mapserver, error) {
 
 	database, err := sql.Open("postgres", configuration.GetConnectionString())
-	if err != nil {
-		return nil, err
+	for err != nil {
+		context.Error("Failed to connect to db: " + err.Error())
+		context.Info("Trying again in 10 seconds...")
+		time.Sleep(10 * time.Second)
+		database, err = sql.Open("postgres", configuration.GetConnectionString())
+
 	}
 
-	return &mapserver{database, make(chan *communication.Request), nil, 1}, nil
+	ms := &mapserver{database, make(map[int]func(*communication.Request, *communication.Answer)), make(chan *communication.Request), nil, 1}
+	ms.registerInternalEndpoint(triesToCreateCity, 101)
+	ms.registerInternalEndpoint(getCities, 102)
+	return ms, nil
+
 }
 func (ms *mapserver) StartListening() {
-	println("Map server started listening")
+	context.Info("Map server started listening")
 
 	for {
 		request := <-ms.in
@@ -66,24 +58,16 @@ func (ms *mapserver) StartListening() {
 }
 func (ms *mapserver) ProcessRequest(request *communication.Request) {
 	answer := request.ToAnswer()
-	answer.Data = make(map[string]string)
-	switch request.Type {
-	case GET_REGION_CITIES:
-		{
-			answer.Data["Result"] = "True"
-			x, err := strconv.Atoi(request.Data["X"])
-			if err != nil {
-				break
-			}
-			y, err := strconv.Atoi(request.Data["Y"])
-			if err != nil {
-				break
-			}
-			answer.Data["Cities"] = getCitiesJson(x, y)
-
-		}
-	default:
+	endpoint, ok := ms.endPoints[request.Type]
+	if ok {
+		endpoint(request, answer)
 	}
 	*ms.out <- answer
 
+}
+
+func (ms *mapserver) registerInternalEndpoint(endpoint func(*communication.Request, *communication.Answer), code int) {
+	if _, exists := ms.endPoints[code]; !exists {
+		ms.endPoints[code] = endpoint
+	}
 }

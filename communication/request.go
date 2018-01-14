@@ -8,5 +8,5 @@ type Request struct {
 }
 
 func (r *Request) ToAnswer() *Answer {
-	return &Answer{r.Key, false, r.Type, "Bad Request", false}
+	return &Answer{-1, r.Key, false, r.Type, "Bad Request", false}
 }

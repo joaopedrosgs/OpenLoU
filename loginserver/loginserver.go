@@ -11,7 +11,7 @@ import (
 	"net/http"
 
 	"github.com/joaopedrosgs/OpenLoU/communication"
-	"github.com/joaopedrosgs/OpenLoU/hermes"
+	"github.com/joaopedrosgs/OpenLoU/session"
 	_ "github.com/lib/pq" // Postgresql Driver
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -39,7 +39,7 @@ const (
 
 type LoginServer struct {
 	Database *sql.DB
-	sessions hermes.ISessionBackend
+	sessions *session.SessionMem
 }
 
 type LoginAttempt struct {
@@ -77,13 +77,13 @@ func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Req
 		}
 	}
 
-	json, _ := json.Marshal(answer)
-	fmt.Fprintf(writer, string(json))
+	jsonAnswer, _ := json.Marshal(answer)
+	fmt.Fprintf(writer, string(jsonAnswer))
 
 }
 
 // New returns an LoginServer that deals with the authentication of the user
-func New(backend hermes.ISessionBackend) (*LoginServer, error) {
+func New(backend *session.SessionMem) (*LoginServer, error) {
 	database, err := sql.Open("postgres", configuration.GetConnectionString())
 
 	if err != nil {
@@ -109,11 +109,14 @@ func (s *LoginServer) NewAttempt(attempt *LoginAttempt) *communication.Answer {
 
 		key, err := GenerateRandomString(configuration.GetInstance().Parameters.Security.KeySize)
 		if err == nil {
-
-			answer.Ok = true
-			answer.Data = key
-			answer.Type = NEW_LOGIN
-			s.sessions.NewSession(id, key)
+			created := s.sessions.NewSession(id, key)
+			if created {
+				answer.Ok = true
+				answer.Data = key
+				answer.Type = NEW_LOGIN
+			} else {
+				answer.Data = "Failed to create session"
+			}
 		}
 	}
 

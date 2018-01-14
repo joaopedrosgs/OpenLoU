@@ -25,15 +25,9 @@ func main() {
 		context.Error(err.Error())
 	}
 
-	MapServer, err := mapserver.New()
-	if err != nil {
-		context.Error(err.Error())
-	}
+	MapServer := mapserver.New()
+	CityServer := cityserver.New()
 
-	CityServer, err := cityserver.New()
-	if err != nil {
-		context.Error(err.Error())
-	}
 	err = Hermes.RegisterWorker(CityServer)
 	if err != nil {
 		context.Error(err.Error())

@@ -26,6 +26,7 @@ type ConstructionType struct {
 	Score        []uint
 	Shared       string
 }
+
 type ConstructionsMap map[uint]ConstructionType
 
 func (registeredConstructions ConstructionsMap) LoadAllConstructions() {

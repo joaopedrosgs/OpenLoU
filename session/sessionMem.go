@@ -13,62 +13,90 @@ type Session struct {
 	conn        net.Conn
 }
 
-type sessionMem struct {
+type SessionMem struct {
 	sessions map[string]*Session
 }
 
-func (s *sessionMem) NewSession(user_id int, key string) {
+func (s *SessionMem) NewSession(user_id int, key string) bool {
 	if len(key) == configuration.GetInstance().Parameters.Security.KeySize || user_id >= 0 {
-		s.sessions[key] = &Session{user_id, time.Now(), 0, nil}
+		if !s.SessionExistsByID(user_id) {
+			s.sessions[key] = &Session{user_id, time.Now(), 0, nil}
+			return true
+		}
+	}
+	return false
+}
+
+func (s *SessionMem) SetConn(key string, conn net.Conn) {
+	session, ok := s.sessions[key]
+	if ok {
+		session.conn = conn
 	}
 }
 
-func (s *sessionMem) SetConn(key string, conn net.Conn) {
-	if s.sessions[key].conn == nil {
-		s.sessions[key].conn = conn
-	}
-}
-
-func (s *sessionMem) SessionExists(key string) bool {
-	if len(key) != configuration.GetInstance().Parameters.Security.KeySize {
-		return false
-	}
+func (s *SessionMem) SessionExists(key string) bool {
 	_, ok := s.sessions[key]
 	return ok
 }
-
-func (s *sessionMem) DeleteSession(key string) {
-	if s.SessionExists(key) {
-		delete(s.sessions, key)
-	}
-}
-
-func NewSessionInMemory() *sessionMem {
-	return &sessionMem{make(map[string]*Session)}
-}
-
-func (s *sessionMem) NewTry(key string) {
-	s.sessions[key].tries++
-}
-
-func (s *sessionMem) GetUserId(key string) int {
-	return s.sessions[key].user_id
-}
-
-func (s *sessionMem) GetUserConnByKey(key string) net.Conn {
-	return s.sessions[key].conn
-}
-
-func (s *sessionMem) GetSession(key string) *Session {
-	return s.sessions[key]
-}
-
-func (s *sessionMem) GetUserConnByID(id int) net.Conn {
-	for _, v := range s.sessions {
-		if v.user_id == id {
-			return v.conn
+func (s *SessionMem) SessionExistsByID(id int) bool {
+	for _, session := range s.sessions {
+		if session.user_id == id {
+			return true
 		}
 	}
-	return nil
+	return false
+}
+
+func (s *SessionMem) DeleteSession(key string) {
+	delete(s.sessions, key)
+
+}
+
+func (s *SessionMem) DeleteSessionByID(id int) {
+	for key, session := range s.sessions {
+		if session.user_id == id {
+			delete(s.sessions, key)
+		}
+	}
+
+}
+func NewSessionInMemory() *SessionMem {
+	return &SessionMem{make(map[string]*Session)}
+}
+
+func (s *SessionMem) NewTry(key string) {
+	if session, ok := s.sessions[key]; ok {
+		session.tries++
+	}
+}
+
+func (s *SessionMem) GetSession(key string) (*Session, bool) {
+	session, ok := s.sessions[key]
+	return session, ok
+}
+func (s *SessionMem) GetSessionById(id int) (*Session, bool) {
+	for _, session := range s.sessions {
+		if session.user_id == id {
+			return session, true
+		}
+	}
+	return nil, false
+}
+
+func (s *SessionMem) GetUserConn(key string) (net.Conn, bool) {
+	session, ok := s.sessions[key]
+	if ok {
+		return session.conn, ok
+	}
+	return nil, ok
+
+}
+func (s *SessionMem) GetUserConnById(id int) (net.Conn, bool) {
+	for _, session := range s.sessions {
+		if session.user_id == id {
+			return session.conn, true
+		}
+	}
+	return nil, false
 
 }

@@ -9,6 +9,7 @@ install:
   - go get golang.org/x/sys/windows
   - go get github.com/lib/pq
   - go get golang.org/x/crypto/bcrypt
+  - go get github.com/sirupsen/logrus
 services:
   - postgresql
 script:

@@ -1,25 +1,20 @@
 package entities
 
 import (
-	"errors"
 	"time"
 )
 
 type City struct {
-	ID          int
-	OwnerID     uint
-	CityName    string
-	Points      uint
-	IsCastle    bool
-	IsPalace    bool
-	PosX        uint
-	PosY        uint
-	data        cityData
-	lastUpdated time.Time
-}
-
-func (c *City) GetData() *cityData {
-	return &c.data
+	UserName    string
+	Name        string
+	ContinentID int
+	Type        int
+	Points      int
+	X           int
+	Y           int
+	production  [5]int
+	stored      [4]int
+	limit       [4]int
 }
 
 type Due struct {
@@ -34,9 +29,9 @@ type Queue struct {
 }
 
 type Transport struct {
-	ID        uint
-	FromID    uint
-	ToID      uint
+	ID        int
+	FromID    int
+	ToID      int
 	Water     bool
 	Resources [5]uint
 	Depart    time.Time
@@ -48,94 +43,25 @@ type cityData struct {
 	Comentary     string
 	Queue         Queue
 	Production    [4]int
-	TotalRes      [4]uint
-	ActualRes     [4]uint
+	TotalRes      [4]int
+	ActualRes     [4]int
 	Transports    []*Transport
 	Troops        []struct {
 		AtBase []struct {
-			Type     uint8
-			Quantity uint
+			Type     int
+			Quantity int
 		}
 		Moving []struct {
-			Type     uint8
-			Quantity uint
+			Type     int
+			Quantity int
 		}
 	}
 	Carts struct {
-		AtBase uint
-		Moving uint
+		AtBase int
+		Moving int
 	}
 	Ships struct {
-		AtBase uint
-		Moving uint
+		AtBase int
+		Moving int
 	}
-}
-
-func (city *City) InRange(posX uint, posY uint, rang uint) bool {
-	if city.PosX >= posX-rang &&
-		city.PosX <= posX+rang &&
-		city.PosY <= posY+rang &&
-		city.PosY >= posY-rang {
-		return true
-	}
-	return false
-}
-
-func (c *City) BuildEnqueue(_due Due) bool {
-	if len(c.GetData().Queue.Constructions) > 10 {
-		return false
-	} else if len(c.GetData().Queue.Constructions) == 0 {
-		_due.Start = time.Now()
-	}
-	c.data.Queue.Constructions = append(c.data.Queue.Constructions, _due)
-	return true
-}
-
-func (c *City) TroopEnqueue(_due Due) error {
-
-	for res := 0; res < 4; res++ {
-		if RegisteredTroops[uint(_due.Type)].Cost[res]*uint(_due.Value) > c.data.ActualRes[res] {
-			return errors.New("Insufficient resources!")
-		}
-	}
-
-	if len(c.GetData().Queue.Military) > 5 {
-		return errors.New("Limite de atividades militares excedido")
-	} else if len(c.GetData().Queue.Military) == 0 {
-		_due.Start = time.Now()
-	}
-	c.data.Queue.Military = append(c.data.Queue.Military, _due)
-	return nil
-}
-
-func (c *City) TransportEnqueue(_transport Transport) ([]*Transport, error) {
-
-	var total uint
-	for _, v := range _transport.Resources {
-		total += v
-	}
-
-	if _transport.Water {
-		shipsNeeded := total % 10000
-		if c.data.Ships.AtBase > shipsNeeded {
-			c.data.Ships.AtBase -= shipsNeeded
-			c.data.Ships.Moving += shipsNeeded
-		} else {
-			return nil, errors.New("Sem navios suficientes")
-		}
-	} else {
-		cartsNeeded := total % 1000
-		if c.data.Carts.AtBase > cartsNeeded {
-			c.data.Carts.AtBase -= cartsNeeded
-			c.data.Carts.Moving += cartsNeeded
-		} else {
-			return nil, errors.New("Sem carroças suficientes")
-		}
-
-	}
-
-	c.data.Transports = append(c.data.Transports, &_transport)
-
-	return c.data.Transports, nil
-
 }

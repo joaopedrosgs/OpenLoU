@@ -11,40 +11,24 @@ import (
 	"net"
 
 	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/session"
 	log "github.com/sirupsen/logrus"
-	"strconv"
 )
 
 var context = log.WithFields(log.Fields{"Entity": "Hermes"})
 
 const (
 	MSG_SIZE = 1024
-	HERMES   = 0
-	// Map Server requests always start with 1
-	MAPSERVER            = 1
-	GET_REGION_CITIES    = 100
-	GET_USER_CITY_LIST   = 101
-	GET_REGION_CITY_INFO = 102
-
-	// City Server requests always start with 2
-	CITYSERVER             = 2
-	GET_CITY_CONSTRUCTIONS = 200
-	GET_CITY_INFO          = 201
-	UPGRADE_CONSTRUCTION   = 202
-	DEGRADE_CONSTRUCTION   = 203
-
-	// Email Server requests always start with 3
-	LOGINSERVER = 3
 )
 
 type Hermes struct {
 	listener net.Listener
 	inChan   chan *communication.Answer
-	sessions ISessionBackend
+	sessions *session.SessionMem
 	workers  map[int]*chan *communication.Request
 }
 
-func Create(backend ISessionBackend) Hermes {
+func Create(backend *session.SessionMem) Hermes {
 	h := Hermes{}
 	h.workers = make(map[int]*chan *communication.Request)
 	h.inChan = make(chan *communication.Answer)
@@ -74,26 +58,32 @@ func (h *Hermes) StartListening() {
 func (h *Hermes) handleReturn() {
 	for {
 		answer := <-h.inChan
-		conn := h.sessions.GetUserConnByKey(answer.GetKey())
-		go h.writeBackToUser(answer, conn)
+		var conn net.Conn
+		var ok bool
+		if answer.IsSystem() {
+			conn, ok = h.sessions.GetUserConnById(answer.GetId())
+		} else {
+			conn, ok = h.sessions.GetUserConn(answer.GetKey())
+		}
+		if ok {
+			go h.writeBackToUser(answer, conn)
+		}
 
 	}
 }
 func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn) {
-	if conn == nil {
-		context.Error("User connection is invalid")
-		h.sessions.DeleteSession(answer.GetKey())
-		return
-	}
-	n := 0
-	err := errors.New("")
 
 	buffer, _ := json.Marshal(answer)
 	writer := bufio.NewWriter(conn)
-	n, err = writer.Write(buffer)
+	n, err := writer.Write(buffer)
 
 	if err != nil || n == 0 {
-		h.sessions.DeleteSession(answer.GetKey())
+		if answer.IsSystem() {
+			h.sessions.DeleteSessionByID(answer.GetId())
+		} else {
+			h.sessions.DeleteSession(answer.GetKey())
+
+		}
 		return
 	}
 	writer.Flush()
@@ -128,18 +118,21 @@ func (h *Hermes) handleUser(conn net.Conn) {
 
 	for err == nil && received > 0 && received < MSG_SIZE {
 
-		err := json.Unmarshal(buffer[:received], request)
-
-		if err != nil { // failed do unmarshal
-			h.writeBackToUser(communication.BadRequest(), conn)
-		}
-
 		if h.sessions.SessionExists(request.Key) {
 			h.handleAuthorizedUser(request)
 		} else {
 			h.writeBackToUser(communication.Unauthorized(), conn)
+			break
 		}
 		received, err = reader.Read(buffer) // blocks until all the data is available
+		err := json.Unmarshal(buffer[:received], request)
+
+		if err != nil { // failed do unmarshal
+			answer := request.ToAnswer()
+			answer.Data = err.Error()
+			h.writeBackToUser(answer, conn)
+			break
+		}
 
 	}
 }
@@ -155,17 +148,17 @@ func (h *Hermes) Validate(request *communication.Request, conn net.Conn) bool {
 	return auth
 }
 func (h *Hermes) handleAuthorizedUser(request *communication.Request) {
-	servertype, err := strconv.Atoi(request.Data["Type"])
-	if err != nil {
-		server := servertype / 100
-		workerChan, ok := h.workers[server]
-		if ok {
-			*workerChan <- request
-		}
+
+	server := request.Type / 100
+	workerChan, ok := h.workers[server]
+	if ok {
+		*workerChan <- request
 	} else {
-		conn := h.sessions.GetUserConnByKey(request.Key)
-		h.writeBackToUser(communication.BadRequest(), conn)
-		h.sessions.NewTry(request.Key)
+		conn, ok := h.sessions.GetUserConn(request.Key)
+		if ok {
+			h.writeBackToUser(communication.BadRequest(), conn)
+			h.sessions.NewTry(request.Key)
+		}
 	}
 
 }
@@ -176,10 +169,10 @@ func (h *Hermes) GetEntryPoint() *chan *communication.Answer {
 
 func (h *Hermes) RegisterWorker(worker IWorker) error {
 	if _, exists := h.workers[worker.GetCode()]; exists {
-		return errors.New("Code already used")
+		return errors.New("Code used by " + worker.GetName())
 	}
 	h.workers[worker.GetCode()] = worker.GetInChan()
 	worker.SetOutChan(&h.inChan)
-	context.WithField("Code", worker.GetCode()).Info("A worker has been registered")
+	context.WithFields(log.Fields{"Name": worker.GetName(), "Code": worker.GetCode()}).Info("A worker has been registered")
 	return nil
 }

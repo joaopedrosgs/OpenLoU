@@ -26,7 +26,8 @@ type Config struct {
 			CaveSpawn    string `json:"caveSpawn"`
 		} `json:"speed"`
 		Security struct {
-			KeySize int `json:"keySize"`
+			KeySize       int `json:"keySize"`
+			KeyStringSize int `json:"keyStringSize"`
 		} `json:"security"`
 		General struct {
 			WorldSize       int    `json:"worldSize"`

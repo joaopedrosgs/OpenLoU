@@ -3,23 +3,27 @@ package session
 import (
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"net"
+	"sync"
 	"time"
 )
 
 type Session struct {
-	user_id     int
+	user_id     uint
 	last_action time.Time
 	tries       int
 	conn        net.Conn
 }
 
 type SessionMem struct {
+	mutex    sync.RWMutex
 	sessions map[string]*Session
 }
 
-func (s *SessionMem) NewSession(user_id int, key string) bool {
-	if len(key) == configuration.GetInstance().Parameters.Security.KeySize || user_id >= 0 {
-		if !s.SessionExistsByID(user_id) {
+func (s *SessionMem) NewSession(user_id uint, key string) bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if len(key) == configuration.GetSingleton().Parameters.Security.KeySize || user_id >= 0 {
+		if !s.sessionsExistsByID(user_id) {
 			s.sessions[key] = &Session{user_id, time.Now(), 0, nil}
 			return true
 		}
@@ -28,17 +32,21 @@ func (s *SessionMem) NewSession(user_id int, key string) bool {
 }
 
 func (s *SessionMem) SetConn(key string, conn net.Conn) {
+	s.mutex.Lock()
 	session, ok := s.sessions[key]
 	if ok {
 		session.conn = conn
 	}
+	s.mutex.Unlock()
 }
 
 func (s *SessionMem) SessionExists(key string) bool {
+	s.mutex.RLock()
 	_, ok := s.sessions[key]
+	s.mutex.RUnlock()
 	return ok
 }
-func (s *SessionMem) SessionExistsByID(id int) bool {
+func (s *SessionMem) sessionsExistsByID(id uint) bool {
 	for _, session := range s.sessions {
 		if session.user_id == id {
 			return true
@@ -48,42 +56,37 @@ func (s *SessionMem) SessionExistsByID(id int) bool {
 }
 
 func (s *SessionMem) DeleteSession(key string) {
+	s.mutex.Lock()
 	delete(s.sessions, key)
+	s.mutex.Unlock()
 
 }
 
-func (s *SessionMem) DeleteSessionByID(id int) {
+func (s *SessionMem) DeleteSessionByID(id uint) {
+	s.mutex.Lock()
 	for key, session := range s.sessions {
 		if session.user_id == id {
 			delete(s.sessions, key)
 		}
 	}
+	s.mutex.Unlock()
 
 }
 func NewSessionInMemory() *SessionMem {
-	return &SessionMem{make(map[string]*Session)}
+	return &SessionMem{sync.RWMutex{}, make(map[string]*Session)}
 }
 
 func (s *SessionMem) NewTry(key string) {
+	s.mutex.RLock()
 	if session, ok := s.sessions[key]; ok {
 		session.tries++
 	}
-}
-
-func (s *SessionMem) GetSession(key string) (*Session, bool) {
-	session, ok := s.sessions[key]
-	return session, ok
-}
-func (s *SessionMem) GetSessionById(id int) (*Session, bool) {
-	for _, session := range s.sessions {
-		if session.user_id == id {
-			return session, true
-		}
-	}
-	return nil, false
+	s.mutex.RUnlock()
 }
 
 func (s *SessionMem) GetUserConn(key string) (net.Conn, bool) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	session, ok := s.sessions[key]
 	if ok {
 		return session.conn, ok
@@ -91,7 +94,9 @@ func (s *SessionMem) GetUserConn(key string) (net.Conn, bool) {
 	return nil, ok
 
 }
-func (s *SessionMem) GetUserConnById(id int) (net.Conn, bool) {
+func (s *SessionMem) GetUserConnById(id uint) (net.Conn, bool) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
 	for _, session := range s.sessions {
 		if session.user_id == id {
 			return session.conn, true

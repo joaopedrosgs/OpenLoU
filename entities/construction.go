@@ -1,21 +1,26 @@
 package entities
 
-import "time"
+import (
+	"github.com/jinzhu/gorm"
+	"time"
+)
 
 type Construction struct {
-	ID          int
-	CityID      int
+	gorm.Model
+	CityID      int `gorm:"index"`
 	Level       int
-	X           int
-	Y           int
+	X           int `gorm:"index:idx_x_y"`
+	Y           int `gorm:"index:idx_x_y"`
 	Type        int
 	Production  int
 	Modifier    int
-	needRefresh bool
+	NeedRefresh bool
 }
 
 type Upgrade struct {
-	ConstructionID int
+	gorm.Model
+	ConstructionID int `gorm:"index"`
 	ToLevel        int
-	Completion     time.Time
+	Duration       time.Duration
+	Start          time.Time
 }

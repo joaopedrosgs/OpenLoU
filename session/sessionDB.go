@@ -33,7 +33,7 @@ func (s *sessionDB) NewSession(user_id int, key string) {
 
 func (s *sessionDB) SessionExists(key string) bool {
 	result := false
-	if len(key) == configuration.GetInstance().Parameters.Security.KeySize {
+	if len(key) == configuration.GetSingleton().Parameters.Security.KeySize {
 		err := s.db.QueryRow(sessionExistsQuery, key).Scan(&result)
 		if err != nil {
 			println(err.Error())

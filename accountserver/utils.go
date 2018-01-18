@@ -1,4 +1,4 @@
-package loginserver
+package accountserver
 
 import (
 	"crypto/rand"

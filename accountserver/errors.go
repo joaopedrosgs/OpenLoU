@@ -1,4 +1,4 @@
-package loginserver
+package accountserver
 
 const (
 	emptyFields       = "Empty fields"

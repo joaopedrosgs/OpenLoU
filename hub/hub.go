@@ -1,7 +1,7 @@
 // Hermes, the messenger
 // Receives packages and passes them to the respective server (processor), receive the answer and pass them to user)
 
-package hermes
+package hub
 
 import (
 	"bufio"
@@ -15,37 +15,37 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var context = log.WithFields(log.Fields{"Entity": "Hermes"})
+var context = log.WithFields(log.Fields{"Entity": "Hub"})
 
 const (
 	MSG_SIZE = 1024
 )
 
-type Hermes struct {
+type Hub struct {
 	listener net.Listener
 	inChan   chan *communication.Answer
 	sessions *session.SessionMem
 	workers  map[int]*chan *communication.Request
 }
 
-func Create(backend *session.SessionMem) Hermes {
-	h := Hermes{}
+func Create(backend *session.SessionMem) Hub {
+	h := Hub{}
 	h.workers = make(map[int]*chan *communication.Request)
 	h.inChan = make(chan *communication.Answer)
 	h.sessions = backend
-	context.Info("Hermes has been started!")
+	context.Info("Hub has been started!")
 	return h
 
 }
 
-func (h *Hermes) StartListening() {
+func (h *Hub) StartListening() {
 	err := errors.New("")
 	h.listener, err = net.Listen("tcp", ":8080")
 	if err != nil {
-		context.Error("Hermes has failed to listen: " + err.Error())
+		context.Error("Hub has failed to listen: " + err.Error())
 		return
 	}
-	context.Info("Hermes started listening")
+	context.Info("Hub started listening")
 	go h.handleReturn()
 	for {
 		client, err := h.listener.Accept()
@@ -55,11 +55,11 @@ func (h *Hermes) StartListening() {
 	}
 }
 
-func (h *Hermes) handleReturn() {
+func (h *Hub) handleReturn() {
+	var conn net.Conn
+	var ok bool
 	for {
 		answer := <-h.inChan
-		var conn net.Conn
-		var ok bool
 		if answer.IsSystem() {
 			conn, ok = h.sessions.GetUserConnById(answer.GetId())
 		} else {
@@ -71,7 +71,7 @@ func (h *Hermes) handleReturn() {
 
 	}
 }
-func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn) {
+func (h *Hub) writeBackToUser(answer *communication.Answer, conn net.Conn) {
 
 	buffer, _ := json.Marshal(answer)
 	writer := bufio.NewWriter(conn)
@@ -89,7 +89,7 @@ func (h *Hermes) writeBackToUser(answer *communication.Answer, conn net.Conn) {
 	writer.Flush()
 
 }
-func (h *Hermes) handleUser(conn net.Conn) {
+func (h *Hub) handleUser(conn net.Conn) {
 
 	defer conn.Close()
 
@@ -124,7 +124,14 @@ func (h *Hermes) handleUser(conn net.Conn) {
 			h.writeBackToUser(communication.Unauthorized(), conn)
 			break
 		}
+
 		received, err = reader.Read(buffer) // blocks until all the data is available
+		if err != nil {
+			answer := request.ToAnswer()
+			answer.Data = err.Error()
+			h.writeBackToUser(answer, conn)
+			break
+		}
 		err := json.Unmarshal(buffer[:received], request)
 
 		if err != nil { // failed do unmarshal
@@ -137,7 +144,7 @@ func (h *Hermes) handleUser(conn net.Conn) {
 	}
 }
 
-func (h *Hermes) Validate(request *communication.Request, conn net.Conn) bool {
+func (h *Hub) Validate(request *communication.Request, conn net.Conn) bool {
 	auth := false
 
 	auth = h.sessions.SessionExists(request.Key)
@@ -147,7 +154,7 @@ func (h *Hermes) Validate(request *communication.Request, conn net.Conn) bool {
 
 	return auth
 }
-func (h *Hermes) handleAuthorizedUser(request *communication.Request) {
+func (h *Hub) handleAuthorizedUser(request *communication.Request) {
 
 	server := request.Type / 100
 	workerChan, ok := h.workers[server]
@@ -163,11 +170,11 @@ func (h *Hermes) handleAuthorizedUser(request *communication.Request) {
 
 }
 
-func (h *Hermes) GetEntryPoint() *chan *communication.Answer {
+func (h *Hub) GetEntryPoint() *chan *communication.Answer {
 	return &h.inChan
 }
 
-func (h *Hermes) RegisterWorker(worker IWorker) error {
+func (h *Hub) RegisterWorker(worker IWorker) error {
 	if _, exists := h.workers[worker.GetCode()]; exists {
 		return errors.New("Code used by " + worker.GetName())
 	}

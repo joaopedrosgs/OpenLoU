@@ -33,7 +33,7 @@ type Config struct {
 			WorldSize       int    `json:"worldSize"`
 			OnlyCastle      string `json:"onlyCastle"`
 			NoMoral         string `json:"noMoral"`
-			ContinentSize   string `json:"continentSize"`
+			ContinentSize   int    `json:"continentSize"`
 			NightProtection struct {
 				Activate   string `json:"activate"`
 				Start      string `json:"start"`
@@ -66,13 +66,13 @@ func (instance *Config) Load() {
 }
 
 func GetConnectionString() string {
-	GetInstance()
+	GetSingleton()
 	connectionString := "user=%s password=%s host=%s port=%d dbname=%s sslmode=%s"
 	connectionString = fmt.Sprintf(connectionString, configuration.Db.User, configuration.Db.Password, configuration.Db.Host, configuration.Db.Port, configuration.Db.Name, configuration.Db.SSL)
 	return connectionString
 }
 
-func GetInstance() *Config {
+func GetSingleton() *Config {
 	if configuration == nil {
 		configuration = &Config{}
 		configuration.Load()

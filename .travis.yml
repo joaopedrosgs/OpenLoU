@@ -10,6 +10,7 @@ install:
   - go get github.com/lib/pq
   - go get golang.org/x/crypto/bcrypt
   - go get github.com/sirupsen/logrus
+  - go get github.com/jinzhu/gorm
 services:
   - postgresql
 script:

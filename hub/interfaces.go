@@ -1,4 +1,4 @@
-package hermes
+package hub
 
 import (
 	"github.com/joaopedrosgs/OpenLoU/communication"

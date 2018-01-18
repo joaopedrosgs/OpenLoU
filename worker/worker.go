@@ -3,12 +3,11 @@ package worker
 import (
 	"database/sql"
 	"github.com/joaopedrosgs/OpenLoU/communication"
-	"github.com/joaopedrosgs/OpenLoU/configuration"
+
 	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"reflect"
 	"runtime"
-	"time"
 )
 
 type Worker struct {
@@ -17,30 +16,20 @@ type Worker struct {
 	in         chan *communication.Request
 	out        *chan *communication.Answer
 	name       string
-	logContext *log.Entry
+	LogContext *log.Entry
 	code       int
 }
 
 func (w *Worker) Setup(name string, code int) {
 	w.code = code
 	w.name = name
-	w.logContext = log.WithFields(log.Fields{"Entity": w.name})
-	database, err := sql.Open("postgres", configuration.GetConnectionString())
-	w.database = database
+	w.LogContext = log.WithFields(log.Fields{"Entity": w.name})
 	w.in = make(chan *communication.Request)
 	w.endPoints = make(map[int]func(map[string]string, *communication.Answer))
 
-	for err != nil {
-		w.logContext.Error("Failed to connect to db: " + err.Error())
-		w.logContext.Info("Trying again in 10 seconds...")
-		time.Sleep(10 * time.Second)
-		database, err = sql.Open("postgres", configuration.GetConnectionString())
-
-	}
-
 }
 func (w *Worker) StartListening() {
-	w.logContext.Info(w.name + " started listening")
+	w.LogContext.Info(w.name + " started listening")
 
 	for {
 		request := <-w.in

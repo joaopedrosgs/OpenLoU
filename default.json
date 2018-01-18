@@ -22,7 +22,7 @@
       "worldSize": 1024,
       "onlyCastle": "false",
       "noMoral": "false",
-      "continentSize": "200",
+      "continentSize": 200,
       "nightProtection": {
         "activate": "true",
         "start": "20",

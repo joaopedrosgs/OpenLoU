@@ -1,7 +1,7 @@
 package communication
 
 type Answer struct {
-	userID   int
+	userID   uint
 	key      string
 	Ok       bool
 	Type     int
@@ -9,21 +9,21 @@ type Answer struct {
 	isSystem bool
 }
 
-func (answer *Answer) GetId() int {
+func (answer *Answer) GetId() uint {
 	return answer.userID
 }
 func (answer *Answer) GetKey() string {
 	return answer.key
 }
-func (answer *Answer) SetUserID(id int) {
+func (answer *Answer) SetUserID(id uint) {
 	answer.userID = id
 }
 func (answer *Answer) SerBySystem() {
 	answer.isSystem = true
 }
 
-var badRequest = Answer{-1, "", false, -1, "Bad request", false}
-var unauthorizedRequest = Answer{-1, "", false, -1, "Unauthorized request", false}
+var badRequest = Answer{0, "", false, -1, "Bad request", false}
+var unauthorizedRequest = Answer{0, "", false, -1, "Unauthorized request", false}
 
 func BadRequest() *Answer {
 	return &badRequest

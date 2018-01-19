@@ -59,7 +59,6 @@ func GetCitiesInRange(x, y, radius, continent int) *[]entities.City {
 func CreateCity(userID uint) {
 	continent := entities.Continent{IsActive: true, Size: configuration.GetSingleton().Parameters.General.ContinentSize, CitiesLimit: 250, X: 0, Y: 0}
 	db.Where("Is_Active = ? AND Cities_Limit <= ?", true, 250).FirstOrCreate(&continent)
-
 	city := entities.City{}
 	city.ContinentID = continent.ID
 	city.UserID = userID

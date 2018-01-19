@@ -7,7 +7,6 @@ type Continent struct {
 	IsActive    bool
 	Size        int
 	CitiesLimit int
-	X           int
-	Y           int
-	Tiles       []TileNode `gorm:"ForeignKey:ContinentID; "`
+	X           int `gorm:"index:continent_idx_x_y"`
+	Y           int `gorm:"index:continent_idx_x_y"`
 }

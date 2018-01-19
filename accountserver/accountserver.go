@@ -11,30 +11,17 @@ import (
 
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/database"
-	"github.com/joaopedrosgs/OpenLoU/entities"
 	"github.com/joaopedrosgs/OpenLoU/session"
-	_ "github.com/lib/pq" // Postgresql Driver
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/joaopedrosgs/OpenLoU/entities"
 	"time"
 )
 
 // Const values
 const (
-
-	//ANSWER RETURN VALUES
-
-	NEW_LOGIN = 301
-
-	///////////////////////////
-	DBUsers = "users"
-
-	//Queries
-	newUserQuery           = "INSERT INTO " + DBUsers + "(name, password_hash, email) VALUES ($1, $2, $3)  RETURNING id"
-	loginQuery             = "SELECT password_hash, id FROM " + DBUsers + " WHERE email =  $1 LIMIT 1 "
-	userExistsQuery        = "SELECT 1 FROM " + DBUsers + " WHERE email=$1 LIMIT 1"
-	deleteUserByLoginQuery = "DELETE from " + DBUsers + " WHERE email=$1"
+	newLogin = 301
 )
 
 type LoginServer struct {
@@ -101,14 +88,13 @@ func (s *LoginServer) NewAttempt(attempt *LoginAttempt) *communication.Answer {
 		answer.Ok = false
 		answer.Data = err.Error()
 	} else {
-
 		key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
 		if err == nil {
 			created := s.sessions.NewSession(id, key)
 			if created {
 				answer.Ok = true
 				answer.Data = key
-				answer.Type = NEW_LOGIN
+				answer.Type = newLogin
 			} else {
 				answer.Data = "Failed to create session"
 			}
@@ -124,15 +110,14 @@ func (s *LoginServer) CheckCredentials(attempt *LoginAttempt) (uint, error) {
 		return 0, errors.New(emptyFields)
 	}
 
-	user := entities.User{}
-	database.GetSingleton().Where("email = ?", attempt.Email).First(&user)
-	database.GetSingleton().Preload("Cities").Find(&user)
-
-	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(attempt.Password))
-	if err != nil {
-		return 0, errors.New(wrongPass)
+	user, err := database.GetUser(attempt.Email)
+	if err == nil {
+		err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(attempt.Password))
+		if err == nil {
+			return user.ID, nil
+		}
 	}
-	return user.ID, nil
+	return 0, err
 }
 func (s *LoginServer) CreateAccount(login string, email string, password string) *communication.Answer {
 	answer := &communication.Answer{}
@@ -141,21 +126,22 @@ func (s *LoginServer) CreateAccount(login string, email string, password string)
 		answer.Data = "Too small"
 		return answer
 	}
-	password_hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-	if err != nil {
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err == nil {
+		user, err := database.CreateUser(login, string(passwordHash), email)
+		if err == nil {
+			answer.Data = "Success"
+			answer.Ok = true
+			go s.initUserAccount(user)
 
-		user := entities.User{Name: login, Email: email, PasswordHash: string(password_hash)}
-		database.GetSingleton().NewRecord(user)
-		database.GetSingleton().Create(&user)
-
-		//go s.initUserAccount(&user)
-		answer.Data = "Success"
-		answer.Ok = true
+		} else {
+			answer.Data = "Failed to create account"
+		}
 	}
 
 	return answer
 
 }
-func (server *LoginServer) initUserAccount(i int) {
-
+func (s *LoginServer) initUserAccount(user *entities.User) {
+	database.CreateCity(user.ID)
 }

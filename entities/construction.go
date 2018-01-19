@@ -6,11 +6,14 @@ import (
 )
 
 type Construction struct {
-	gorm.Model
-	CityID      int `gorm:"index"`
+	ID          uint `gorm:"primary_key"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time
+	CityID      uint `gorm:"index"`
 	Level       int
-	X           int `gorm:"index:idx_x_y"`
-	Y           int `gorm:"index:idx_x_y"`
+	X           uint `gorm:"index:idx_x_y"`
+	Y           uint `gorm:"index:idx_x_y"`
 	Type        int
 	Production  int
 	Modifier    int

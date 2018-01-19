@@ -1,12 +1,12 @@
 package accountserver
 
 const (
-	emptyFields       = "Empty fields"
-	shortPassword     = "Password is too short"
-	wrongPass         = "Wrong password"
-	dbError           = "Failed to access database"
-	accountInexistent = "Account not found"
-	InternalError     = "Internal Error"
-	accountExists     = "An account already exists with that information"
-	userWrongIP       = "User wrong IP"
+	emptyFields       = "empty fields"
+	shortPassword     = "password is too short"
+	wrongPass         = "wrong password"
+	dbError           = "failed to access database"
+	accountInexistent = "account not found"
+	InternalError     = "internal Error"
+	accountExists     = "an account already exists with that information"
+	userWrongIP       = "user wrong IP"
 )

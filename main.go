@@ -8,10 +8,8 @@ import (
 	"github.com/joaopedrosgs/OpenLoU/mapserver"
 	"github.com/joaopedrosgs/OpenLoU/session"
 
-	"github.com/joaopedrosgs/OpenLoU/test"
 	log "github.com/sirupsen/logrus"
 	"os"
-	"time"
 
 	"github.com/joaopedrosgs/OpenLoU/database"
 )
@@ -49,13 +47,7 @@ func main() {
 
 	go MapServer.StartListening()
 	go LoginServer.StartListening(":8000")
-	go func() {
-		time.Sleep(4 * time.Second)
-		for i := 0; i < 10; i++ {
-			go test.RunTest()
-		}
 
-	}()
-	Hermes.StartListening()
+	Hermes.StartListening(":8080")
 
 }

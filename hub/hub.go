@@ -38,9 +38,9 @@ func Create(backend *session.SessionMem) Hub {
 
 }
 
-func (h *Hub) StartListening() {
+func (h *Hub) StartListening(port string) {
 	err := errors.New("")
-	h.listener, err = net.Listen("tcp", ":8080")
+	h.listener, err = net.Listen("tcp", port)
 	if err != nil {
 		context.Error("Hub has failed to listen: " + err.Error())
 		return

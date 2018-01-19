@@ -2,9 +2,8 @@ package entities
 
 import "github.com/jinzhu/gorm"
 
-type Dungeon struct {
+type WorldResource struct {
 	gorm.Model
 	TileNode
-	Level    int
-	Progress int
+	ResourceType uint
 }

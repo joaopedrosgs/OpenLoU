@@ -10,7 +10,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"time"
 )
 
 func RunTest() {
@@ -50,7 +49,7 @@ func RunTest() {
 	writer := bufio.NewWriter(conn)
 	reader := bufio.NewReader(conn)
 	bytes, _ := json.Marshal(request)
-	inicio := time.Now()
+
 	for i := 0; i < 10; i++ {
 		_, err := writer.Write(bytes)
 		if err != nil {
@@ -63,7 +62,7 @@ func RunTest() {
 		}
 
 	}
-	println(time.Now().Sub(inicio).String())
+
 	conn.Close()
 
 }

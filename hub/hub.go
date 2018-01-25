@@ -18,21 +18,19 @@ import (
 var context = log.WithFields(log.Fields{"Entity": "Hub"})
 
 const (
-	MSG_SIZE = 1024
+	MSGSIZE = 256
 )
 
 type Hub struct {
 	listener net.Listener
 	inChan   chan *communication.Answer
-	sessions *session.SessionMem
 	workers  map[int]*chan *communication.Request
 }
 
-func Create(backend *session.SessionMem) Hub {
+func Create() Hub {
 	h := Hub{}
 	h.workers = make(map[int]*chan *communication.Request)
 	h.inChan = make(chan *communication.Answer)
-	h.sessions = backend
 	context.Info("Hub has been started!")
 	return h
 
@@ -61,9 +59,9 @@ func (h *Hub) handleReturn() {
 	for {
 		answer := <-h.inChan
 		if answer.IsSystem() {
-			conn, ok = h.sessions.GetUserConnById(answer.GetId())
+			conn, ok = session.GetUserConnById(answer.GetId())
 		} else {
-			conn, ok = h.sessions.GetUserConn(answer.GetKey())
+			conn, ok = session.GetUserConn(answer.GetKey())
 		}
 		if ok {
 			go h.writeBackToUser(answer, conn)
@@ -79,9 +77,9 @@ func (h *Hub) writeBackToUser(answer *communication.Answer, conn net.Conn) {
 
 	if err != nil || n == 0 {
 		if answer.IsSystem() {
-			h.sessions.DeleteSessionByID(answer.GetId())
+			session.DeleteSessionByID(answer.GetId())
 		} else {
-			h.sessions.DeleteSession(answer.GetKey())
+			session.DeleteSession(answer.GetKey())
 
 		}
 		return
@@ -94,7 +92,7 @@ func (h *Hub) handleUser(conn net.Conn) {
 	defer conn.Close()
 
 	reader := bufio.NewReader(conn)
-	buffer := make([]byte, MSG_SIZE)
+	buffer := make([]byte, MSGSIZE)
 	received, err := reader.Read(buffer) // blocks until all the data is available
 
 	if err != nil {
@@ -105,20 +103,16 @@ func (h *Hub) handleUser(conn net.Conn) {
 	request := &communication.Request{}
 	err = json.Unmarshal(buffer[:received], request)
 
-	defer h.sessions.DeleteSession(request.Key)
+	defer session.DeleteSession(request.Key)
 
-	if err != nil {
+	if err != nil || !h.Validate(request, conn) {
 		h.writeBackToUser(communication.BadRequest(), conn)
 		return
 	}
 
-	if !h.Validate(request, conn) {
-		h.writeBackToUser(communication.Unauthorized(), conn)
-	}
+	for err == nil && received > 0 && received < MSGSIZE {
 
-	for err == nil && received > 0 && received < MSG_SIZE {
-
-		if h.sessions.SessionExists(request.Key) {
+		if session.Exists(request.Key) {
 			h.handleAuthorizedUser(request)
 		} else {
 			h.writeBackToUser(communication.Unauthorized(), conn)
@@ -147,9 +141,9 @@ func (h *Hub) handleUser(conn net.Conn) {
 func (h *Hub) Validate(request *communication.Request, conn net.Conn) bool {
 	auth := false
 
-	auth = h.sessions.SessionExists(request.Key)
+	auth = session.Exists(request.Key)
 	if auth {
-		h.sessions.SetConn(request.Key, conn)
+		session.SetConn(request.Key, conn)
 	}
 
 	return auth
@@ -158,13 +152,14 @@ func (h *Hub) handleAuthorizedUser(request *communication.Request) {
 
 	server := request.Type / 100
 	workerChan, ok := h.workers[server]
+	request.Type = request.Type % 100
 	if ok {
 		*workerChan <- request
 	} else {
-		conn, ok := h.sessions.GetUserConn(request.Key)
+		conn, ok := session.GetUserConn(request.Key)
 		if ok {
 			h.writeBackToUser(communication.BadRequest(), conn)
-			h.sessions.NewTry(request.Key)
+			session.NewTry(request.Key)
 		}
 	}
 

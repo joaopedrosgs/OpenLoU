@@ -1,34 +1,30 @@
 package entities
 
 import (
-	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"time"
 )
 
 type City struct {
-	ID uint `gorm:"primary_key"`
+	ID uint
 	TileNode
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	DeletedAt       *time.Time
-	UserID          uint `gorm:"index"`
+	createdAt       time.Time
+	updatedAt       time.Time
+	userID          uint
 	Name            string
 	Points          int
-	Constructions   []Construction `gorm:"ForeignKey:CityID"`
-	Upgrades        []Upgrade      `gorm:"ForeignKey:CityID"`
-	WoodProduction  int
-	StoneProduction int
-	IronProduction  int
-	FoodProduction  int
-	GoldProduction  int
-	WoodStored      int
-	StoneStored     int
-	FoodStored      int
-	IronStored      int
-	WoodLimit       int
-	StoneLimit      int
-	IronLimit       int
-	FoodLimit       int
+	woodProduction  int
+	stoneProduction int
+	ironProduction  int
+	foodProduction  int
+	goldProduction  int
+	woodStored      int
+	stoneStored     int
+	foodStored      int
+	ironStored      int
+	woodLimit       int
+	stoneLimit      int
+	ironLimit       int
+	foodLimit       int
 }
 
 func (c *City) GetType() int {

@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 
+	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/database"
 )
 
@@ -21,14 +22,16 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
 	context.Info("OpenLoU is starting...")
+	configuration.Load()
 	database.InitDB()
+	defer database.Close()
 	entities.RegisterAllTroops()
 	entities.RegisterAllConstructions()
 
-	Sessions := session.NewSessionInMemory()
-	Hermes := hub.Create(Sessions)
+	session.NewSessionInMemory()
+	Hermes := hub.Create()
 
-	LoginServer, err := accountserver.New(Sessions)
+	AccountServer, err := accountserver.New()
 	if err != nil {
 		context.Error(err.Error())
 	}
@@ -46,8 +49,8 @@ func main() {
 	}
 
 	go MapServer.StartListening()
-	go LoginServer.StartListening(":8000")
-
+	go CityServer.StartListening()
+	go AccountServer.StartListening(":8000")
 	Hermes.StartListening(":8080")
 
 }

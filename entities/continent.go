@@ -1,12 +1,17 @@
 package entities
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+)
 
 type Continent struct {
-	gorm.Model
-	IsActive    bool
-	Size        int
-	CitiesLimit int
-	X           int `gorm:"index:continent_idx_x_y"`
-	Y           int `gorm:"index:continent_idx_x_y"`
+	ID             uint
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	IsActive       bool
+	Size           uint
+	NumberOfCities uint
+	CitiesLimit    uint
+	X              uint
+	Y              uint
 }

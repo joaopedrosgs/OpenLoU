@@ -15,18 +15,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/joaopedrosgs/OpenLoU/entities"
 	"time"
 )
 
-// Const values
-const (
-	newLogin = 301
-)
-
-type LoginServer struct {
-	sessions *session.SessionMem
-	context  *log.Entry
+type AccountServer struct {
+	context *log.Entry
 }
 
 type LoginAttempt struct {
@@ -34,12 +27,12 @@ type LoginAttempt struct {
 	Password string
 }
 
-func New(backend *session.SessionMem) (*LoginServer, error) {
-	return &LoginServer{backend, log.WithFields(log.Fields{"Entity": "Account Server"})}, nil
+func New() (*AccountServer, error) {
+	return &AccountServer{log.WithFields(log.Fields{"Entity": "Account Server"})}, nil
 
 }
 
-func (s *LoginServer) StartListening(address string) {
+func (s *AccountServer) StartListening(address string) {
 	// Index Handler
 	http.HandleFunc("/login", s.loginHandler)
 	http.HandleFunc("/register", s.registerHandler)
@@ -53,8 +46,8 @@ func (s *LoginServer) StartListening(address string) {
 	}
 	s.context.Info("Account server has started listening")
 }
-func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
-
+func (s *AccountServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
+	println("aloi")
 	if request.Method == "POST" {
 		email := request.PostFormValue("email")
 		password := request.PostFormValue("password")
@@ -66,82 +59,78 @@ func (s *LoginServer) loginHandler(writer http.ResponseWriter, request *http.Req
 	}
 
 }
-func (s *LoginServer) registerHandler(writer http.ResponseWriter, request *http.Request) {
+func (s *AccountServer) registerHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "POST" {
 		login := request.PostFormValue("login")
 		email := request.PostFormValue("email")
 		password := request.PostFormValue("password")
-		answer := s.CreateAccount(login, email, password)
+		err := s.CreateAccount(login, email, password)
+		answer := communication.Answer{}
+		if err != nil {
+			answer.Data = err.Error()
+		} else {
+			answer.Data = success
+			answer.Ok = true
+		}
 		jsonAnswer, _ := json.Marshal(answer)
 		fmt.Fprintf(writer, string(jsonAnswer))
 	}
 }
 
-// New returns an LoginServer that deals with the authentication of the user
+// New returns an AccountServer that deals with the authentication of the user
 
 //NewAttempt returns an Answer which contains the auth info from the attempt
-func (s *LoginServer) NewAttempt(attempt *LoginAttempt) *communication.Answer {
-	answer := &communication.Answer{}
+func (s *AccountServer) NewAttempt(attempt *LoginAttempt) (answer *communication.Answer) {
+	answer = &communication.Answer{}
 	id, err := s.CheckCredentials(attempt)
 
 	if err != nil {
-		answer.Ok = false
 		answer.Data = err.Error()
-	} else {
-		key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
-		if err == nil {
-			created := s.sessions.NewSession(id, key)
-			if created {
-				answer.Ok = true
-				answer.Data = key
-				answer.Type = newLogin
-			} else {
-				answer.Data = "Failed to create session"
-			}
-		}
+		return
+	}
+	key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
+	if err != nil {
+		answer.Data = InternalError
+		return
+	}
+	created := session.NewSession(id, key)
+	if created {
+		answer.Ok = true
+		answer.Data = key
 	}
 
-	return answer
+	return
 }
 
 //CheckCredentials returns the user and nil if the credentials are correct
-func (s *LoginServer) CheckCredentials(attempt *LoginAttempt) (uint, error) {
+func (s *AccountServer) CheckCredentials(attempt *LoginAttempt) (uint, error) {
 	if len(attempt.Password) == 0 || len(attempt.Email) == 0 {
 		return 0, errors.New(emptyFields)
 	}
-
 	user, err := database.GetUser(attempt.Email)
-	if err == nil {
-		err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(attempt.Password))
-		if err == nil {
-			return user.ID, nil
-		}
+	if err != nil {
+		return 0, err
 	}
-	return 0, err
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(attempt.Password))
+	if err != nil {
+		return 0, err
+	}
+	return user.ID, nil
+
 }
-func (s *LoginServer) CreateAccount(login string, email string, password string) *communication.Answer {
-	answer := &communication.Answer{}
+func (s *AccountServer) CreateAccount(login string, email string, password string) error {
 
 	if len(login) < 6 || len(email) < 8 || len(password) < 8 {
-		answer.Data = "Too small"
-		return answer
+		return errors.New(shortCredentials)
 	}
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-	if err == nil {
-		user, err := database.CreateUser(login, string(passwordHash), email)
-		if err == nil {
-			answer.Data = "Success"
-			answer.Ok = true
-			go s.initUserAccount(user)
-
-		} else {
-			answer.Data = "Failed to create account"
-		}
+	if err != nil {
+		return errors.New(InternalError)
 	}
+	err = database.CreateUser(login, string(passwordHash), email)
+	if err != nil {
+		return errors.New(accountExists)
+	}
+	return nil
 
-	return answer
-
-}
-func (s *LoginServer) initUserAccount(user *entities.User) {
-	database.CreateCity(user.ID)
 }

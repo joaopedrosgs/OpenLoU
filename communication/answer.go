@@ -18,7 +18,7 @@ func (answer *Answer) GetKey() string {
 func (answer *Answer) SetUserID(id uint) {
 	answer.userID = id
 }
-func (answer *Answer) SerBySystem() {
+func (answer *Answer) SetBySystem() {
 	answer.isSystem = true
 }
 

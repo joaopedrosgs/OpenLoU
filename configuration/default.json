@@ -1,0 +1,48 @@
+{
+  "db": {
+    "host": "localhost",
+    "port": 5432,
+    "name": "openlou",
+    "user": "postgres",
+    "password": "postgres",
+    "SSL": "disable"
+  },
+  "parameters": {
+    "speed": {
+      "resource": "1",
+      "military": "1",
+      "construction": "1",
+      "caveSpawn": "1"
+    },
+    "security": {
+      "keySize": 32,
+      "keyStringSize": 44
+    },
+    "general": {
+      "worldSize": 36,
+      "onlyCastle": "false",
+      "noMoral": "false",
+      "continentSize": 100,
+      "nightProtection": {
+        "activate": "true",
+        "start": "20",
+        "end": "8",
+        "percentage": "20"
+      },
+      "limits": {
+        "alliance": "100",
+        "cities": "-1",
+        "constructions": "100"
+      },
+      "starter": {
+        "resources": [
+          1000,
+          1000,
+          200,
+          200
+        ]
+      }
+    }
+  }
+}
+

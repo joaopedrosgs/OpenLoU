@@ -1,29 +1,30 @@
 package entities
 
 import (
-	"github.com/jinzhu/gorm"
 	"time"
 )
 
 type Construction struct {
-	ID          uint `gorm:"primary_key"`
+	ID          uint
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	DeletedAt   *time.Time
-	CityID      uint `gorm:"unique_index:construction_idx_x_y_cityid"`
-	Level       int
-	X           uint `gorm:"unique_index:construction_idx_x_y_cityid"`
-	Y           uint `gorm:"unique_index:construction_idx_x_y_cityid"`
-	Type        int
+	CityID      uint
+	Level       uint
+	X           uint
+	Y           uint
+	Type        uint
 	Production  int
 	Modifier    int
 	NeedRefresh bool
 }
 
 type Upgrade struct {
-	gorm.Model
-	ConstructionID int `gorm:"index"`
-	ToLevel        int
-	Duration       time.Duration
+	ID             uint
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	ConstructionID uint
+	CityID         uint
+	Index          uint
+	Duration       uint
 	Start          time.Time
 }

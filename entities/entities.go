@@ -41,9 +41,9 @@ func RegisterAllConstructions() {
 
 func RegisterAllTroops() {
 
-	println("Loading troops")
 	RegisteredTroops = make(map[int]TroopType)
 	dir := "modules/military/"
+	context.WithField("From", dir).Info("Loading troops")
 
 	modules, err := ioutil.ReadDir(dir)
 	if err != nil {

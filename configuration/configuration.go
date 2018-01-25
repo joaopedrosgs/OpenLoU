@@ -2,7 +2,7 @@ package configuration
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/jackc/pgx"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 )
@@ -54,28 +54,39 @@ type Config struct {
 
 var configuration *Config
 
-func (instance *Config) Load() {
-	arquivo, err := ioutil.ReadFile("default.json")
-	err = json.Unmarshal(arquivo, &instance)
+func Load() {
+	arquivo, err := ioutil.ReadFile("configuration/default.json")
 	if err != nil {
-		context.Info("The default configuration couldn't be loaded")
-	} else {
-		context.Info("Configuration loaded")
+		context.WithField("Error", err.Error()).Info("The default configuration couldn't be loaded")
+		return
 	}
+	err = json.Unmarshal(arquivo, &configuration)
+	if err != nil {
+		context.WithField("Error", err.Error()).Info("The default configuration couldn't be parsed")
+		return
+	}
+
+	context.Info("Configuration loaded")
 
 }
 
-func GetConnectionString() string {
-	GetSingleton()
-	connectionString := "user=%s password=%s host=%s port=%d dbname=%s sslmode=%s"
-	connectionString = fmt.Sprintf(connectionString, configuration.Db.User, configuration.Db.Password, configuration.Db.Host, configuration.Db.Port, configuration.Db.Name, configuration.Db.SSL)
-	return connectionString
+func GetConnConfig() pgx.ConnConfig {
+	if configuration == nil {
+		Load()
+	}
+	config := pgx.ConnConfig{
+		Host:     configuration.Db.Host,
+		Port:     uint16(configuration.Db.Port),
+		Database: configuration.Db.Name,
+		User:     configuration.Db.User,
+		Password: configuration.Db.Password}
+	return config
 }
 
 func GetSingleton() *Config {
 	if configuration == nil {
-		configuration = &Config{}
-		configuration.Load()
+		Load()
 	}
 	return configuration
+
 }

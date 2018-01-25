@@ -1,9 +1,13 @@
 package entities
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+)
 
 type Dungeon struct {
-	gorm.Model
+	ID        uint
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	TileNode
 	Level    int
 	Progress int

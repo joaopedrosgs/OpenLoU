@@ -3,68 +3,33 @@ package database
 import (
 	"errors"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jackc/pgx"
+
 	"github.com/joaopedrosgs/OpenLoU/configuration"
-	"github.com/joaopedrosgs/OpenLoU/entities"
+
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
-var db *gorm.DB
+var db *pgx.ConnPool
 var context = log.WithField("Entity", "Database")
 
 func InitDB() {
 	err := errors.New("")
-	db, err = gorm.Open("postgres", configuration.GetConnectionString())
+
+	db, err = pgx.NewConnPool(pgx.ConnPoolConfig{ConnConfig: configuration.GetConnConfig(), MaxConnections: 5})
 	if err != nil {
-		context.Error(err.Error())
+		context.WithField("When", "Database init").Error(err.Error())
 	}
-	db.DropTableIfExists(&entities.User{}, &entities.City{}, &entities.Construction{}, &entities.Upgrade{}, &entities.Dungeon{}, &entities.Continent{}, &entities.WorldResource{})
-	db.AutoMigrate(&entities.User{}, &entities.City{}, &entities.Construction{}, &entities.Upgrade{}, &entities.Dungeon{}, &entities.Continent{}, &entities.WorldResource{})
+	numberOfContinent := 0
+	expectedNumberOfContinents := configuration.GetSingleton().Parameters.General.WorldSize
+	db.QueryRow("Select MAX(id) from continents").Scan(&numberOfContinent)
+	if numberOfContinent < expectedNumberOfContinents {
+		context.Warning("Looks like there are less continents than expected, attempting to create more...")
+		createNewContinents()
+	}
 
 }
 
-func CreateUser(login, password_hash, email string) (*entities.User, error) {
-	if db == nil {
-		InitDB()
-	}
-	user := &entities.User{Name: login, Email: email, PasswordHash: password_hash, CreatedAt: time.Now(), UpdatedAt: time.Now()}
-	db.NewRecord(user)
-	db.Create(user)
-	if user.ID > 0 {
-		return user, nil
-	}
-	CreateCity(user.ID)
-	return nil, errors.New("Failed to create account!")
-}
-
-func GetUser(email string) (*entities.User, error) {
-	if db == nil {
-		InitDB()
-	}
-	user := &entities.User{}
-	db.Where("email = ?", email).First(&user)
-	if user.ID > 0 {
-		return user, nil
-	}
-	return nil, errors.New("Account not found account!")
-}
-
-func GetCitiesInRange(x, y, radius, continent int) *[]entities.City {
-	cities := []entities.City{}
-	db.Where("x BETWEEN ? AND ? AND y BETWEEN ? AND ? AND continent_id = ?", x-radius, x+radius, y-radius, y+radius, continent).Find(&cities)
-	return &cities
-}
-
-func CreateCity(userID uint) {
-	continent := entities.Continent{IsActive: true, Size: configuration.GetSingleton().Parameters.General.ContinentSize, CitiesLimit: 250, X: 0, Y: 0}
-	db.Where("Is_Active = ? AND Cities_Limit <= ?", true, 250).FirstOrCreate(&continent)
-	city := entities.City{}
-	city.ContinentID = continent.ID
-	city.UserID = userID
-	townHall := entities.Construction{CityID: city.ID, X: 10, Y: 10}
-	city.Constructions = append(city.Constructions, townHall)
-	db.Create(&city)
-	db.NewRecord(city)
-
+func Close() {
+	db.Close()
 }

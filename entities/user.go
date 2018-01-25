@@ -5,12 +5,10 @@ import (
 )
 
 type User struct {
-	ID           uint `gorm:"primary_key"`
+	ID           uint
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
-	DeletedAt    *time.Time
-	Name         string `gorm:"type:varchar(100);unique_index"`
-	Email        string `gorm:"type:varchar(100);unique_index"`
+	Name         string
+	Email        string
 	PasswordHash string
-	Cities       []City `gorm:"ForeignKey:UserID"`
 }

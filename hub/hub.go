@@ -95,7 +95,7 @@ func (h *Hub) handleUser(conn net.Conn) {
 	buffer := make([]byte, MSGSIZE)
 	received, err := reader.Read(buffer) // blocks until all the data is available
 
-	if err != nil {
+	if err != nil || received > MSGSIZE {
 		h.writeBackToUser(communication.BadRequest(), conn)
 		return
 	}
@@ -103,12 +103,11 @@ func (h *Hub) handleUser(conn net.Conn) {
 	request := &communication.Request{}
 	err = json.Unmarshal(buffer[:received], request)
 
-	defer session.DeleteSession(request.Key)
-
 	if err != nil || !h.Validate(request, conn) {
 		h.writeBackToUser(communication.BadRequest(), conn)
 		return
 	}
+	defer session.DeleteSession(request.Key)
 
 	for err == nil && received > 0 && received < MSGSIZE {
 
@@ -152,7 +151,6 @@ func (h *Hub) handleAuthorizedUser(request *communication.Request) {
 
 	server := request.Type / 100
 	workerChan, ok := h.workers[server]
-	request.Type = request.Type % 100
 	if ok {
 		*workerChan <- request
 	} else {

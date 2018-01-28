@@ -47,13 +47,13 @@ func (s *AccountServer) StartListening(address string) {
 	s.context.Info("Account server has started listening")
 }
 func (s *AccountServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
-	println("aloi")
 	if request.Method == "POST" {
 		email := request.PostFormValue("email")
 		password := request.PostFormValue("password")
 		attempt := &LoginAttempt{email, password}
 		answer := s.NewAttempt(attempt)
 		jsonAnswer, _ := json.Marshal(answer)
+
 		fmt.Fprintf(writer, string(jsonAnswer))
 
 	}
@@ -64,14 +64,7 @@ func (s *AccountServer) registerHandler(writer http.ResponseWriter, request *htt
 		login := request.PostFormValue("login")
 		email := request.PostFormValue("email")
 		password := request.PostFormValue("password")
-		err := s.CreateAccount(login, email, password)
-		answer := communication.Answer{}
-		if err != nil {
-			answer.Data = err.Error()
-		} else {
-			answer.Data = success
-			answer.Ok = true
-		}
+		answer := s.createAccount(login, email, password)
 		jsonAnswer, _ := json.Marshal(answer)
 		fmt.Fprintf(writer, string(jsonAnswer))
 	}
@@ -82,10 +75,10 @@ func (s *AccountServer) registerHandler(writer http.ResponseWriter, request *htt
 //NewAttempt returns an Answer which contains the auth info from the attempt
 func (s *AccountServer) NewAttempt(attempt *LoginAttempt) (answer *communication.Answer) {
 	answer = &communication.Answer{}
-	id, err := s.CheckCredentials(attempt)
+	id, err := s.checkCredentials(attempt)
 
 	if err != nil {
-		answer.Data = err.Error()
+		answer.Data = wrongAccountInfo
 		return
 	}
 	key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
@@ -97,14 +90,16 @@ func (s *AccountServer) NewAttempt(attempt *LoginAttempt) (answer *communication
 	if created {
 		answer.Ok = true
 		answer.Data = key
+	} else {
+		answer.Data = failedSession
 	}
 
 	return
 }
 
-//CheckCredentials returns the user and nil if the credentials are correct
-func (s *AccountServer) CheckCredentials(attempt *LoginAttempt) (uint, error) {
-	if len(attempt.Password) == 0 || len(attempt.Email) == 0 {
+//checkCredentials returns the user and nil if the credentials are correct
+func (s *AccountServer) checkCredentials(attempt *LoginAttempt) (uint, error) {
+	if len(attempt.Password) < 8 || len(attempt.Email) < 8 {
 		return 0, errors.New(emptyFields)
 	}
 	user, err := database.GetUser(attempt.Email)
@@ -118,19 +113,26 @@ func (s *AccountServer) CheckCredentials(attempt *LoginAttempt) (uint, error) {
 	return user.ID, nil
 
 }
-func (s *AccountServer) CreateAccount(login string, email string, password string) error {
+func (s *AccountServer) createAccount(login string, email string, password string) (answer *communication.Answer) {
+	answer = &communication.Answer{}
 
 	if len(login) < 6 || len(email) < 8 || len(password) < 8 {
-		return errors.New(shortCredentials)
+		answer.Data = shortCredentials
+		return
+
 	}
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		return errors.New(InternalError)
+		answer.Data = InternalError
+		return
 	}
 	err = database.CreateUser(login, string(passwordHash), email)
 	if err != nil {
-		return errors.New(accountExists)
+		answer.Data = accountExists
+		return
 	}
-	return nil
+	answer.Data = success
+	answer.Ok = true
+	return
 
 }

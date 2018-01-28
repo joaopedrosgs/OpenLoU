@@ -23,13 +23,13 @@ var sessionsStorage sessionMem
 
 func NewSession(userId uint, key string) bool {
 	sessionsStorage.mutex.Lock()
-	defer sessionsStorage.mutex.Unlock()
 	if len(key) == configuration.GetSingleton().Parameters.Security.KeySize || userId >= 0 {
-		if !sessionsExistsByID(userId) {
-			sessionsStorage.sessions[key] = &Session{userId, time.Now(), 0, nil}
-			return true
-		}
+		sessionsStorage.sessions[key] = &Session{userId, time.Now(), 0, nil}
+		sessionsStorage.mutex.Unlock()
+		return true
+
 	}
+	sessionsStorage.mutex.Unlock()
 	return false
 }
 
@@ -88,29 +88,33 @@ func NewTry(key string) {
 
 func GetUserConn(key string) (net.Conn, bool) {
 	sessionsStorage.mutex.RLock()
-	defer sessionsStorage.mutex.RUnlock()
 	session, ok := sessionsStorage.sessions[key]
 	if ok {
+		sessionsStorage.mutex.RUnlock()
 		return session.conn, ok
+
 	}
+	sessionsStorage.mutex.RUnlock()
 	return nil, ok
 
 }
 func GetUserConnById(id uint) (net.Conn, bool) {
 	sessionsStorage.mutex.RLock()
-	defer sessionsStorage.mutex.RUnlock()
 	for _, session := range sessionsStorage.sessions {
 		if session.userId == id {
+			sessionsStorage.mutex.RUnlock()
 			return session.conn, true
 		}
 	}
+	sessionsStorage.mutex.RUnlock()
 	return nil, false
 
 }
 
-func GetUserID(key string) (id uint) {
+func GetUserID(key string) uint {
 	sessionsStorage.mutex.RLock()
-	defer sessionsStorage.mutex.RUnlock()
+	id := sessionsStorage.sessions[key].userId
+	sessionsStorage.mutex.RUnlock()
 
-	return sessionsStorage.sessions[key].userId
+	return id
 }

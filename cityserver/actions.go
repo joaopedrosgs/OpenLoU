@@ -11,17 +11,17 @@ func (cs *cityserver) upgradeConstruction(request *communication.Request, answer
 	defer func() { *out <- answer }()
 	cityID, err := strconv.ParseUint(request.Data["CityID"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad CityID"
+		answer.Data = BadCityID
 		return
 	}
 	x, err := strconv.ParseUint(request.Data["X"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad X value"
+		answer.Data = BadXValue
 		return
 	}
 	y, err := strconv.ParseUint(request.Data["Y"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad Y value"
+		answer.Data = BadYValue
 		return
 	}
 	err = database.CreateUpgrade(uint(cityID), uint(x), uint(y))
@@ -29,7 +29,7 @@ func (cs *cityserver) upgradeConstruction(request *communication.Request, answer
 		answer.Data = err.Error()
 		return
 	}
-	answer.Data = "success"
+	answer.Data = Success
 	answer.Ok = true
 
 }
@@ -38,40 +38,40 @@ func (cs *cityserver) newConstruction(request *communication.Request, answer *co
 	defer func() { *out <- answer }()
 	cityID, err := strconv.ParseUint(request.Data["CityID"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad CityID"
+		answer.Data = BadXValue
 		return
 	}
 	x, err := strconv.ParseUint(request.Data["X"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad X value"
+		answer.Data = BadXValue
 		return
 	}
 	y, err := strconv.ParseUint(request.Data["Y"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad Y value"
+		answer.Data = BadYValue
 		return
 	}
 	constructionType, err := strconv.ParseUint(request.Data["Type"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad construction type"
+		answer.Data = BadConstructionType
 		return
 	}
 	_, err = database.GetConstruction(uint(cityID), uint(x), uint(y))
 	if err != nil {
 		err = database.CreateConstruction(uint(cityID), uint(x), uint(y), uint(constructionType), 0)
 		if err != nil {
-			answer.Data = errors.New("failed to create construction")
+			answer.Data = errors.New(FailedNewConstruction)
 			return
 		}
 		err = database.CreateUpgrade(uint(cityID), uint(x), uint(y))
 		if err != nil {
-			answer.Data = errors.New("failed to create upgrade to the new construction")
+			answer.Data = errors.New(FailedNewConstructionUpgrade)
 			return
 		}
-		answer.Data = "success"
+		answer.Data = Success
 		answer.Ok = true
 	} else {
-		answer.Data = errors.New("tile already in use")
+		answer.Data = errors.New(TileInUse)
 	}
 
 }
@@ -80,14 +80,15 @@ func (cs *cityserver) getConstructions(request *communication.Request, answer *c
 	defer func() { *out <- answer }()
 	cityID, err := strconv.ParseUint(request.Data["CityID"], 10, 32)
 	if err != nil {
-		answer.Data = "Bad CityID"
+		answer.Data = BadCityID
 		return
 	}
 	cities, err := database.GetAllConstruction(uint(cityID))
 	if err != nil {
-		answer.Data = errors.New("failed to get constructions")
+		answer.Data = errors.New(FailedGetConstructions)
 		return
 	}
+	answer.Ok = true
 	answer.Data = cities
 
 }

@@ -12,18 +12,22 @@ func (ms *mapserver) createCity(request *communication.Request, answer *communic
 
 }
 func (ms *mapserver) getCitiesFromUser(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-	defer func() { *out <- answer }()
+
 	userID := session.GetUserID(request.Key)
 	cities, err := database.GetUserCities(userID)
 	if err != nil {
 		answer.Data = err
+		*out <- answer
 		return
 	}
-	answer.Data, answer.Ok = cities, true
+	answer.Data = cities
+	answer.Ok = true
+	*out <- answer
 
 }
 
 func (ms *mapserver) getCities(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
+	defer func() { *out <- answer }()
 	x, err := strconv.Atoi(request.Data["X"])
 	if err != nil || x < 0 || x > configuration.GetSingleton().Parameters.General.ContinentSize {
 		answer.Data = "Bad X value"
@@ -37,8 +41,7 @@ func (ms *mapserver) getCities(request *communication.Request, answer *communica
 	}
 	distance, err := strconv.Atoi(request.Data["Range"])
 	if err != nil || distance <= 0 || distance > 10 {
-		answer.Data = "Bad Range value"
-		return
+		distance = 10
 	}
 
 	continent, err := strconv.Atoi(request.Data["Continent"])

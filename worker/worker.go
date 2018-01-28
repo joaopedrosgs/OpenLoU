@@ -32,7 +32,7 @@ func (w *Worker) StartListening() {
 	for {
 		request := <-w.in
 		answer := request.ToAnswer()
-		if endpoint, ok := w.endPoints[request.Type]; ok {
+		if endpoint, ok := w.endPoints[request.Type%100]; ok {
 			go endpoint(request, answer, w.out)
 		} else {
 			*w.out <- answer

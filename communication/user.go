@@ -13,7 +13,3 @@ type User struct {
 	BufferRead  []byte
 	Key         string
 }
-
-func (c *User) Close() {
-	(*c.Conn).Close()
-}

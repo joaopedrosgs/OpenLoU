@@ -6,7 +6,7 @@ import (
 )
 
 func GetUserCities(userID uint) ([]entities.City, error) {
-	rows, err := db.Query("SELECT x, y, continent_id, type, name, points FROM cities WHERE user_id = $1", userID)
+	rows, err := db.Query("SELECT id, x, y, continent_id, type, name, points FROM cities WHERE user_id = $1", userID)
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.New("Could not pull cities: " + err.Error())
@@ -14,7 +14,7 @@ func GetUserCities(userID uint) ([]entities.City, error) {
 	var cities []entities.City
 	for rows.Next() {
 		city := entities.City{}
-		err := rows.Scan(&city.X, &city.Y, &city.ContinentID, &city.Type, &city.Name, &city.Points)
+		err := rows.Scan(&city.ID, &city.X, &city.Y, &city.ContinentID, &city.Type, &city.Name, &city.Points)
 		if err != nil {
 			return nil, errors.New("Failed to scan: " + err.Error())
 		}
@@ -23,12 +23,13 @@ func GetUserCities(userID uint) ([]entities.City, error) {
 	if err != nil {
 		return nil, errors.New("Could not pull cities: " + err.Error())
 	}
+
 	return cities, nil
 }
 
 func GetCitiesInRange(x, y, radius, continent int) (*[]entities.City, error) {
 	cities := make([]entities.City, 0, (radius*radius)*4)
-	rows, err := db.Query("SELECT x, y, continent_id, type, name, points "+
+	rows, err := db.Query("SELECT id, x, y, continent_id, type, name, points "+
 		"FROM cities WHERE "+
 		"x BETWEEN $1 AND $2 AND "+
 		"y BETWEEN $3 AND $4 "+
@@ -39,7 +40,10 @@ func GetCitiesInRange(x, y, radius, continent int) (*[]entities.City, error) {
 	}
 	for rows.Next() {
 		city := entities.City{}
-		rows.Scan(&city.X, &city.Y, &city.ContinentID, &city.Name, &city.Points)
+		err := rows.Scan(&city.ID, &city.X, &city.Y, &city.ContinentID, &city.Type, &city.Name, &city.Points)
+		if err != nil {
+			return nil, err
+		}
 		cities = append(cities, city)
 	}
 	return &cities, nil

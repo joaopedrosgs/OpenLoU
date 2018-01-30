@@ -5,7 +5,7 @@ import (
 )
 
 type TroopType struct {
-	Id        int    `json:"id"`
+	ID        uint   `json:"id"`
 	Name      string `json:"name"`
 	CanAttack bool   `json:"canAttack"`
 	Image     string `json:"image"`

@@ -23,7 +23,7 @@ var sessionsStorage sessionMem
 
 func NewSession(userId uint, key string) bool {
 	sessionsStorage.mutex.Lock()
-	if len(key) == configuration.GetSingleton().Parameters.Security.KeySize || userId >= 0 {
+	if uint(len(key)) == configuration.GetSingleton().Parameters.Security.KeySize || userId >= 0 {
 		sessionsStorage.sessions[key] = &Session{userId, time.Now(), 0, nil}
 		sessionsStorage.mutex.Unlock()
 		return true

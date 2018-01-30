@@ -5,7 +5,6 @@ import (
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/database"
 	"github.com/joaopedrosgs/OpenLoU/session"
-	"strconv"
 )
 
 func (ms *mapserver) createCity(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
@@ -27,34 +26,41 @@ func (ms *mapserver) getCitiesFromUser(request *communication.Request, answer *c
 }
 
 func (ms *mapserver) getCities(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-	defer func() { *out <- answer }()
-	x, err := strconv.Atoi(request.Data["X"])
-	if err != nil || x < 0 || x > configuration.GetSingleton().Parameters.General.ContinentSize {
-		answer.Data = "Bad X value"
-		return
-	}
-	y, err := strconv.Atoi(request.Data["Y"])
-	if err != nil || y < 0 || y > configuration.GetSingleton().Parameters.General.ContinentSize {
-		answer.Data = "Bad Y value"
-		return
-
-	}
-	distance, err := strconv.Atoi(request.Data["Range"])
-	if err != nil || distance <= 0 || distance > 10 {
-		distance = 10
-	}
-
-	continent, err := strconv.Atoi(request.Data["Continent"])
-	if err != nil || continent < 0 || continent > 50 {
-		answer.Data = "Bad Continent value"
-		return
-	}
-	cities, err := database.GetCitiesInRange(x, y, distance, continent)
+	err := request.ValidadeFields("X", "Y", "Range", "Continent")
 	if err != nil {
 		answer.Data = err.Error()
+		*out <- answer
+		return
+	}
+	if request.Data["X"] > configuration.GetSingleton().Parameters.General.ContinentSize {
+		answer.Data = "Bad X value"
+		*out <- answer
+		return
+	}
+	if request.Data["Y"] > configuration.GetSingleton().Parameters.General.ContinentSize {
+		answer.Data = "Bad Y value"
+		*out <- answer
+		return
+	}
+
+	if request.Data["Range"] <= 0 || request.Data["Range"] > 20 {
+		request.Data["Range"] = 20
+	}
+
+	if err != nil || request.Data["Continent"] < 0 || request.Data["Continent"] > configuration.GetSingleton().Parameters.General.WorldSize {
+		answer.Data = "Bad Continent value"
+		*out <- answer
+		return
+	}
+	cities, err := database.GetCitiesInRange(request.Data["X"], request.Data["Y"], request.Data["Range"], request.Data["Continent"])
+	if err != nil {
+		ms.LogContext.WithField("When", "Accessing database").Error(err.Error())
+		answer.Data = "Internal error"
+		*out <- answer
 		return
 	}
 	answer.Ok = true
 	answer.Data = cities
+	*out <- answer
 
 }

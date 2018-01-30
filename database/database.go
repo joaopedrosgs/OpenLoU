@@ -20,7 +20,7 @@ func InitDB() {
 	if err != nil {
 		context.WithField("When", "Database init").Error(err.Error())
 	}
-	numberOfContinent := 0
+	var numberOfContinent uint = 0
 	expectedNumberOfContinents := configuration.GetSingleton().Parameters.General.WorldSize
 	db.QueryRow("Select MAX(id) from continents").Scan(&numberOfContinent)
 	if numberOfContinent < expectedNumberOfContinents {

@@ -27,13 +27,23 @@ func GetUserCities(userID uint) ([]entities.City, error) {
 	return cities, nil
 }
 
-func GetCitiesInRange(x, y, radius, continent int) (*[]entities.City, error) {
+func GetCitiesInRange(x, y, radius, continent uint) (*[]entities.City, error) {
 	cities := make([]entities.City, 0, (radius*radius)*4)
+	if x < radius {
+		x = radius
+	}
+	if y < radius {
+		y = radius
+	}
+	minX := x - radius
+	minY := y - radius
+	maxX := x + radius
+	maxY := y + radius
 	rows, err := db.Query("SELECT id, x, y, continent_id, type, name, points "+
 		"FROM cities WHERE "+
 		"x BETWEEN $1 AND $2 AND "+
 		"y BETWEEN $3 AND $4 "+
-		"AND continent_id = $5;", x-radius, x+radius, y-radius, y+radius, continent)
+		"AND continent_id = $5;", minX, maxX, minY, maxY, continent)
 	defer rows.Close()
 	if err != nil {
 		return nil, err

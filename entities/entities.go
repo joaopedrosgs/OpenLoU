@@ -6,14 +6,14 @@ import (
 	"io/ioutil"
 )
 
-var RegisteredConstructions map[int]ConstructionType
-var RegisteredTroops map[int]TroopType
+var RegisteredConstructions map[uint]ConstructionType
+var RegisteredTroops map[uint]TroopType
 var context = log.WithField("Entity", "OpenLoU")
 
 func RegisterAllConstructions() {
 	dir := "modules/constructions/"
 	context.WithField("From", dir).Info("Loading constructions")
-	RegisteredConstructions = make(map[int]ConstructionType)
+	RegisteredConstructions = make(map[uint]ConstructionType)
 
 	modules, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -28,7 +28,7 @@ func RegisterAllConstructions() {
 		}
 		err = json.Unmarshal(fileContent, &element)
 		if err == nil {
-			RegisteredConstructions[int(element.ID)] = element
+			RegisteredConstructions[uint(element.ID)] = element
 			context.WithFields(log.Fields{"Module": element.Name, "Status": "Successful"}).Info("Construction type Loaded")
 		} else {
 			context.WithFields(log.Fields{"Module": element.Name, "Error": err.Error()}).Info("Construction type could not be loaded")
@@ -41,7 +41,7 @@ func RegisterAllConstructions() {
 
 func RegisterAllTroops() {
 
-	RegisteredTroops = make(map[int]TroopType)
+	RegisteredTroops = make(map[uint]TroopType)
 	dir := "modules/military/"
 	context.WithField("From", dir).Info("Loading troops")
 
@@ -59,7 +59,7 @@ func RegisterAllTroops() {
 
 		err = json.Unmarshal(fileContent, &element)
 		if err == nil {
-			RegisteredTroops[element.Id] = element
+			RegisteredTroops[element.ID] = element
 			context.WithFields(log.Fields{"Module": element.Name, "Status": "Successful"}).Info("Troop type Loaded")
 		} else {
 			context.WithFields(log.Fields{"Module": element.Name, "Error": err.Error()}).Info("Troop type could not be loaded")

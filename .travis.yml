@@ -7,10 +7,9 @@ env:
 install:
   - go get golang.org/x/sys/unix
   - go get golang.org/x/sys/windows
-  - go get github.com/lib/pq
   - go get golang.org/x/crypto/bcrypt
   - go get github.com/sirupsen/logrus
-  - go get github.com/jinzhu/gorm
+  - go get github.com/jackc/pgx
 services:
   - postgresql
 script:

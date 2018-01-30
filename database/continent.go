@@ -8,7 +8,7 @@ import (
 )
 
 func createNewContinents() error {
-	numberOfContinents := int(math.Sqrt(float64(configuration.GetSingleton().Parameters.General.WorldSize)))
+	numberOfContinents := uint(math.Sqrt(float64(configuration.GetSingleton().Parameters.General.WorldSize)))
 	continentSize := configuration.GetSingleton().Parameters.General.ContinentSize
 	groundType := [4]string{"land", "stone", "iron", "forest"}
 
@@ -18,9 +18,10 @@ func createNewContinents() error {
 		return err
 	}
 
-	var continentId int
-	for x := 0; x < numberOfContinents; x++ {
-		for y := 0; y < numberOfContinents; y++ {
+	var continentId uint
+	var x, y uint
+	for x = 0; x < numberOfContinents; x++ {
+		for y = 0; y < numberOfContinents; y++ {
 			err = db.QueryRow("INSERT into continents (is_active ,size, x, y) values(true, $1, $2, $3) RETURNING id",
 				continentSize, x, y).Scan(&continentId)
 			if err != nil {
@@ -28,9 +29,10 @@ func createNewContinents() error {
 				return err
 			}
 			rand.Seed(time.Now().UTC().UnixNano())
-			for tileX := 0; tileX < continentSize; tileX++ {
-				for tileY := 0; tileY < continentSize; tileY++ {
-					go func(tileX, tileY, continentId int) {
+			var tileX, tileY uint
+			for tileX = 0; tileX < continentSize; tileX++ {
+				for tileY = 0; tileY < continentSize; tileY++ {
+					go func(tileX, tileY, continentId uint) {
 						_, err := db.Exec("INSERT into tiles (continent_id, x, y, occupied_by) values ($1, $2, $3, $4)", continentId, tileX, tileY, groundType[rand.Intn(3)])
 						if err != nil {
 							context.WithField("When", "Inserting new tile").Error(err.Error())

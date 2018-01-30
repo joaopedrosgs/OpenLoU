@@ -70,9 +70,8 @@ func (h *Hub) handleReturn() {
 	}
 }
 func (h *Hub) writeBackToUser(answer *communication.Answer, conn net.Conn) {
-
 	buffer, _ := json.Marshal(answer)
-	writer := bufio.NewWriter(conn)
+	writer := bufio.NewWriterSize(conn, MSGSIZE)
 	n, err := writer.Write(buffer)
 
 	if err != nil || n == 0 {
@@ -91,7 +90,7 @@ func (h *Hub) handleUser(conn net.Conn) {
 
 	defer conn.Close()
 
-	reader := bufio.NewReader(conn)
+	reader := bufio.NewReaderSize(conn, MSGSIZE)
 	buffer := make([]byte, MSGSIZE)
 	received, err := reader.Read(buffer) // blocks until all the data is available
 

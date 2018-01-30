@@ -1,7 +1,7 @@
 package entities
 
 type ConstructionType struct {
-	ID    int    `json:"id"`
+	ID    uint   `json:"id"`
 	Name  string `json:"name"`
 	Bonus []struct {
 		Name  string `json:"name"`

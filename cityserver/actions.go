@@ -4,27 +4,17 @@ import (
 	"errors"
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/database"
-	"strconv"
+	"github.com/joaopedrosgs/OpenLoU/entities"
 )
 
 func (cs *cityserver) upgradeConstruction(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
 	defer func() { *out <- answer }()
-	cityID, err := strconv.ParseUint(request.Data["CityID"], 10, 32)
+	err := request.ValidadeFields("CityID", "X", "Y")
 	if err != nil {
-		answer.Data = BadCityID
+		answer.Data = err.Error()
 		return
 	}
-	x, err := strconv.ParseUint(request.Data["X"], 10, 32)
-	if err != nil {
-		answer.Data = BadXValue
-		return
-	}
-	y, err := strconv.ParseUint(request.Data["Y"], 10, 32)
-	if err != nil {
-		answer.Data = BadYValue
-		return
-	}
-	err = database.CreateUpgrade(uint(cityID), uint(x), uint(y))
+	err = database.CreateUpgrade(request.Data["CityID"], request.Data["X"], request.Data["Y"])
 	if err != nil {
 		answer.Data = err.Error()
 		return
@@ -36,34 +26,35 @@ func (cs *cityserver) upgradeConstruction(request *communication.Request, answer
 
 func (cs *cityserver) newConstruction(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
 	defer func() { *out <- answer }()
-	cityID, err := strconv.ParseUint(request.Data["CityID"], 10, 32)
+	err := request.ValidadeFields("CityID", "X", "Y", "Type")
 	if err != nil {
-		answer.Data = BadXValue
+		answer.Data = err.Error()
 		return
 	}
-	x, err := strconv.ParseUint(request.Data["X"], 10, 32)
-	if err != nil {
-		answer.Data = BadXValue
+	if request.Data["X"] > 19 {
+		answer.Data = "Bad X value"
+		*out <- answer
 		return
 	}
-	y, err := strconv.ParseUint(request.Data["Y"], 10, 32)
-	if err != nil {
-		answer.Data = BadYValue
+	if request.Data["Y"] > 19 {
+		answer.Data = "Bad Y value"
+		*out <- answer
 		return
 	}
-	constructionType, err := strconv.ParseUint(request.Data["Type"], 10, 32)
-	if err != nil {
-		answer.Data = BadConstructionType
+	_, ok := entities.RegisteredConstructions[request.Data["Type"]]
+	if !ok {
+		answer.Data = "Bad Type value"
+		*out <- answer
 		return
 	}
-	_, err = database.GetConstruction(uint(cityID), uint(x), uint(y))
+	_, err = database.GetConstruction(request.Data["CityID"], request.Data["X"], request.Data["Y"]) // Check if construction exists
 	if err != nil {
-		err = database.CreateConstruction(uint(cityID), uint(x), uint(y), uint(constructionType), 0)
+		err = database.CreateConstruction(request.Data["CityID"], request.Data["X"], request.Data["Y"], request.Data["Type"], 0)
 		if err != nil {
 			answer.Data = errors.New(FailedNewConstruction)
 			return
 		}
-		err = database.CreateUpgrade(uint(cityID), uint(x), uint(y))
+		err = database.CreateUpgrade(request.Data["CityID"], request.Data["X"], request.Data["Y"])
 		if err != nil {
 			answer.Data = errors.New(FailedNewConstructionUpgrade)
 			return
@@ -78,12 +69,12 @@ func (cs *cityserver) newConstruction(request *communication.Request, answer *co
 
 func (cs *cityserver) getConstructions(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
 	defer func() { *out <- answer }()
-	cityID, err := strconv.ParseUint(request.Data["CityID"], 10, 32)
+	err := request.ValidadeFields("CityID")
 	if err != nil {
-		answer.Data = BadCityID
+		answer.Data = err.Error()
 		return
 	}
-	cities, err := database.GetAllConstruction(uint(cityID))
+	cities, err := database.GetAllConstruction(request.Data["CityID"])
 	if err != nil {
 		answer.Data = errors.New(FailedGetConstructions)
 		return

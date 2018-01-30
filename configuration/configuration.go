@@ -26,14 +26,14 @@ type Config struct {
 			CaveSpawn    string `json:"caveSpawn"`
 		} `json:"speed"`
 		Security struct {
-			KeySize       int `json:"keySize"`
-			KeyStringSize int `json:"keyStringSize"`
+			KeySize       uint `json:"keySize"`
+			KeyStringSize uint `json:"keyStringSize"`
 		} `json:"security"`
 		General struct {
-			WorldSize       int    `json:"worldSize"`
+			WorldSize       uint   `json:"worldSize"`
 			OnlyCastle      string `json:"onlyCastle"`
 			NoMoral         string `json:"noMoral"`
-			ContinentSize   int    `json:"continentSize"`
+			ContinentSize   uint   `json:"continentSize"`
 			NightProtection struct {
 				Activate   string `json:"activate"`
 				Start      string `json:"start"`

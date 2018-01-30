@@ -2,8 +2,6 @@ package worker
 
 import (
 	"github.com/joaopedrosgs/OpenLoU/communication"
-
-	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"reflect"
 	"runtime"

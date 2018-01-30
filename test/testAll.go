@@ -45,13 +45,13 @@ func RunTest() {
 	request.Key = key
 	request.Type = 203
 
-	data := make(map[string]string)
-	data["X"] = "11"
-	data["Y"] = "11"
-	data["CityID"] = "9"
-	data["Type"] = "1"
-	data["Range"] = "10"
-	data["Continent"] = "1"
+	data := make(map[string]uint)
+	data["X"] = 11
+	data["Y"] = 11
+	data["CityID"] = 9
+	data["Type"] = 1
+	data["Range"] = 10
+	data["Continent"] = 1
 	request.Data = data
 	sendWithData(key, conn, request)
 	println(((time.Now().Sub(begin) * 1 / 1000000) * time.Millisecond).String())

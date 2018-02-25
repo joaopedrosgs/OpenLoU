@@ -1,6 +1,7 @@
   {
-    "id":2,
+    "id": 7,
     "name": "Cottage",
+    "info": "Increases the construction speed of all build orders in a city. Also increases productivity of bordering resource buildings.",
     "bonus": [{
       "name": "constructionspeed",
       "value": [4, 10, 16, 25, 35, 46, 58, 71, 85, 100]

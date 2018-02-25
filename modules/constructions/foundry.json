@@ -1,6 +1,7 @@
   {
-    "id":14,
+    "id": 18,
     "name": "Foundry",
+    "info": "Increases the efficiency of bordering Ore Mines and iron storage capacity of bordering Storage.",
     "adjascent": [{
         "builds": ["ironmine"],
         "bonus": [30, 35, 40, 45, 50, 55, 60, 65, 70, 75]

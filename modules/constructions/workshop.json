@@ -1,23 +1,24 @@
 {
-  "id":19,
-    "name": "Workshop",
-    "bonus": [{
-      "name": "siegeRecruitment",
-      "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
+  "id": 28,
+  "name": "Workshop",
+  "info": "Allows construction of siege engines and, if upgraded, increases their construction speed. Placing a Barracks beside a Workshop will also increase recruitment speed.",
+  "bonus": [{
+    "name": "siegeRecruitment",
+    "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
 
-    }],
-    "resourcecost": [
-      [40, 80],
-      [75, 150],
-      [150, 300],
-      [370, 740],
-      [1100, 2200],
-      [2600, 5200],
-      [5200, 10400],
-      [8900, 17800],
-      [14000, 28000],
-      [21500, 43000]
+  }],
+  "resourcecost": [
+    [40, 80],
+    [75, 150],
+    [150, 300],
+    [370, 740],
+    [1100, 2200],
+    [2600, 5200],
+    [5200, 10400],
+    [8900, 17800],
+    [14000, 28000],
+    [21500, 43000]
 
-    ],
-    "score": [2, 5, 10, 19, 32, 48, 67, 91, 120, 160]
-  }
+  ],
+  "score": [2, 5, 10, 19, 32, 48, 67, 91, 120, 160]
+}

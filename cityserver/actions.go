@@ -2,84 +2,86 @@ package cityserver
 
 import (
 	"errors"
-	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/database"
 	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/hub"
 )
 
-func (cs *cityserver) upgradeConstruction(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-	defer func() { *out <- answer }()
-	err := request.ValidadeFields("CityID", "X", "Y")
+func (cs *cityserver) upgradeConstruction(request *hub.RequestWithCallback) {
+	answer := request.Request.ToAnswer()
+	defer request.Callback(answer)
+
+	err := request.Request.FieldsExist("CityID ", "X", "Y")
 	if err != nil {
 		answer.Data = err.Error()
 		return
 	}
-	err = database.CreateUpgrade(request.Data["CityID"], request.Data["X"], request.Data["Y"])
+	err = database.CreateUpgrade(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"])
 	if err != nil {
 		answer.Data = err.Error()
 		return
 	}
 	answer.Data = Success
 	answer.Ok = true
+	return
 
 }
 
-func (cs *cityserver) newConstruction(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-	defer func() { *out <- answer }()
-	err := request.ValidadeFields("CityID", "X", "Y", "Type")
+func (cs *cityserver) newConstruction(request *hub.RequestWithCallback) {
+	answer := request.Request.ToAnswer()
+	defer request.Callback(answer)
+	err := request.Request.FieldsExist("CityID", "X", "Y", "Type")
 	if err != nil {
 		answer.Data = err.Error()
 		return
 	}
-	if request.Data["X"] > 19 {
+	if request.Request.Data["X"] < 0 || request.Request.Data["X"] > 19 {
 		answer.Data = "Bad X value"
-		*out <- answer
 		return
 	}
-	if request.Data["Y"] > 19 {
+	if request.Request.Data["Y"] < 0 || request.Request.Data["Y"] > 19 {
 		answer.Data = "Bad Y value"
-		*out <- answer
 		return
 	}
-	_, ok := entities.RegisteredConstructions[request.Data["Type"]]
+	_, ok := entities.RegisteredConstructions[request.Request.Data["Type"]]
 	if !ok {
 		answer.Data = "Bad Type value"
-		*out <- answer
 		return
 	}
-	_, err = database.GetConstruction(request.Data["CityID"], request.Data["X"], request.Data["Y"]) // Check if construction exists
-	if err != nil {
-		err = database.CreateConstruction(request.Data["CityID"], request.Data["X"], request.Data["Y"], request.Data["Type"], 0)
-		if err != nil {
-			answer.Data = errors.New(FailedNewConstruction)
-			return
-		}
-		err = database.CreateUpgrade(request.Data["CityID"], request.Data["X"], request.Data["Y"])
-		if err != nil {
-			answer.Data = errors.New(FailedNewConstructionUpgrade)
-			return
-		}
-		answer.Data = Success
-		answer.Ok = true
-	} else {
+	_, err = database.GetConstruction(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"]) // Check if construction exists
+	if err == nil {
 		answer.Data = errors.New(TileInUse)
+		return
 	}
-
+	err = database.CreateConstruction(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"], request.Request.Data["Type"], 0)
+	if err != nil {
+		answer.Data = errors.New(FailedNewConstruction)
+		return
+	}
+	err = database.CreateUpgrade(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"])
+	if err != nil {
+		answer.Data = errors.New(FailedNewConstructionUpgrade)
+		return
+	}
+	answer.Data = Success
+	answer.Ok = true
+	return
 }
 
-func (cs *cityserver) getConstructions(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-	defer func() { *out <- answer }()
-	err := request.ValidadeFields("CityID")
+func (cs *cityserver) getConstructions(request *hub.RequestWithCallback) {
+	answer := request.Request.ToAnswer()
+	defer request.Callback(answer)
+	err := request.Request.FieldsExist("CityID")
 	if err != nil {
 		answer.Data = err.Error()
 		return
 	}
-	cities, err := database.GetAllConstruction(request.Data["CityID"])
+	cities, err := database.GetAllConstruction(request.Request.Data["CityID"])
 	if err != nil {
 		answer.Data = errors.New(FailedGetConstructions)
 		return
 	}
 	answer.Ok = true
 	answer.Data = cities
-
+	return
 }

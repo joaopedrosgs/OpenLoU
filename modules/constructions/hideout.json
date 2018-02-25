@@ -1,6 +1,7 @@
   {
-    "id":5,
+    "id": 10,
     "name": "Hideout",
+    "info": "Allows safe storage of resources, preventing them from being reported by Scouts or plundered. Its capacity can be increased if built beside woods.",
     "bonus": [{
       "name": "hiddenstorage",
       "value": [500, 1000, 2000, 3000, 4500, 6000, 8000, 10000, 12000, 15000]

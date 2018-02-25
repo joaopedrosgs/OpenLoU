@@ -1,27 +1,28 @@
 {
-  "id":17,
-    "name": "Barracks",
-    "bonus": [{
-      "name": "armySize",
-      "value": [10, 30, 60, 100, 160, 240, 350, 500, 700, 1000]
-    }],
-    "adjascent": [{
-      "builds": ["trainingGround", "stable", "moonglow", "temple", "workshop", "shipyard"],
-      "bonus": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
-    }],
-    "resourceCost": [
-      [15, 30],
-      [30, 60],
-      [55, 110],
-      [140, 280],
-      [400, 800],
-      [1000, 2000],
-      [1900, 3800],
-      [3200, 6400],
-      [5100, 10200],
-      [8000, 16000],
-      [19840, 39680]
-    ],
-    "score": [1, 2, 4, 7, 12, 18, 25, 34, 45, 60]
+  "id": 20,
+  "name": "Barracks",
+  "info": "Increases the maximum army size of a city. Also increases the recruitment speed of all bordering Training Grounds, Stables, Moonglow Towers, Trinsic Temples, Workshops and Shipyards.",
+  "bonus": [{
+    "name": "armySize",
+    "value": [10, 30, 60, 100, 160, 240, 350, 500, 700, 1000]
+  }],
+  "adjascent": [{
+    "builds": ["trainingGround", "stable", "moonglow", "temple", "workshop", "shipyard"],
+    "bonus": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
+  }],
+  "resourceCost": [
+    [15, 30],
+    [30, 60],
+    [55, 110],
+    [140, 280],
+    [400, 800],
+    [1000, 2000],
+    [1900, 3800],
+    [3200, 6400],
+    [5100, 10200],
+    [8000, 16000],
+    [19840, 39680]
+  ],
+  "score": [1, 2, 4, 7, 12, 18, 25, 34, 45, 60]
 
-  }
+}

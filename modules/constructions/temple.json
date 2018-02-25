@@ -1,23 +1,24 @@
 {
-  "id":20,
-    "name": "Trinsic Temple",
-    "bonus": [{
-      "name": "blessedRecruitment",
-      "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
+  "id": 22,
+  "name": "Trinsic Temple",
+  "info": "Allows recruitment of blessed units and Barons and, if upgraded, increases their recruitment speed. Placing a Barracks beside a Trinsic Temple will also increase recruitment speed.",
+  "bonus": [{
+    "name": "blessedRecruitment",
+    "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
 
-    }],
-    "resourcecost": [
-      [35, 70],
-      [70, 140],
-      [135, 270],
-      [335, 670],
-      [1000, 2000],
-      [2350, 4700],
-      [4650, 9300],
-      [8000, 16000],
-      [12700, 25400],
-      [19500, 39000]
+  }],
+  "resourcecost": [
+    [35, 70],
+    [70, 140],
+    [135, 270],
+    [335, 670],
+    [1000, 2000],
+    [2350, 4700],
+    [4650, 9300],
+    [8000, 16000],
+    [12700, 25400],
+    [19500, 39000]
 
-    ],
-    "score": [1, 3, 6, 12, 20, 30, 42, 57, 75, 100]
-  }
+  ],
+  "score": [1, 3, 6, 12, 20, 30, 42, 57, 75, 100]
+}

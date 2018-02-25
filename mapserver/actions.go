@@ -1,66 +1,59 @@
 package mapserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/database"
+	"github.com/joaopedrosgs/OpenLoU/hub"
 	"github.com/joaopedrosgs/OpenLoU/session"
 )
 
-func (ms *mapserver) createCity(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-
+func (ms *mapserver) createCity(request *hub.RequestWithCallback) {
+	return
 }
-func (ms *mapserver) getCitiesFromUser(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-
-	userID := session.GetUserID(request.Key)
+func (ms *mapserver) getCitiesFromUser(request *hub.RequestWithCallback) {
+	answer := request.Request.ToAnswer()
+	userID := session.GetUserID(request.Request.Key)
 	cities, err := database.GetUserCities(userID)
 	if err != nil {
 		answer.Data = err
-		*out <- answer
-		return
-	}
-	answer.Data = cities
-	answer.Ok = true
-	*out <- answer
 
+	} else {
+		answer.Data = cities
+		answer.Ok = true
+	}
+	request.Callback(answer)
 }
 
-func (ms *mapserver) getCities(request *communication.Request, answer *communication.Answer, out *chan *communication.Answer) {
-	err := request.ValidadeFields("X", "Y", "Range", "Continent")
-	if err != nil {
+func (ms *mapserver) getCities(request *hub.RequestWithCallback) {
+	answer := request.Request.ToAnswer()
+	if err := request.Request.FieldsExist("X", "Y", "Range", "Continent"); err != nil {
 		answer.Data = err.Error()
-		*out <- answer
+	}
+	if request.Request.Data["X"] < 0 || request.Request.Data["X"] > configuration.GetSingleton().Parameters.General.ContinentSize {
+		answer.Data = "X is bigger than allowed"
 		return
 	}
-	if request.Data["X"] > configuration.GetSingleton().Parameters.General.ContinentSize {
-		answer.Data = "Bad X value"
-		*out <- answer
+	if request.Request.Data["Y"] < 0 || request.Request.Data["Y"] > configuration.GetSingleton().Parameters.General.ContinentSize {
+		answer.Data = "Y is bigger than allowed"
 		return
 	}
-	if request.Data["Y"] > configuration.GetSingleton().Parameters.General.ContinentSize {
-		answer.Data = "Bad Y value"
-		*out <- answer
+	if request.Request.Data["Range"] <= 0 || request.Request.Data["Range"] > 20 {
+		answer.Data = "Range is bigger/smaller than allowed"
+		return
+	}
+	if request.Request.Data["Continent"] < 0 || request.Request.Data["Continent"] > configuration.GetSingleton().Parameters.General.WorldSize {
+		answer.Data = "This continent doenst exist"
 		return
 	}
 
-	if request.Data["Range"] <= 0 || request.Data["Range"] > 20 {
-		request.Data["Range"] = 20
-	}
-
-	if err != nil || request.Data["Continent"] < 0 || request.Data["Continent"] > configuration.GetSingleton().Parameters.General.WorldSize {
-		answer.Data = "Bad Continent value"
-		*out <- answer
-		return
-	}
-	cities, err := database.GetCitiesInRange(request.Data["X"], request.Data["Y"], request.Data["Range"], request.Data["Continent"])
+	cities, err := database.GetCitiesInRange(request.Request.Data["X"], request.Request.Data["Y"], request.Request.Data["Range"], request.Request.Data["Continent"])
 	if err != nil {
 		ms.LogContext.WithField("When", "Accessing database").Error(err.Error())
 		answer.Data = "Internal error"
-		*out <- answer
-		return
+	} else {
+		answer.Ok = true
+		answer.Data = cities
 	}
-	answer.Ok = true
-	answer.Data = cities
-	*out <- answer
 
+	request.Callback(answer)
 }

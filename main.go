@@ -8,8 +8,9 @@ import (
 	"github.com/joaopedrosgs/OpenLoU/mapserver"
 	"github.com/joaopedrosgs/OpenLoU/session"
 
-	log "github.com/sirupsen/logrus"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/database"
@@ -51,6 +52,7 @@ func main() {
 	go MapServer.StartListening()
 	go CityServer.StartListening()
 	go AccountServer.StartListening(":8000")
+
 	Hermes.StartListening(":8080")
 
 }

@@ -1,6 +1,7 @@
 {
-  "id":0,
-  "name": "Town Hall",
+  "id": 5,
+  "name": "Townhall",
+  "info": "Provides basic storage and wood production. Also determines the maximum number of buildings in a city. Only one can be built in each city. Cannot be totally demolished or destroyed.",
   "bonus": [{
     "name": "woodh",
     "value": [300]

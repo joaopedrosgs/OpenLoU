@@ -1,23 +1,24 @@
 {
-  "id":18,
-    "name": "Training Ground",
-    "bonus": [{
-      "name": "infantryRecruitment",
-      "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
+  "id": 21,
+  "name": "Training Ground",
+  "info": "Allows recruitment of infantry units and, if upgraded, increases their recruitment speed. Placing a Barracks beside a Training Ground will also increase recruitment speed.",
+  "bonus": [{
+    "name": "infantryRecruitment",
+    "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
 
-    }],
-    "resourcecost": [
-      [20, 40],
-      [40, 80],
-      [80, 160],
-      [200, 400],
-      [600, 1200],
-      [1400, 2800],
-      [2800, 5600],
-      [4800, 9600],
-      [7500, 15000],
-      [11500, 23000],
-      [28940, 57880]
-    ],
-    "score": [1, 2, 5, 10, 16, 24, 34, 46, 60, 80]
-  }
+  }],
+  "resourcecost": [
+    [20, 40],
+    [40, 80],
+    [80, 160],
+    [200, 400],
+    [600, 1200],
+    [1400, 2800],
+    [2800, 5600],
+    [4800, 9600],
+    [7500, 15000],
+    [11500, 23000],
+    [28940, 57880]
+  ],
+  "score": [1, 2, 5, 10, 16, 24, 34, 46, 60, 80]
+}

@@ -1,6 +1,7 @@
   {
-    "id":6,
+    "id": 11,
     "name": "Farm",
+    "info": "Produces food. Any bordering grassland, lakes, Cottages and Mills will increase productivity.",
     "bonus": [{
       "name": "foodh",
       "value": [5, 10, 15, 20, 30, 45, 75, 120, 200, 300]

@@ -1,15 +1,16 @@
 {
-  "id":13,
-    "name": "Mill",
-    "adjascent": [{
-        "builds": ["farm"],
-        "bonus": [30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
-      },
-      {
-        "builds": ["storage"],
-        "resource": "food",
-        "bonus": [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
-      }
-    ],
-    "shared": "inc"
-  }
+  "id": 27,
+  "name": "Mill",
+  "info": "Increases the efficiency of bordering Farms and food storage capacity of any bordering Storage.",
+  "adjascent": [{
+      "builds": ["farm"],
+      "bonus": [30, 35, 40, 45, 50, 55, 60, 65, 70, 75]
+    },
+    {
+      "builds": ["storage"],
+      "resource": "food",
+      "bonus": [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+    }
+  ],
+  "shared": "inc"
+}

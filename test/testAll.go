@@ -43,7 +43,7 @@ func RunTest() {
 	begin := time.Now()
 	request := communication.Request{}
 	request.Key = key
-	request.Type = 203
+	request.Type = 1254
 
 	data := make(map[string]uint)
 	data["X"] = 11
@@ -81,7 +81,7 @@ func sendWithData(key string, conn net.Conn, request communication.Request) {
 	reader := bufio.NewReader(conn)
 	bytes, _ := json.Marshal(request)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1; i++ {
 		_, err := writer.Write(bytes)
 
 		if err != nil {

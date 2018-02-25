@@ -1,6 +1,7 @@
   {
-    "id":9,
+    "id": 14,
     "name": "Marketplace",
+    "info": "Allows transport of resources between cities and enables trade with other players by land. Also increases the tax income of connected buildings.",
     "bonus": [{
       "name": "carts",
       "value": [1, 4, 10, 20, 30, 50, 70, 105, 145, 200]

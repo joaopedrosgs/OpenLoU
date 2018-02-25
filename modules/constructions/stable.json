@@ -1,22 +1,23 @@
 {
-  "id":21,
-    "name": "Stable",
-    "bonus": [{
-      "name": "cavalryRecruitment",
-      "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
+  "id": 23,
+  "name": "Stable",
+  "info": "Allows recruitment of cavalry units and, if upgraded, increases their recruitment speed. Placing a Barracks beside a Stable will also increase recruitment speed.",
+  "bonus": [{
+    "name": "cavalryRecruitment",
+    "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
 
-    }],
-    "resourcecost": [
-      [25, 50],
-      [55, 110],
-      [110, 220],
-      [275, 550],
-      [800, 1600],
-      [1900, 3800],
-      [3750, 7500],
-      [6500, 13000],
-      [10200, 20400],
-      [15500, 31000]
-    ],
-    "score": [1, 3, 6, 12, 20, 30, 42, 57, 75, 100]
-  }
+  }],
+  "resourcecost": [
+    [25, 50],
+    [55, 110],
+    [110, 220],
+    [275, 550],
+    [800, 1600],
+    [1900, 3800],
+    [3750, 7500],
+    [6500, 13000],
+    [10200, 20400],
+    [15500, 31000]
+  ],
+  "score": [1, 3, 6, 12, 20, 30, 42, 57, 75, 100]
+}

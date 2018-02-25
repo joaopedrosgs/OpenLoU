@@ -1,6 +1,7 @@
 {
-  "id":1,
-  "name": "woodcutter",
+  "id": 6,
+  "name": "Woodcutter's Hut",
+  "info": "Produces wood. Any bordering woods, Cottages and a maximum of one Sawmill will increase productivity.",
   "bonus": [{
     "name": "woodh",
     "value": [5, 10, 15, 20, 30, 45, 75, 120, 200, 300]

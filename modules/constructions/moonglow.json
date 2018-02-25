@@ -1,0 +1,23 @@
+{
+  "id": 25,
+  "name": "Moonglow Tower",
+  "info": "Allows recruitment of caster units (Mages, Warlocks) and, if upgraded, increases their recruitment speed. Also enables purification of resources for research, vital when recruiting Barons. Placing a Barracks beside a Moonglow Tower will also increase recruitment speed.",
+  "bonus": [{
+    "name": "mageRecruitment",
+    "value": [5, 10, 16, 24, 35, 50, 68, 90, 115, 150]
+
+  }],
+  "resourcecost": [
+    [25, 50],
+    [55, 110],
+    [110, 220],
+    [275, 550],
+    [800, 1600],
+    [1900, 3800],
+    [3750, 7500],
+    [6500, 13000],
+    [10200, 20400],
+    [15500, 31000]
+  ],
+  "score": [1, 3, 6, 12, 20, 30, 42, 57, 75, 100]
+}

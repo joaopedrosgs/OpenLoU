@@ -2,7 +2,6 @@ package communication
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 )
 
 type Request struct {
@@ -12,10 +11,10 @@ type Request struct {
 	isSystem bool
 }
 
-func (r *Request) ValidadeFields(fields ...string) error {
+func (r *Request) FieldsExist(fields ...string) error {
 	for _, field := range fields {
 		if _, ok := r.Data[field]; !ok {
-			return errors.New(fmt.Sprintf("bad %s value!", field))
+			return fmt.Errorf("bad %s value!", field)
 		}
 
 	}

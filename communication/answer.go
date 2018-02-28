@@ -5,7 +5,7 @@ type Answer struct {
 	key      string
 	Ok       bool
 	Type     int
-	Data     interface{}
+	Data     interface{} `json:",omitempty"`
 	isSystem bool
 }
 

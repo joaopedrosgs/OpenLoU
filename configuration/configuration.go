@@ -55,18 +55,13 @@ type Config struct {
 var configuration *Config
 
 func Load() {
-	arquivo, err := ioutil.ReadFile("configuration/default.json")
-	if err != nil {
+	if arquivo, err := ioutil.ReadFile("configuration/default.json"); err != nil {
 		context.WithField("Error", err.Error()).Info("The default configuration couldn't be loaded")
-		return
-	}
-	err = json.Unmarshal(arquivo, &configuration)
-	if err != nil {
+	} else if err = json.Unmarshal(arquivo, &configuration); err != nil {
 		context.WithField("Error", err.Error()).Info("The default configuration couldn't be parsed")
-		return
+	} else {
+		context.Info("Configuration loaded")
 	}
-
-	context.Info("Configuration loaded")
 
 }
 

@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+
 	"github.com/joaopedrosgs/OpenLoU/entities"
 )
 
@@ -69,7 +70,7 @@ func createCity(userID, x, y, continentID uint) error {
 	if err != nil {
 		return errors.New("Failed to create city: " + err.Error())
 	}
-	err = CreateConstruction(id, 11, 11, 1, 1)
+	err = CreateConstruction(id, 11, 11, 5, 1)
 	if err != nil {
 		return errors.New("Failed to create city: " + err.Error())
 	}

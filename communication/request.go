@@ -14,7 +14,7 @@ type Request struct {
 func (r *Request) FieldsExist(fields ...string) error {
 	for _, field := range fields {
 		if _, ok := r.Data[field]; !ok {
-			return fmt.Errorf("bad %s value!", field)
+			return fmt.Errorf("Empty %s value!", field)
 		}
 
 	}

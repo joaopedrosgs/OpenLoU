@@ -2,86 +2,55 @@ package cityserver
 
 import (
 	"errors"
+	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/database"
 	"github.com/joaopedrosgs/OpenLoU/entities"
-	"github.com/joaopedrosgs/OpenLoU/hub"
 )
 
-func (cs *cityserver) upgradeConstruction(request *hub.RequestWithCallback) {
-	answer := request.Request.ToAnswer()
-	defer request.Callback(answer)
-
-	err := request.Request.FieldsExist("CityID ", "X", "Y")
-	if err != nil {
+func (cs *cityserver) upgradeConstruction(request *communication.Request, answer *communication.Answer) *communication.Answer {
+	if err := request.FieldsExist("CityID ", "X", "Y"); err != nil {
 		answer.Data = err.Error()
-		return
-	}
-	err = database.CreateUpgrade(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"])
-	if err != nil {
+	} else if err = database.CreateUpgrade(request.Data["CityID"], request.Data["X"], request.Data["Y"]); err != nil {
 		answer.Data = err.Error()
-		return
+	} else {
+		answer.Data = Success
+		answer.Ok = true
 	}
-	answer.Data = Success
-	answer.Ok = true
-	return
+	return answer
 
 }
 
-func (cs *cityserver) newConstruction(request *hub.RequestWithCallback) {
-	answer := request.Request.ToAnswer()
-	defer request.Callback(answer)
-	err := request.Request.FieldsExist("CityID", "X", "Y", "Type")
-	if err != nil {
+func (cs *cityserver) newConstruction(request *communication.Request, answer *communication.Answer) *communication.Answer {
+	if err := request.FieldsExist("CityID", "X", "Y", "Type"); err != nil {
 		answer.Data = err.Error()
-		return
-	}
-	if request.Request.Data["X"] < 0 || request.Request.Data["X"] > 19 {
-		answer.Data = "Bad X value"
-		return
-	}
-	if request.Request.Data["Y"] < 0 || request.Request.Data["Y"] > 19 {
-		answer.Data = "Bad Y value"
-		return
-	}
-	_, ok := entities.RegisteredConstructions[request.Request.Data["Type"]]
-	if !ok {
-		answer.Data = "Bad Type value"
-		return
-	}
-	_, err = database.GetConstruction(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"]) // Check if construction exists
-	if err == nil {
+	} else if request.Data["X"] < 0 || request.Data["X"] > 19 {
+		answer.Data = BadXValue
+	} else if request.Data["Y"] < 0 || request.Data["Y"] > 19 {
+		answer.Data = BadYValue
+	} else if _, ok := entities.RegisteredConstructions[request.Data["Type"]]; !ok {
+		answer.Data = BadConstructionType
+	} else if _, err = database.GetConstruction(request.Data["CityID"], request.Data["X"], request.Data["Y"]); err != nil {
 		answer.Data = errors.New(TileInUse)
-		return
-	}
-	err = database.CreateConstruction(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"], request.Request.Data["Type"], 0)
-	if err != nil {
+	} else if err = database.CreateConstruction(request.Data["CityID"], request.Data["X"], request.Data["Y"], request.Data["Type"], 0); err != nil {
 		answer.Data = errors.New(FailedNewConstruction)
-		return
-	}
-	err = database.CreateUpgrade(request.Request.Data["CityID"], request.Request.Data["X"], request.Request.Data["Y"])
-	if err != nil {
+	} else if err = database.CreateUpgrade(request.Data["CityID"], request.Data["X"], request.Data["Y"]); err != nil {
 		answer.Data = errors.New(FailedNewConstructionUpgrade)
-		return
+	} else {
+		answer.Data = Success
+		answer.Ok = true
 	}
-	answer.Data = Success
-	answer.Ok = true
-	return
+	return answer
 }
 
-func (cs *cityserver) getConstructions(request *hub.RequestWithCallback) {
-	answer := request.Request.ToAnswer()
-	defer request.Callback(answer)
-	err := request.Request.FieldsExist("CityID")
+func (cs *cityserver) getConstructions(request *communication.Request, answer *communication.Answer) *communication.Answer {
+	err := request.FieldsExist("CityID")
 	if err != nil {
 		answer.Data = err.Error()
-		return
-	}
-	cities, err := database.GetAllConstruction(request.Request.Data["CityID"])
-	if err != nil {
+	} else if cities, err := database.GetAllConstruction(request.Data["CityID"]); err != nil {
 		answer.Data = errors.New(FailedGetConstructions)
-		return
+	} else {
+		answer.Ok = true
+		answer.Data = cities
 	}
-	answer.Ok = true
-	answer.Data = cities
-	return
+	return answer
 }

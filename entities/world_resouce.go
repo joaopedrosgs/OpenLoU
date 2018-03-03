@@ -5,9 +5,8 @@ import (
 )
 
 type WorldResource struct {
-	ID        uint
-	CreatedAt time.Time
-	UpdatedAt time.Time
 	TileNode
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
 	ResourceType uint
 }

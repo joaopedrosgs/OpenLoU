@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/accountserver"
+	"github.com/joaopedrosgs/OpenLoU/authserver"
 	"github.com/joaopedrosgs/OpenLoU/cityserver"
 	"github.com/joaopedrosgs/OpenLoU/entities"
 	"github.com/joaopedrosgs/OpenLoU/hub"
@@ -12,6 +12,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/joaopedrosgs/OpenLoU/accountserver"
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/database"
 )
@@ -32,14 +33,14 @@ func main() {
 	session.NewSessionInMemory()
 	Hermes := hub.Create()
 
-	AccountServer, err := accountserver.New()
+	AuthServer, err := authserver.New()
 	if err != nil {
 		context.Error(err.Error())
 	}
 
 	MapServer := mapserver.New()
 	CityServer := cityserver.New()
-
+	AccountServer := accountserver.New()
 	err = Hermes.RegisterWorker(CityServer)
 	if err != nil {
 		context.Error(err.Error())
@@ -48,10 +49,15 @@ func main() {
 	if err != nil {
 		context.Error(err.Error())
 	}
+	err = Hermes.RegisterWorker(AccountServer)
+	if err != nil {
+		context.Error(err.Error())
+	}
 
 	go MapServer.StartListening()
 	go CityServer.StartListening()
-	go AccountServer.StartListening(":8000")
+	go AccountServer.StartListening()
+	go AuthServer.StartListening(":8000")
 
 	Hermes.StartListening(":8080")
 

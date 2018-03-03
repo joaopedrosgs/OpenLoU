@@ -2,16 +2,15 @@ package cityserver
 
 import (
 	"github.com/joaopedrosgs/OpenLoU/database"
-
 	"github.com/joaopedrosgs/OpenLoU/worker"
 	"time"
 )
 
-type cityserver struct {
+type cityServer struct {
 	worker.Worker
 }
 
-func (cs *cityserver) UpgradeChecker() {
+func (cs *cityServer) UpgradeChecker() {
 	for {
 		upgrades, err := database.GetUpgrades()
 		if err != nil {
@@ -31,13 +30,13 @@ func (cs *cityserver) UpgradeChecker() {
 	}
 }
 
-func New() *cityserver {
-	cs := &cityserver{}
-	cs.Setup("City server", 2)
+func New() *cityServer {
+	cs := &cityServer{}
+	cs.Setup("City server", 3)
 	cs.RegisterInternalEndpoint(cs.upgradeConstruction, 1)
 	cs.RegisterInternalEndpoint(cs.newConstruction, 2)
 	cs.RegisterInternalEndpoint(cs.getConstructions, 3)
-
+	cs.RegisterInternalEndpoint(cs.getUpgrades, 4)
 
 	go cs.UpgradeChecker()
 	return cs

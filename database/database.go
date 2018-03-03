@@ -22,7 +22,7 @@ func InitDB() {
 	}
 	var numberOfContinent uint = 0
 	expectedNumberOfContinents := configuration.GetSingleton().Parameters.General.WorldSize
-	db.QueryRow("Select MAX(id) from continents").Scan(&numberOfContinent)
+	db.QueryRow("Select Count(*) from continents").Scan(&numberOfContinent)
 	if numberOfContinent < expectedNumberOfContinents {
 		context.Warning("Looks like there are less continents than expected, attempting to create more...")
 		createNewContinents()

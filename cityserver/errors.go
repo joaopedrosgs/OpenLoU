@@ -10,4 +10,6 @@ const (
 	FailedNewConstructionUpgrade = "failed to create upgrade to the new construction"
 	TileInUse                    = "tile already in use"
 	FailedGetConstructions       = "failed to get constructions"
+	BadCityXValue                = "bad city X value"
+	BadCityYValue                = "bad city Y value"
 )

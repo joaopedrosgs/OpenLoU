@@ -1,4 +1,4 @@
-package accountserver
+package session
 
 import (
 	"crypto/rand"

@@ -5,10 +5,9 @@ import (
 )
 
 type Dungeon struct {
-	ID        uint
+	TileNode
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	TileNode
-	Level    int
-	Progress int
+	Level     int
+	Progress  int
 }

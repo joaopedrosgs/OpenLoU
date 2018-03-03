@@ -5,10 +5,17 @@ import (
 )
 
 type User struct {
-	ID           uint
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	Name         string
 	Email        string
 	PasswordHash string
+	AllianceName string
+	Gold         uint
+	Diamonds     uint
+	Darkwood     uint
+	Runestone    uint
+	Veritium     uint
+	Trueseed     uint
+	Rank         uint
 }

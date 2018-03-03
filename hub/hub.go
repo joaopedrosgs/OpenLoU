@@ -1,5 +1,5 @@
 // Hermes, the messenger
-// Receives packages and passes them to the respective server (processor), receive th
+// Receives packages and passes them to the respective server (processor), it also receives the answers and return them to the user
 
 package hub
 
@@ -59,7 +59,7 @@ func (h *Hub) handleReturn() {
 	for {
 		answer := <-h.inChan
 		if answer.IsSystem() {
-			conn, ok = session.GetUserConnById(answer.GetId())
+			conn, ok = session.GetUserConnByName(answer.GetUserName())
 		} else {
 			conn, ok = session.GetUserConn(answer.GetKey())
 		}
@@ -76,7 +76,7 @@ func (h *Hub) writeBackToUser(answer *communication.Answer, conn net.Conn) {
 
 	if err != nil || n == 0 {
 		if answer.IsSystem() {
-			session.DeleteSessionByID(answer.GetId())
+			session.DeleteSessionByName(answer.GetUserName())
 		} else {
 			session.DeleteSession(answer.GetKey())
 
@@ -110,7 +110,7 @@ func (h *Hub) handleUser(conn net.Conn) {
 
 	for err == nil && received > 0 && received < MSGSIZE {
 
-		if session.Exists(request.Key) {
+		if _, ok := session.Exists(request.Key); ok {
 			h.handleAuthorizedUser(request)
 		} else {
 			h.writeBackToUser(communication.Unauthorized(), conn)
@@ -139,7 +139,7 @@ func (h *Hub) handleUser(conn net.Conn) {
 func (h *Hub) Validate(request *communication.Request, conn net.Conn) bool {
 	auth := false
 
-	auth = session.Exists(request.Key)
+	_, auth = session.Exists(request.Key)
 	if auth {
 		session.SetConn(request.Key, conn)
 	}

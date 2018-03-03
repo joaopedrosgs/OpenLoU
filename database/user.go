@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/session"
 )
 
 func CreateUser(login, passwordHash, email string) error {
@@ -28,12 +29,17 @@ func CreateUser(login, passwordHash, email string) error {
 			return err
 		}
 	}
-	randX, randY, continentID, err := findNewCityLocation()
+	randX, randY, continentX, continentY, err := findNewCityLocation()
 	if err != nil {
 		context.WithField("When", "Finding location").Error(err.Error())
 		return err
 	}
-	err = createCity(userID, randX, randY, continentID)
+	err = createCity(entities.City{
+		TileNode: entities.TileNode{randX, randY, continentX, continentY, "city"},
+		Name:     "New City",
+		Points:   3,
+		UserName: login,
+	})
 	if err != nil {
 		context.WithField("When", "Creating city").Error(err.Error())
 		return err
@@ -41,14 +47,34 @@ func CreateUser(login, passwordHash, email string) error {
 	return nil
 }
 
-func GetUser(email string) (*entities.User, error) {
-	if db == nil {
-		InitDB()
-	}
+func GetUserInfo(userName string) (*entities.User, error) {
 	user := &entities.User{}
-	err := db.QueryRow("SELECT * from users where email = $1", email).Scan(&user.ID, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Email, &user.PasswordHash)
+	err := db.QueryRow(
+		"SELECT name, email, alliance_id, gold, diamonds, darkwood, runestone, veritium, trueseed, rank "+
+			"from users "+
+			"WHERE name = $1", userName).Scan(
+		&user.Name,
+		&user.Email,
+		&user.AllianceName,
+		&user.Gold,
+		&user.Diamonds,
+		&user.Darkwood,
+		&user.Runestone,
+		&user.Veritium,
+		&user.Trueseed,
+		&user.Rank)
 	if err != nil {
-		return nil, errors.New("Account could not be found: " + err.Error())
+		context.WithField("When", "Retrieving user information").Error(err.Error())
+
 	}
-	return user, nil
+	return user, err
+}
+
+func GetUserInfoByKey(key string) (*entities.User, error) {
+	userName, ok := session.GetUserName(key)
+	if ok {
+		return GetUserInfo(userName)
+	} else {
+		return nil, errors.New("Account not found")
+	}
 }

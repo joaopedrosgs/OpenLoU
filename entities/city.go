@@ -5,11 +5,10 @@ import (
 )
 
 type City struct {
-	ID uint
 	TileNode
 	createdAt       time.Time
 	updatedAt       time.Time
-	userID          uint
+	UserName        string
 	Name            string
 	Points          int
 	woodProduction  int
@@ -27,6 +26,6 @@ type City struct {
 	foodLimit       int
 }
 
-func (c *City) GetType() int {
-	return 1
+func (c *City) GetType() string {
+	return "city"
 }

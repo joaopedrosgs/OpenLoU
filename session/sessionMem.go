@@ -2,13 +2,15 @@ package session
 
 import (
 	"github.com/joaopedrosgs/OpenLoU/configuration"
+	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/pkg/errors"
 	"net"
 	"sync"
 	"time"
 )
 
 type Session struct {
-	userId     uint
+	UserName   string
 	lastAction time.Time
 	tries      int
 	conn       net.Conn
@@ -21,16 +23,18 @@ type sessionMem struct {
 
 var sessionsStorage sessionMem
 
-func NewSession(userId uint, key string) bool {
-	sessionsStorage.mutex.Lock()
-	if uint(len(key)) == configuration.GetSingleton().Parameters.Security.KeySize || userId >= 0 {
-		sessionsStorage.sessions[key] = &Session{userId, time.Now(), 0, nil}
+func NewSession(user entities.User) (string, error) {
+	key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
+	if err == nil {
+		sessionsStorage.mutex.Lock()
+		if uint(len(key)) == configuration.GetSingleton().Parameters.Security.KeySize || len(user.Name) >= 0 {
+			sessionsStorage.sessions[key] = &Session{user.Name, time.Now(), 0, nil}
+		} else {
+			err = errors.New("Internal error")
+		}
 		sessionsStorage.mutex.Unlock()
-		return true
-
 	}
-	sessionsStorage.mutex.Unlock()
-	return false
+	return key, err
 }
 
 func SetConn(key string, conn net.Conn) {
@@ -42,19 +46,11 @@ func SetConn(key string, conn net.Conn) {
 	sessionsStorage.mutex.Unlock()
 }
 
-func Exists(key string) bool {
+func Exists(key string) (Session, bool) {
 	sessionsStorage.mutex.RLock()
-	_, ok := sessionsStorage.sessions[key]
+	session, ok := sessionsStorage.sessions[key]
 	sessionsStorage.mutex.RUnlock()
-	return ok
-}
-func sessionsExistsByID(id uint) bool {
-	for _, session := range sessionsStorage.sessions {
-		if session.userId == id {
-			return true
-		}
-	}
-	return false
+	return *session, ok
 }
 
 func DeleteSession(key string) {
@@ -64,10 +60,10 @@ func DeleteSession(key string) {
 
 }
 
-func DeleteSessionByID(id uint) {
+func DeleteSessionByName(userName string) {
 	sessionsStorage.mutex.Lock()
 	for key, session := range sessionsStorage.sessions {
-		if session.userId == id {
+		if session.UserName == userName {
 			delete(sessionsStorage.sessions, key)
 		}
 	}
@@ -98,10 +94,10 @@ func GetUserConn(key string) (net.Conn, bool) {
 	return nil, ok
 
 }
-func GetUserConnById(id uint) (net.Conn, bool) {
+func GetUserConnByName(userName string) (net.Conn, bool) {
 	sessionsStorage.mutex.RLock()
 	for _, session := range sessionsStorage.sessions {
-		if session.userId == id {
+		if session.UserName == userName {
 			sessionsStorage.mutex.RUnlock()
 			return session.conn, true
 		}
@@ -111,10 +107,10 @@ func GetUserConnById(id uint) (net.Conn, bool) {
 
 }
 
-func GetUserID(key string) uint {
+func GetUserName(key string) (string, bool) {
 	sessionsStorage.mutex.RLock()
-	id := sessionsStorage.sessions[key].userId
+	user, bool := sessionsStorage.sessions[key]
+	name := user.UserName
 	sessionsStorage.mutex.RUnlock()
-
-	return id
+	return name, bool
 }

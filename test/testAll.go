@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"github.com/joaopedrosgs/OpenLoU/accountserver"
 	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/session"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -15,8 +15,8 @@ import (
 
 func RunTest() {
 	urlLogin := "http://localhost:8000/"
-	randomLogin, _ := accountserver.GenerateRandomString(10)
-	randomMail, _ := accountserver.GenerateRandomString(10)
+	randomLogin, _ := session.GenerateRandomString(10)
+	randomMail, _ := session.GenerateRandomString(10)
 
 	form := url.Values{
 		"login":    {randomLogin},

@@ -1,8 +1,9 @@
 package entities
 
 type TileNode struct {
-	X           uint
-	Y           uint
-	ContinentID uint
-	Type        uint
+	X          uint
+	Y          uint
+	ContinentX uint
+	ContinentY uint
+	Type       string
 }

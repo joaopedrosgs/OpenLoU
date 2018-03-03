@@ -1,4 +1,4 @@
-package accountserver
+package authserver
 
 const (
 	emptyFields      = "empty fields"
@@ -8,4 +8,6 @@ const (
 	accountExists    = "an account already exists with that information"
 	failedSession    = "failed to create session"
 	success          = "success"
+	notPost          = "only POST allowed!"
+	sessionNotFound  = "session not found!"
 )

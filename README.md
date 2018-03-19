@@ -8,5 +8,5 @@
 The project is in early state, nothing really works yet.
 
 # Tech
-I'm using Goland and PostgreSQL.
+I'm using Golang and PostgreSQL.
 

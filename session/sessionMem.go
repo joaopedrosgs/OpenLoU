@@ -2,7 +2,7 @@ package session
 
 import (
 	"github.com/joaopedrosgs/OpenLoU/configuration"
-	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/models"
 	"github.com/pkg/errors"
 	"net"
 	"sync"
@@ -23,7 +23,7 @@ type sessionMem struct {
 
 var sessionsStorage sessionMem
 
-func NewSession(user entities.User) (string, error) {
+func NewSession(user models.User) (string, error) {
 	key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
 	if err == nil {
 		sessionsStorage.mutex.Lock()

@@ -1,11 +1,11 @@
 package accountserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/worker"
+	"github.com/joaopedrosgs/OpenLoU/server"
 )
 
 type accountServer struct {
-	worker.Worker
+	server.Server
 }
 
 func New() *accountServer {

@@ -13,7 +13,7 @@ import (
 var db *pgx.ConnPool
 var context = log.WithField("Entity", "Database")
 
-func InitDB() {
+func Open() {
 	err := errors.New("")
 
 	db, err = pgx.NewConnPool(pgx.ConnPoolConfig{ConnConfig: configuration.GetConnConfig(), MaxConnections: 5})

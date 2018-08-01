@@ -13,13 +13,14 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/models"
 
 	"time"
 )
 
 type authServer struct {
 	context *log.Entry
+	Attemps map[string]int
 }
 
 type LoginAttempt struct {
@@ -28,7 +29,7 @@ type LoginAttempt struct {
 }
 
 func New() (*authServer, error) {
-	return &authServer{log.WithFields(log.Fields{"Entity": "Auth Server"})}, nil
+	return &authServer{log.WithFields(log.Fields{"Entity": "Auth Server"}), make(map[string]int)}, nil
 
 }
 
@@ -116,9 +117,9 @@ func (s *authServer) NewAttempt(attempt *LoginAttempt) (string, error) {
 }
 
 //checkCredentials returns the user and nil if the credentials are correct
-func (s *authServer) checkCredentials(attempt *LoginAttempt) (entities.User, error) {
+func (s *authServer) checkCredentials(attempt *LoginAttempt) (models.User, error) {
 	var err error
-	var user entities.User
+	var user models.User
 	if len(attempt.Password) < 8 || len(attempt.Login) < 8 {
 		err = errors.New(emptyFields)
 	} else if user, err := database.GetUserInfo(attempt.Login); err != nil {

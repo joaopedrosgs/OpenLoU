@@ -4,13 +4,13 @@ import (
 	"errors"
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/database"
-	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/models"
 )
 
-func (cs *cityServer) upgradeConstruction(request *communication.Request, answer *communication.Answer) *communication.Answer {
+func (cs *cityServer) upgradeConstruction(request *communication.Request) (answer *communication.Answer) {
 	if err := request.FieldsExist("CityX", "CityY", "X", "Y"); err != nil {
 		answer.Data = err.Error()
-	} else if err := database.CreateUpgrade(&entities.Construction{
+	} else if err := database.CreateUpgrade(&models.Construction{
 		X:     request.Data["X"],
 		Y:     request.Data["Y"],
 		CityX: request.Data["CityX"],
@@ -24,7 +24,7 @@ func (cs *cityServer) upgradeConstruction(request *communication.Request, answer
 
 }
 
-func (cs *cityServer) newConstruction(request *communication.Request, answer *communication.Answer) *communication.Answer {
+func (cs *cityServer) newConstruction(request *communication.Request) (answer *communication.Answer) {
 
 	if err := request.FieldsExist("CityX", "CityY", "X", "Y", "Type"); err != nil {
 		answer.Data = err.Error()
@@ -43,11 +43,11 @@ func (cs *cityServer) newConstruction(request *communication.Request, answer *co
 	return answer
 }
 
-func (cs *cityServer) getConstructions(request *communication.Request, answer *communication.Answer) *communication.Answer {
+func (cs *cityServer) getConstructions(request *communication.Request) (answer *communication.Answer) {
 	err := request.FieldsExist("CityX", "CityY")
 	if err != nil {
 		answer.Data = err.Error()
-	} else if cities, err := database.GetAllConstruction(request.Data["CityX"], request.Data["CityY"]); err != nil && cities != nil {
+	} else if cities, err := models.GetAllConstruction(request.Data["CityX"], request.Data["CityY"]); err != nil && cities != nil {
 		answer.Data = errors.New(FailedGetConstructions)
 	} else {
 		answer.Ok = true
@@ -55,12 +55,12 @@ func (cs *cityServer) getConstructions(request *communication.Request, answer *c
 	}
 	return answer
 }
-func (cs *cityServer) getUpgrades(request *communication.Request, answer *communication.Answer) *communication.Answer {
+func (cs *cityServer) getUpgrades(request *communication.Request) (answer *communication.Answer) {
 	err := request.FieldsExist("CityX", "CityY")
 	if err != nil {
 		answer.Data = err.Error()
 	} else if upgrades, err := database.GetUpgradesFromCity(request.Data["CityX"], request.Data["CityY"]); err != nil && upgrades != nil {
-		answer.Data = errors.New("Failed to get upgrads")
+		answer.Data = errors.New("Failed to get upgrades")
 	} else {
 		answer.Ok = true
 		answer.Data = upgrades

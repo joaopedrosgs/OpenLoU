@@ -1,12 +1,11 @@
-package entities
+package models
 
 import (
 	"time"
 )
 
 type Continent struct {
-	X              uint
-	Y              uint
+	Tile           Coord
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	IsActive       bool
@@ -14,3 +13,4 @@ type Continent struct {
 	NumberOfCities uint
 	CitiesLimit    uint
 }
+

@@ -1,6 +1,3 @@
-// Hermes, the messenger
-// Receives packages and passes them to the respective server (processor), it also receives the answers and return them to the user
-
 package hub
 
 import (
@@ -27,7 +24,7 @@ type Hub struct {
 	workers  map[int]*chan *communication.Request
 }
 
-func Create() Hub {
+func New() Hub {
 	h := Hub{}
 	h.workers = make(map[int]*chan *communication.Request)
 	h.inChan = make(chan *communication.Answer)
@@ -166,12 +163,12 @@ func (h *Hub) GetEntryPoint() *chan *communication.Answer {
 	return &h.inChan
 }
 
-func (h *Hub) RegisterWorker(worker IWorker) error {
+func (h *Hub) RegisterServer(worker IWorker) error {
 	if _, exists := h.workers[worker.GetCode()]; exists {
 		return errors.New("Code used by " + worker.GetName())
 	}
 	h.workers[worker.GetCode()] = worker.GetInChan()
 	worker.SetOutChan(&h.inChan)
-	context.WithFields(log.Fields{"Name": worker.GetName(), "Code": worker.GetCode()}).Info("A worker has been registered")
+	context.WithFields(log.Fields{"Name": worker.GetName(), "Code": worker.GetCode()}).Info("A server has been registered")
 	return nil
 }

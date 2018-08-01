@@ -2,13 +2,13 @@ package database
 
 import (
 	"errors"
-	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/models"
 	"github.com/joaopedrosgs/OpenLoU/session"
 )
 
 func CreateUser(login, passwordHash, email string) error {
 	if db == nil {
-		InitDB()
+		Open()
 	}
 	var userID uint
 
@@ -34,8 +34,8 @@ func CreateUser(login, passwordHash, email string) error {
 		context.WithField("When", "Finding location").Error(err.Error())
 		return err
 	}
-	err = createCity(entities.City{
-		TileNode: entities.TileNode{randX, randY, continentX, continentY, "city"},
+	err = createCity(models.City{
+		TileNode: models.TileNode{randX, randY, continentX, continentY, "city"},
 		Name:     "New City",
 		Points:   3,
 		UserName: login,
@@ -47,8 +47,8 @@ func CreateUser(login, passwordHash, email string) error {
 	return nil
 }
 
-func GetUserInfo(userName string) (*entities.User, error) {
-	user := &entities.User{}
+func GetUserInfo(userName string) (*models.User, error) {
+	user := &models.User{}
 	err := db.QueryRow(
 		"SELECT name, email, alliance_id, gold, diamonds, darkwood, runestone, veritium, trueseed, rank "+
 			"from users "+
@@ -70,7 +70,7 @@ func GetUserInfo(userName string) (*entities.User, error) {
 	return user, err
 }
 
-func GetUserInfoByKey(key string) (*entities.User, error) {
+func GetUserInfoByKey(key string) (*models.User, error) {
 	userName, ok := session.GetUserName(key)
 	if ok {
 		return GetUserInfo(userName)

@@ -1,11 +1,11 @@
 package mapserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/worker"
+	"github.com/joaopedrosgs/OpenLoU/server"
 )
 
 type mapserver struct {
-	worker.Worker
+	server.Server
 }
 
 func New() *mapserver {

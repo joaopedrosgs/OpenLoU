@@ -2,7 +2,7 @@ package database
 
 import (
 	"github.com/joaopedrosgs/OpenLoU/configuration"
-	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/models"
 	"math"
 	"math/rand"
 	"time"
@@ -52,7 +52,7 @@ func createNewContinents() error {
 	context.Info("Continents created!")
 	return nil
 }
-func setTile(tile entities.TileNode) error {
+func setTile(tile models.TileNode) error {
 	_, err := db.Exec("UPDATE tiles SET occupied_by = $1 WHERE continent_x = $2 AND continent_y = $3 AND x = $4 AND y = $5", tile.Type, tile.ContinentX, tile.ContinentY, tile.X, tile.Y)
 	return err
 }

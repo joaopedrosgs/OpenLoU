@@ -1,26 +1,27 @@
-package entities
+package modules
 
 import (
 	"encoding/json"
+	"github.com/joaopedrosgs/OpenLoU/models"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 )
 
-var RegisteredConstructions map[uint]ConstructionType
-var RegisteredTroops map[uint]TroopType
-var context = log.WithField("Entity", "Entities")
+var RegisteredConstructions map[uint]models.ConstructionType
+var RegisteredTroops map[uint]models.TroopType
 
 func RegisterAllConstructions() {
+	context := log.WithField("Entity", "Modules (Constructions)")
 	dir := "modules/constructions/"
 	context.WithField("From", dir).Info("Loading constructions")
-	RegisteredConstructions = make(map[uint]ConstructionType)
+	RegisteredConstructions = make(map[uint]models.ConstructionType)
 
 	if modules, err := ioutil.ReadDir(dir); err != nil {
 		context.WithFields(log.Fields{"Error": err.Error()}).Error("Failed to read constructions directory")
 
 	} else {
 		for _, module := range modules {
-			var element ConstructionType
+			var element models.ConstructionType
 			fileContent, err := ioutil.ReadFile(string(dir + module.Name()))
 			if err != nil {
 				context.WithFields(log.Fields{"Error": err.Error(), "Module": module.Name()}).Error("Failed to read construction module file")
@@ -41,8 +42,8 @@ func RegisterAllConstructions() {
 }
 
 func RegisterAllTroops() {
-
-	RegisteredTroops = make(map[uint]TroopType)
+	context := log.WithField("Entity", "Modules (Troops)")
+	RegisteredTroops = make(map[uint]models.TroopType)
 	dir := "modules/military/"
 	context.WithField("From", dir).Info("Loading troops")
 
@@ -51,7 +52,7 @@ func RegisterAllTroops() {
 		context.WithFields(log.Fields{"Error": err.Error()}).Error("Failed to read troops directory")
 	}
 	for _, module := range modules {
-		var element TroopType
+		var element models.TroopType
 		fileContent, err := ioutil.ReadFile(string(dir + module.Name()))
 		if err != nil {
 			context.WithFields(log.Fields{"Error": err.Error(), "Module": module.Name()}).Error("Failed to read troop module file")

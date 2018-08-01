@@ -1,7 +1,8 @@
-package entities
+package models
 
 import (
 	"time"
+	"github.com/jackc/pgx"
 )
 
 type User struct {
@@ -18,4 +19,11 @@ type User struct {
 	Veritium     uint
 	Trueseed     uint
 	Rank         uint
+}
+
+func GetUserByName(db pgx.Conn, name string) *User {
+
+}
+func GetUserByEmail(db pgx.Conn, email string) *User {
+
 }

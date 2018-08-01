@@ -1,22 +1,22 @@
 package database
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/entities"
+	"github.com/joaopedrosgs/OpenLoU/models"
 	"math/rand"
 	"time"
 )
 
-func GetUserCities(userName string) (*[]entities.City, error) {
-	var cities []entities.City
+func GetUserCities(userName string) (*[]models.City, error) {
+	var cities []models.City
 	if rows, err := db.Query(
 		"SELECT x, y, continent_x, continent_y, type, name, points "+
 			"FROM cities "+
 			"WHERE user_name = $1", userName); err != nil {
 		context.Error(err.Error())
 	} else {
-		cities = make([]entities.City, 0, 100)
+		cities = make([]models.City, 0)
 		for rows.Next() {
-			city := entities.City{UserName: userName}
+			city := models.City{UserName: userName}
 			err := rows.Scan(&city.X, &city.Y, &city.ContinentX, &city.ContinentY, &city.Type, &city.Name, &city.Points)
 			if err != nil {
 				context.Error(err.Error())
@@ -31,8 +31,8 @@ func GetUserCities(userName string) (*[]entities.City, error) {
 	return &cities, nil
 }
 
-func GetCitiesInRange(x, y, radius uint) (*[]entities.City, error) {
-	cities := make([]entities.City, 0, (radius*radius)*4)
+func GetCitiesInRange(x, y, radius uint) (*[]models.City, error) {
+	cities := make([]models.City, 0, (radius*radius)*4)
 	if x < radius {
 		x = radius
 	}
@@ -52,7 +52,7 @@ func GetCitiesInRange(x, y, radius uint) (*[]entities.City, error) {
 		context.WithField("When", "Finding cities in the region").Error(err.Error())
 	} else {
 		for rows.Next() {
-			city := entities.City{}
+			city := models.City{}
 			err := rows.Scan(&city.X, &city.Y, &city.ContinentX, &city.ContinentY, &city.Type, &city.Name, &city.Points)
 			if err != nil {
 				context.WithField("When", "Scaning cities from the database").Error(err.Error())
@@ -65,7 +65,7 @@ func GetCitiesInRange(x, y, radius uint) (*[]entities.City, error) {
 	return &cities, err
 }
 
-func createCity(city entities.City) error {
+func createCity(city models.City) error {
 	_, err := db.Exec(
 		"INSERT INTO cities(user_name, x, y, continent_x, continent_y) "+
 			"VALUES($1, $2, $3, $4, $5)",
@@ -86,12 +86,12 @@ func createCity(city entities.City) error {
 
 	return err
 }
-func PopulateNewCity(city entities.City) error {
+func PopulateNewCity(city models.City) error {
 	var err error
 	seed := rand.NewSource(time.Now().UnixNano())
 	random := rand.New(seed)
-	var defaultConstruction = make([]entities.Construction, 0, 21)
-	defaultConstruction[0] = entities.Construction{
+	var defaultConstruction = make([]models.Construction, 0, 21)
+	defaultConstruction[0] = models.Construction{
 		X:          11,
 		Y:          11,
 		CityX:      city.X,
@@ -107,7 +107,7 @@ func PopulateNewCity(city entities.City) error {
 		var resourceType = random.Uint32() % 4
 		var resourceX = random.Uint32() % 21
 		var resourceY = random.Uint32() % 21
-		defaultConstruction[i] = entities.Construction{
+		defaultConstruction[i] = models.Construction{
 			X:          uint(resourceX),
 			Y:          uint(resourceY),
 			CityX:      city.X,

@@ -3,8 +3,8 @@ package models
 import "math"
 
 type Coord struct {
-	X uint
-	Y uint
+	X int
+	Y int
 }
 
 func (c *Coord) DistanceBetween(other Coord) float64 {

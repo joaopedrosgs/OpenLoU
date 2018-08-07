@@ -10,7 +10,7 @@ type mapserver struct {
 
 func New() *mapserver {
 	ms := &mapserver{}
-	ms.Setup("Map Server", 2)
+	ms.Setup("Map Server", 2, 4)
 	ms.RegisterInternalEndpoint(ms.createCity, 1)
 	ms.RegisterInternalEndpoint(ms.getCities, 2)
 	ms.RegisterInternalEndpoint(ms.getCitiesFromUser, 3)

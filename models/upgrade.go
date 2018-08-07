@@ -1,8 +1,10 @@
 package models
 
 import (
-	"github.com/jackc/pgx"
 	"time"
+
+	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/pgtype"
 )
 
 type Upgrade struct {
@@ -17,10 +19,16 @@ type Upgrade struct {
 	Start            time.Time
 }
 
-func GetUpgradesFromCity(db pgx.Conn, tile Coord, continent Coord) []*Upgrade {
+func (upgrade *Upgrade) EnqueueCompletion(db *pgx.Batch) {
+	construction := Construction{Tile: upgrade.Tile, CityTile: upgrade.CityTile}
 
-}
-
-func GetAllUpgrades(db pgx.Conn) []*Upgrade {
-
+	construction.UpgradeConstruction(db)
+	db.Queue("DELETE FROM upgrades WHERE x=$1 and y=$2 and city_x=$3 and city_y=$4",
+		[]interface{}{upgrade.Tile.X,
+			upgrade.Tile.Y,
+			upgrade.CityTile.X,
+			upgrade.CityTile.Y},
+		[]pgtype.OID{pgtype.Int2OID, pgtype.Int2OID, pgtype.Int2OID, pgtype.Int2OID},
+		nil)
+	return
 }

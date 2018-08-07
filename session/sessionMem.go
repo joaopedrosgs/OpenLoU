@@ -1,19 +1,20 @@
 package session
 
 import (
+	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/models"
 	"github.com/pkg/errors"
-	"net"
-	"sync"
-	"time"
 )
 
 type Session struct {
 	UserName   string
 	lastAction time.Time
 	tries      int
-	conn       net.Conn
+	conn       *websocket.Conn
 }
 
 type sessionMem struct {
@@ -37,7 +38,7 @@ func NewSession(user models.User) (string, error) {
 	return key, err
 }
 
-func SetConn(key string, conn net.Conn) {
+func SetConn(key string, conn *websocket.Conn) {
 	sessionsStorage.mutex.Lock()
 	session, ok := sessionsStorage.sessions[key]
 	if ok {
@@ -46,13 +47,18 @@ func SetConn(key string, conn net.Conn) {
 	sessionsStorage.mutex.Unlock()
 }
 
-func Exists(key string) (Session, bool) {
+func Exists(key string) bool {
+	sessionsStorage.mutex.RLock()
+	_, ok := sessionsStorage.sessions[key]
+	sessionsStorage.mutex.RUnlock()
+	return ok
+}
+func GetSession(key string) (*Session, bool) {
 	sessionsStorage.mutex.RLock()
 	session, ok := sessionsStorage.sessions[key]
 	sessionsStorage.mutex.RUnlock()
-	return *session, ok
+	return session, ok
 }
-
 func DeleteSession(key string) {
 	sessionsStorage.mutex.Lock()
 	delete(sessionsStorage.sessions, key)
@@ -82,7 +88,7 @@ func NewTry(key string) {
 	sessionsStorage.mutex.RUnlock()
 }
 
-func GetUserConn(key string) (net.Conn, bool) {
+func GetUserConn(key string) (*websocket.Conn, bool) {
 	sessionsStorage.mutex.RLock()
 	session, ok := sessionsStorage.sessions[key]
 	if ok {
@@ -94,7 +100,7 @@ func GetUserConn(key string) (net.Conn, bool) {
 	return nil, ok
 
 }
-func GetUserConnByName(userName string) (net.Conn, bool) {
+func GetUserConnByName(userName string) (*websocket.Conn, bool) {
 	sessionsStorage.mutex.RLock()
 	for _, session := range sessionsStorage.sessions {
 		if session.UserName == userName {
@@ -107,10 +113,13 @@ func GetUserConnByName(userName string) (net.Conn, bool) {
 
 }
 
-func GetUserName(key string) (string, bool) {
+func GetUserName(key string) (string, error) {
 	sessionsStorage.mutex.RLock()
-	user, bool := sessionsStorage.sessions[key]
+	user, found := sessionsStorage.sessions[key]
 	name := user.UserName
 	sessionsStorage.mutex.RUnlock()
-	return name, bool
+	if !found {
+		return "", errors.New("account or session not found")
+	}
+	return name, nil
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type TroopType struct {
-	ID        uint   `json:"id"`
+	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	CanAttack bool   `json:"canAttack"`
 	Image     string `json:"image"`
@@ -22,11 +22,11 @@ type TroopType struct {
 }
 
 type MilitaryAction struct {
-	Id     uint
-	Type   uint8
+	Id     int
+	Type   int8
 	Troops []struct {
-		ID    uint8
-		Quant uint
+		ID    int8
+		Quant int
 	}
 	Depart   time.Time
 	Duration time.Duration

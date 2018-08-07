@@ -7,6 +7,7 @@ import (
 type City struct {
 	Tile          Coord
 	ContinentTile Coord
+	Type          byte
 	createdAt     time.Time
 	updatedAt     time.Time
 	UserName      string
@@ -21,9 +22,6 @@ func (c City) DistanceBetween(other *City) float64 {
 	return other.Tile.DistanceBetween(c.Tile)
 }
 
-func (c *City) GetType() string {
-	return "city"
-}
 func (c *City) GetCoords() Coord {
 	return c.Tile
 }

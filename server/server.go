@@ -1,10 +1,12 @@
 package server
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/communication"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"runtime"
+
+	"github.com/jackc/pgx"
+	"github.com/joaopedrosgs/OpenLoU/communication"
+	log "github.com/sirupsen/logrus"
 )
 
 type Server struct {
@@ -13,18 +15,25 @@ type Server struct {
 	out                     *chan *communication.Answer
 	name                    string
 	LogContext              *log.Entry
-	majorCode               int
+	EndPointCode            int
 	internalWorkerInstances int
+	conn                    *pgx.Conn
 }
 
-func (w *Server) Setup(name string, majorCode int, workerInstances int) {
-	w.majorCode = majorCode
+func (w *Server) Setup(name string, endPointCode int, workerInstances int) {
+	w.EndPointCode = endPointCode
 	w.name = name
 	w.LogContext = log.WithFields(log.Fields{"Entity": w.name})
 	w.in = make(chan *communication.Request)
 	w.endPoints = make(map[int]func(*communication.Request) *communication.Answer)
 	w.internalWorkerInstances = workerInstances
 
+}
+func (w *Server) SetConn(conn *pgx.Conn) {
+	w.conn = conn
+}
+func (w *Server) GetConn() *pgx.Conn {
+	return w.conn
 }
 func (w *Server) StartListening() {
 	w.LogContext.Info(w.name + " started listening")
@@ -35,7 +44,7 @@ func (w *Server) StartListening() {
 func (w *Server) Worker() {
 	for request := range w.in {
 		answer := request.ToAnswer()
-		if endpoint, ok := w.endPoints[request.Type%100]; ok {
+		if endpoint, ok := w.endPoints[request.Type]; ok {
 			*w.out <- endpoint(request)
 		} else {
 			*w.out <- answer
@@ -47,7 +56,7 @@ func (w *Server) RegisterInternalEndpoint(endpoint func(*communication.Request) 
 		log.WithFields(log.Fields{"Code": minorCode, "Name": runtime.FuncForPC(reflect.ValueOf(endpoint).Pointer()).Name()}).Info("New endpoint registered!")
 		w.endPoints[minorCode] = endpoint
 	} else {
-		w.LogContext.WithField("Code", minorCode).Error("An endpoint with this minorCode already exists!")
+		w.LogContext.WithField("Code", minorCode).Error("An endpoint with this type already exists!")
 	}
 }
 
@@ -58,7 +67,7 @@ func (w *Server) SetOutChan(out *chan *communication.Answer) {
 	w.out = out
 }
 func (w *Server) GetCode() int {
-	return w.majorCode
+	return w.EndPointCode
 }
 func (w *Server) GetName() string {
 	return w.name

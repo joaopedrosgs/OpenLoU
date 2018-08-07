@@ -2,24 +2,18 @@ package authserver
 
 import (
 	"errors"
-	"fmt"
-
-	"encoding/json"
-	"net/http"
 
 	"github.com/joaopedrosgs/OpenLoU/communication"
-	"github.com/joaopedrosgs/OpenLoU/database"
+	"github.com/joaopedrosgs/OpenLoU/server"
 	"github.com/joaopedrosgs/OpenLoU/session"
-	log "github.com/sirupsen/logrus"
+	"github.com/joaopedrosgs/OpenLoU/storage"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/joaopedrosgs/OpenLoU/models"
-
-	"time"
 )
 
 type authServer struct {
-	context *log.Entry
+	server.Server
 	Attemps map[string]int
 }
 
@@ -28,61 +22,49 @@ type LoginAttempt struct {
 	Password string
 }
 
-func New() (*authServer, error) {
-	return &authServer{log.WithFields(log.Fields{"Entity": "Auth Server"}), make(map[string]int)}, nil
+func New() *authServer {
+	cs := &authServer{}
+	cs.Setup("Auth server", 4, 4)
+	cs.Attemps = make(map[string]int)
+	cs.RegisterInternalEndpoint(cs.login, 1)
+
+	return cs
+}
+
+func (s *authServer) login(request *communication.Request) *communication.Answer {
+	answer := request.ToAnswer()
+	err := request.FieldsExist("email", "password")
+	if err != nil {
+		answer.Data = err.Error()
+	}
+	attempt := &LoginAttempt{request.Data["email"], request.Data["password"]}
+	key, err := s.NewAttempt(attempt)
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
+	}
+	answer.Ok = true
+	answer.Data = key
+	return answer
 
 }
 
-func (s *authServer) StartListening(address string) {
-	// Index Handler
-	http.HandleFunc("/login", s.loginHandler)
-	http.HandleFunc("/register", s.registerHandler)
-	err := http.ListenAndServe(address, nil)
-	for err != nil {
-		s.context.Error("Failed to listen: " + err.Error())
-		s.context.Info("Trying again in 10 seconds...")
-		time.Sleep(10 * time.Second)
-		err = http.ListenAndServe(address, nil)
-
+func (s *authServer) registerHandler(request *communication.Request) *communication.Answer {
+	answer := request.ToAnswer()
+	err := request.FieldsExist("login", "email", "password")
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
 	}
-	s.context.Info("Auth server has started listening")
-}
-func (s *authServer) loginHandler(writer http.ResponseWriter, request *http.Request) {
-	if request.Method == "POST" {
-		fmt.Fprintf(writer, notPost)
-
-	} else {
-		answer := communication.Answer{}
-		email := request.PostFormValue("email")
-		password := request.PostFormValue("password")
-		attempt := &LoginAttempt{email, password}
-		if key, err := s.NewAttempt(attempt); err != nil {
-			answer.Data = err.Error()
-		} else {
-			answer.Ok = true
-			answer.Data = key
-		}
-		jsonAnswer, err := json.Marshal(answer)
-		if err != nil {
-			jsonAnswer = []byte(InternalError)
-			s.context.WithField("When", "Converting login answer to JSON").Error(err.Error())
-		}
-		fmt.Fprintf(writer, string(jsonAnswer))
-
+	err = s.createAccount(request.Data["login"], request.Data["email"], request.Data["password"])
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
 	}
+	answer.Data = "Account created!"
+	answer.Ok = true
+	return answer
 
-}
-func (s *authServer) registerHandler(writer http.ResponseWriter, request *http.Request) {
-	if request.Method == "POST" {
-		fmt.Fprint(writer, notPost)
-	} else {
-		login := request.PostFormValue("login")
-		email := request.PostFormValue("email")
-		password := request.PostFormValue("password")
-		answer := s.createAccount(login, email, password)
-		jsonAnswer, _ := json.Marshal(answer)
-		fmt.Fprint(writer, string(jsonAnswer))
-	}
 } /*
 func (s *authServer) userInfoHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
@@ -122,7 +104,7 @@ func (s *authServer) checkCredentials(attempt *LoginAttempt) (models.User, error
 	var user models.User
 	if len(attempt.Password) < 8 || len(attempt.Login) < 8 {
 		err = errors.New(emptyFields)
-	} else if user, err := database.GetUserInfo(attempt.Login); err != nil {
+	} else if user, err := storage.GetUserInfo(s.GetConn(), attempt.Login); err != nil {
 		err = errors.New(wrongAccountInfo)
 	} else if err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(attempt.Password)); err != nil {
 		err = errors.New(wrongAccountInfo)
@@ -130,18 +112,14 @@ func (s *authServer) checkCredentials(attempt *LoginAttempt) (models.User, error
 	return user, err
 
 }
-func (s *authServer) createAccount(login string, email string, password string) *communication.Answer {
-	answer := &communication.Answer{}
+func (s *authServer) createAccount(login string, email string, password string) error {
 	if len(login) < 6 || len(email) < 8 || len(password) < 8 {
-		answer.Data = shortCredentials
+		return errors.New(shortCredentials)
 	} else if passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10); err != nil {
-		answer.Data = InternalError
-	} else if err = database.CreateUser(login, string(passwordHash), email); err != nil {
-		answer.Data = accountExists + err.Error()
-	} else {
-		answer.Data = success
-		answer.Ok = true
+		return errors.New(InternalError)
+	} else if err = storage.CreateUser(s.GetConn(), login, string(passwordHash), email); err != nil {
+		return errors.New(accountExists + err.Error())
 	}
-	return answer
+	return nil
 
 }

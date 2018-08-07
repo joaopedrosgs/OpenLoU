@@ -10,6 +10,6 @@ type accountServer struct {
 
 func New() *accountServer {
 	cs := &accountServer{}
-	cs.Setup("City server", 1)
+	cs.Setup("Account server", 1, 10)
 	return cs
 }

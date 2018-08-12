@@ -9,8 +9,8 @@ type User struct {
 	UpdatedAt    time.Time
 	Name         string
 	Email        string
-	PasswordHash string
-	AllianceName string
+	PasswordHash string `json:"-"`
+	AllianceName *string
 	Gold         uint
 	Diamonds     uint
 	Darkwood     uint

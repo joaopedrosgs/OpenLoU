@@ -1,18 +1,12 @@
 package accountserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/communication"
-	"github.com/joaopedrosgs/OpenLoU/storage"
+	"github.com/joaopedrosgs/OpenLoU/models"
 )
 
-func (cs *accountServer) GetUserInfo(request *communication.Request) *communication.Answer {
+func (cs *accountServer) GetUserInfo(request *models.Request) *models.Answer {
 	answer := request.ToAnswer()
-	user, err := storage.GetUserInfoByKey(cs.GetConn(), request.Key)
-	if err != nil {
-		cs.LogContext.WithField("When", "Retrieving user information").Error(err.Error())
-		return nil
-	}
-	answer.Data = user
+	answer.Data = request.Session.User
 	answer.Ok = true
 	return answer
 

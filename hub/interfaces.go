@@ -2,13 +2,12 @@ package hub
 
 import (
 	"github.com/jackc/pgx"
-	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/models"
 )
 
 type IServer interface {
 	GetName() string
-	GetInChan() *chan *communication.Request
-	SetOutChan(*chan *communication.Answer)
+	GetJobsChan() *chan *models.Request
 	GetCode() int
 	SetConn(conn *pgx.Conn)
 	StartListening()

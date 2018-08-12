@@ -3,11 +3,11 @@ package cityserver
 import (
 	"errors"
 
-	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/models"
 	"github.com/joaopedrosgs/OpenLoU/storage"
 )
 
-func (cs *cityServer) upgradeConstruction(request *communication.Request) *communication.Answer {
+func (cs *cityServer) upgradeConstruction(request *models.Request) *models.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY", "X", "Y")
 	if err != nil {
@@ -30,7 +30,7 @@ func (cs *cityServer) upgradeConstruction(request *communication.Request) *commu
 
 }
 
-func (cs *cityServer) newConstruction(request *communication.Request) *communication.Answer {
+func (cs *cityServer) newConstruction(request *models.Request) *models.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY", "X", "Y", "Type")
 	if err != nil {
@@ -53,7 +53,7 @@ func (cs *cityServer) newConstruction(request *communication.Request) *communica
 	return answer
 }
 
-func (cs *cityServer) getConstructions(request *communication.Request) *communication.Answer {
+func (cs *cityServer) getConstructions(request *models.Request) *models.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY")
 	if err != nil {
@@ -75,7 +75,7 @@ func (cs *cityServer) getConstructions(request *communication.Request) *communic
 
 	return answer
 }
-func (cs *cityServer) getUpgrades(request *communication.Request) *communication.Answer {
+func (cs *cityServer) getUpgrades(request *models.Request) *models.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY")
 	if err != nil {

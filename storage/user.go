@@ -1,16 +1,22 @@
 package storage
 
 import (
+	"errors"
 	"github.com/jackc/pgx"
 	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/joaopedrosgs/OpenLoU/session"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(db *pgx.Conn, login, passwordHash, email string) error {
+func CreateUser(db *pgx.Conn, login, password, email string) error {
 
-	var userID int
-
-	err := db.QueryRow("INSERT INTO users (name, email, password) values ($1, $2, $3) returning id", login, email, passwordHash).Scan(&userID)
+	if len(login) < 6 || len(email) < 8 || len(password) < 8 {
+		return errors.New("login, email or password is too short")
+	}
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return errors.New("internal error")
+	}
+	_, err = db.Exec("INSERT INTO users (name, email, password) values ($1, $2, $3)", login, email, passwordHash)
 
 	if err != nil {
 		logger.Error("account could not be created because: " + err.Error())
@@ -22,7 +28,7 @@ func CreateUser(db *pgx.Conn, login, passwordHash, email string) error {
 func GetUserInfo(db *pgx.Conn, userName string) (*models.User, error) {
 	user := &models.User{}
 	err := db.QueryRow(
-		"SELECT name, email, alliance_id, gold, diamonds, darkwood, runestone, veritium, trueseed, rank "+
+		"SELECT name, email, alliance_name, gold, diamonds, darkwood, runestone, veritium, trueseed, rank, password "+
 			"from users "+
 			"WHERE name = $1", userName).Scan(
 		&user.Name,
@@ -34,23 +40,11 @@ func GetUserInfo(db *pgx.Conn, userName string) (*models.User, error) {
 		&user.Runestone,
 		&user.Veritium,
 		&user.Trueseed,
-		&user.Rank)
+		&user.Rank,
+		&user.PasswordHash)
 	if err != nil {
 		logger.WithField("When", "Retrieving user information").Error(err.Error())
 		return nil, err
 	}
 	return user, nil
-}
-
-func GetUserInfoByKey(db *pgx.Conn, key string) (*models.User, error) {
-	userName, err := session.GetUserName(key)
-	if err != nil {
-		logger.Error("failed to get user name by key: ", err.Error())
-	}
-	user, err := GetUserInfo(db, userName)
-	if err != nil {
-		logger.Error("failed to get user info: ", err.Error())
-	}
-	return user, nil
-
 }

@@ -4,23 +4,15 @@ import (
 	"strconv"
 
 	"github.com/joaopedrosgs/OpenLoU/models"
-
-	"github.com/joaopedrosgs/OpenLoU/communication"
-	"github.com/joaopedrosgs/OpenLoU/session"
 	"github.com/joaopedrosgs/OpenLoU/storage"
 )
 
-func (ms *mapserver) createCity(request *communication.Request) *communication.Answer {
+func (ms *mapserver) createCity(request *models.Request) *models.Answer {
 	return request.ToAnswer()
 }
-func (ms *mapserver) getCitiesFromUser(request *communication.Request) *communication.Answer {
+func (ms *mapserver) getCitiesFromUser(request *models.Request) *models.Answer {
 	answer := request.ToAnswer()
-	userName, err := session.GetUserName(request.Key)
-	if err != nil {
-		answer.Data = "User not found: " + err.Error()
-		return answer
-	}
-	cities, err := storage.GetUserCities(ms.GetConn(), userName)
+	cities, err := storage.GetUserCities(ms.GetConn(), request.Session.User.Name)
 	if err != nil {
 		answer.Data = err
 		return answer
@@ -32,7 +24,7 @@ func (ms *mapserver) getCitiesFromUser(request *communication.Request) *communic
 
 }
 
-func (ms *mapserver) getCities(request *communication.Request) *communication.Answer {
+func (ms *mapserver) getCities(request *models.Request) *models.Answer {
 	answer := request.ToAnswer()
 	if err := request.FieldsExist("X", "Y", "Range"); err != nil {
 		answer.Data = err.Error()

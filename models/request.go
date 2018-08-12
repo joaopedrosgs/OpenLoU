@@ -1,20 +1,18 @@
-package communication
+package models
 
 import (
 	"errors"
 	"fmt"
 	"strconv"
-
-	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/joaopedrosgs/OpenLoU/modules"
+	"time"
 )
 
-type Payload map[string]string
 type Request struct {
-	Key      string `valid:"required"`
-	EndPoint int    `valid:"required"`
-	Type     int    `valid:"required"`
-	Data     Payload
+	receivedAt time.Time
+	Session    *Session
+	EndPoint   int `valid:"required"`
+	Type       int `valid:"required"`
+	Data       map[string]string
 }
 
 func (r *Request) FieldsExist(fields ...string) error {
@@ -27,26 +25,24 @@ func (r *Request) FieldsExist(fields ...string) error {
 	return nil
 }
 func (r *Request) ToAnswer() *Answer {
-	return &Answer{"", r.Key, false, r.Type, "Bad Request", false}
+	return &Answer{r.Session, false, r.Type, "Bad Request"}
 }
-func (r *Request) ToConstruction() (*models.Construction, error) {
+func (r *Request) ToConstruction() (*Construction, error) {
 	x, _ := strconv.Atoi(r.Data["X"])
 	y, _ := strconv.Atoi(r.Data["Y"])
 	cityX, _ := strconv.Atoi(r.Data["CityX"])
 	cityY, _ := strconv.Atoi(r.Data["CityY"])
 	t, _ := strconv.Atoi(r.Data["Type"])
 
-	construction := &models.Construction{
-		Tile:     models.Coord{x, y},
-		CityTile: models.Coord{cityX, cityY},
+	construction := &Construction{
+		Tile:     Coord{x, y},
+		CityTile: Coord{cityX, cityY},
 		Type:     t}
 	var err error
 	if construction.Tile.X < 0 || construction.Tile.X > 21 {
 		err = errors.New("Bad X value")
 	} else if construction.Tile.Y < 0 || construction.Tile.Y > 19 {
 		err = errors.New("Bar Y value")
-	} else if _, ok := modules.RegisteredConstructions[construction.Type]; !ok {
-		err = errors.New("Bad type valye")
 	} else if construction.CityTile.Y < 0 || construction.CityTile.Y > 600 {
 		err = errors.New("Bad City Y value")
 	} else if construction.CityTile.X < 0 || construction.CityTile.X > 600 {
@@ -55,10 +51,10 @@ func (r *Request) ToConstruction() (*models.Construction, error) {
 	return construction, err
 }
 
-func (r *Request) ToCityCoord() (*models.Coord, error) {
+func (r *Request) ToCityCoord() (*Coord, error) {
 	cityX, _ := strconv.Atoi(r.Data["CityX"])
 	cityY, _ := strconv.Atoi(r.Data["CityY"])
-	cityCoord := &models.Coord{
+	cityCoord := &Coord{
 		X: cityX,
 		Y: cityY}
 
@@ -71,7 +67,7 @@ func (r *Request) ToCityCoord() (*models.Coord, error) {
 	return cityCoord, nil
 }
 
-func (r *Request) ToUpgrade() (*models.Upgrade, error) {
+func (r *Request) ToUpgrade() (*Upgrade, error) {
 	x, err := strconv.Atoi(r.Data["X"])
 	if err != nil {
 		return nil, err
@@ -88,7 +84,7 @@ func (r *Request) ToUpgrade() (*models.Upgrade, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &models.Upgrade{
-		Tile:     models.Coord{x, y},
-		CityTile: models.Coord{cityX, cityY}}, nil
+	return &Upgrade{
+		Tile:     Coord{x, y},
+		CityTile: Coord{cityX, cityY}}, nil
 }

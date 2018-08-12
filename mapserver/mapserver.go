@@ -14,6 +14,5 @@ func New() *mapserver {
 	ms.RegisterInternalEndpoint(ms.createCity, 1)
 	ms.RegisterInternalEndpoint(ms.getCities, 2)
 	ms.RegisterInternalEndpoint(ms.getCitiesFromUser, 3)
-
 	return ms
 }

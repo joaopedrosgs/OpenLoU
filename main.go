@@ -1,7 +1,14 @@
 package main
 
-import "github.com/joaopedrosgs/OpenLoU/app"
+import (
+	"flag"
+
+	"github.com/joaopedrosgs/OpenLoU/app"
+)
 
 func main() {
-	app.Run("localhost:8123")
+	addrPtr := flag.String("addr", ":8080", "Address")
+
+	flag.Parse()
+	app.Run(*addrPtr)
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/joaopedrosgs/OpenLoU/accountserver"
-	"github.com/joaopedrosgs/OpenLoU/authserver"
 	"github.com/joaopedrosgs/OpenLoU/cityserver"
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/hub"
@@ -24,11 +23,11 @@ func Run(port string) {
 	MapServer := mapserver.New()
 	CityServer := cityserver.New()
 	AccountServer := accountserver.New()
-	AuthServer := authserver.New()
 
 	Hub, err := hub.New()
 	if err != nil {
-		context.Error(err.Error())
+		context.Fatal(err.Error())
+		return
 	}
 	modules.RegisterAllTroops()
 	modules.RegisterAllConstructions()
@@ -43,10 +42,6 @@ func Run(port string) {
 		context.Error(err.Error())
 	}
 	err = Hub.RegisterServer(AccountServer)
-	if err != nil {
-		context.Error(err.Error())
-	}
-	err = Hub.RegisterServer(AuthServer)
 	if err != nil {
 		context.Error(err.Error())
 	}

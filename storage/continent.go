@@ -60,7 +60,8 @@ func GetContinent(db *pgx.Conn, tile models.Coord) (*models.Continent, error) {
 	return continent, nil
 }
 
-func createNewContinents(db *pgx.Conn) error {
+func CreateNewContinents(db *pgx.Conn) error {
+	logger.Info("Populating continents and tiles")
 	numberOfContinents := uint(math.Sqrt(float64(configuration.GetSingleton().Parameters.General.WorldSize)))
 	continentSize := configuration.GetSingleton().Parameters.General.ContinentSize
 	groundType := [4]string{"land", "stone", "iron", "forest"}
@@ -77,7 +78,7 @@ func createNewContinents(db *pgx.Conn) error {
 	}
 
 	var x, y uint
-	batch := db.BeginBatch()
+	start := time.Now()
 
 	for x = 0; x < numberOfContinents; x++ {
 		for y = 0; y < numberOfContinents; y++ {
@@ -86,9 +87,12 @@ func createNewContinents(db *pgx.Conn) error {
 				logger.WithField("When", "Inserting new continent").Error(err.Error())
 				return err
 			}
+			batch := db.BeginBatch()
+
 			rand.Seed(time.Now().UTC().UnixNano())
 			var tileX, tileY uint
 			for tileX = x * 100; tileX < (x+1)*100; tileX++ {
+
 				for tileY = y * 100; tileY < (y+1)*100; tileY++ {
 					batch.Queue(
 						"INSERT into tiles (continent_x, continent_y, x, y, occupied_by) values ($1, $2, $3, $4, $5)",
@@ -97,14 +101,18 @@ func createNewContinents(db *pgx.Conn) error {
 						nil)
 
 				}
+
 			}
+			batch.Send(context.Background(), nil)
+
 		}
 	}
-	batch.Send(context.Background(), nil)
 	if err != nil {
 		logger.Fatal("failed to create continents", err.Error())
 		return err
 	}
 	logger.Info("Continents created!")
+	logger.Info(time.Since(start))
+
 	return nil
 }

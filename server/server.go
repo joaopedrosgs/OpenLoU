@@ -5,14 +5,13 @@ import (
 	"runtime"
 
 	"github.com/jackc/pgx"
-	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/models"
 	log "github.com/sirupsen/logrus"
 )
 
 type Server struct {
-	endPoints               map[int]func(*communication.Request) *communication.Answer
-	in                      chan *communication.Request
-	out                     *chan *communication.Answer
+	endPoints               map[int]func(*models.Request) *models.Answer
+	jobs                    chan *models.Request
 	name                    string
 	LogContext              *log.Entry
 	EndPointCode            int
@@ -24,8 +23,8 @@ func (w *Server) Setup(name string, endPointCode int, workerInstances int) {
 	w.EndPointCode = endPointCode
 	w.name = name
 	w.LogContext = log.WithFields(log.Fields{"Entity": w.name})
-	w.in = make(chan *communication.Request)
-	w.endPoints = make(map[int]func(*communication.Request) *communication.Answer)
+	w.jobs = make(chan *models.Request)
+	w.endPoints = make(map[int]func(*models.Request) *models.Answer)
 	w.internalWorkerInstances = workerInstances
 
 }
@@ -42,16 +41,16 @@ func (w *Server) StartListening() {
 	}
 }
 func (w *Server) Worker() {
-	for request := range w.in {
-		answer := request.ToAnswer()
+	for request := range w.jobs {
 		if endpoint, ok := w.endPoints[request.Type]; ok {
-			*w.out <- endpoint(request)
+			answer := endpoint(request)
+			answer.SendToUser()
 		} else {
-			*w.out <- answer
+			request.ToAnswer().SendToUser()
 		}
 	}
 }
-func (w *Server) RegisterInternalEndpoint(endpoint func(*communication.Request) *communication.Answer, minorCode int) {
+func (w *Server) RegisterInternalEndpoint(endpoint func(*models.Request) *models.Answer, minorCode int) {
 	if _, exists := w.endPoints[minorCode]; !exists {
 		log.WithFields(log.Fields{"Code": minorCode, "Name": runtime.FuncForPC(reflect.ValueOf(endpoint).Pointer()).Name()}).Info("New endpoint registered!")
 		w.endPoints[minorCode] = endpoint
@@ -60,11 +59,8 @@ func (w *Server) RegisterInternalEndpoint(endpoint func(*communication.Request) 
 	}
 }
 
-func (w *Server) GetInChan() *chan *communication.Request {
-	return &w.in
-}
-func (w *Server) SetOutChan(out *chan *communication.Answer) {
-	w.out = out
+func (w *Server) GetJobsChan() *chan *models.Request {
+	return &w.jobs
 }
 func (w *Server) GetCode() int {
 	return w.EndPointCode

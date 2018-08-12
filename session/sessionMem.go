@@ -7,44 +7,26 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/pkg/errors"
 )
-
-type Session struct {
-	UserName   string
-	lastAction time.Time
-	tries      int
-	conn       *websocket.Conn
-}
 
 type sessionMem struct {
 	mutex    sync.RWMutex
-	sessions map[string]*Session
+	sessions map[string]*models.Session
 }
 
 var sessionsStorage sessionMem
 
-func NewSession(user models.User) (string, error) {
+func NewSession(usr *models.User, conn *websocket.Conn) (*models.Session, error) {
 	key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
-	if err == nil {
-		sessionsStorage.mutex.Lock()
-		if uint(len(key)) == configuration.GetSingleton().Parameters.Security.KeySize || len(user.Name) >= 0 {
-			sessionsStorage.sessions[key] = &Session{user.Name, time.Now(), 0, nil}
-		} else {
-			err = errors.New("Internal error")
-		}
-		sessionsStorage.mutex.Unlock()
+	if err != nil {
+		return nil, err
 	}
-	return key, err
-}
-
-func SetConn(key string, conn *websocket.Conn) {
 	sessionsStorage.mutex.Lock()
-	session, ok := sessionsStorage.sessions[key]
-	if ok {
-		session.conn = conn
-	}
+	session := &models.Session{User: usr, LastAction: time.Now(), Conn: conn}
+	sessionsStorage.sessions[key] = session
 	sessionsStorage.mutex.Unlock()
+
+	return session, nil
 }
 
 func Exists(key string) bool {
@@ -53,23 +35,25 @@ func Exists(key string) bool {
 	sessionsStorage.mutex.RUnlock()
 	return ok
 }
-func GetSession(key string) (*Session, bool) {
+func GetSession(key string) (*models.Session, bool) {
 	sessionsStorage.mutex.RLock()
 	session, ok := sessionsStorage.sessions[key]
 	sessionsStorage.mutex.RUnlock()
 	return session, ok
 }
-func DeleteSession(key string) {
+func CloseSession(key string) {
 	sessionsStorage.mutex.Lock()
+	sessionsStorage.sessions[key].Close()
 	delete(sessionsStorage.sessions, key)
 	sessionsStorage.mutex.Unlock()
 
 }
 
-func DeleteSessionByName(userName string) {
+func DeleteSessionByUser(user *models.User) {
 	sessionsStorage.mutex.Lock()
 	for key, session := range sessionsStorage.sessions {
-		if session.UserName == userName {
+		if session.User == user {
+
 			delete(sessionsStorage.sessions, key)
 		}
 	}
@@ -77,49 +61,5 @@ func DeleteSessionByName(userName string) {
 
 }
 func NewSessionInMemory() {
-	sessionsStorage = sessionMem{sync.RWMutex{}, make(map[string]*Session)}
-}
-
-func NewTry(key string) {
-	sessionsStorage.mutex.RLock()
-	if session, ok := sessionsStorage.sessions[key]; ok {
-		session.tries++
-	}
-	sessionsStorage.mutex.RUnlock()
-}
-
-func GetUserConn(key string) (*websocket.Conn, bool) {
-	sessionsStorage.mutex.RLock()
-	session, ok := sessionsStorage.sessions[key]
-	if ok {
-		sessionsStorage.mutex.RUnlock()
-		return session.conn, ok
-
-	}
-	sessionsStorage.mutex.RUnlock()
-	return nil, ok
-
-}
-func GetUserConnByName(userName string) (*websocket.Conn, bool) {
-	sessionsStorage.mutex.RLock()
-	for _, session := range sessionsStorage.sessions {
-		if session.UserName == userName {
-			sessionsStorage.mutex.RUnlock()
-			return session.conn, true
-		}
-	}
-	sessionsStorage.mutex.RUnlock()
-	return nil, false
-
-}
-
-func GetUserName(key string) (string, error) {
-	sessionsStorage.mutex.RLock()
-	user, found := sessionsStorage.sessions[key]
-	name := user.UserName
-	sessionsStorage.mutex.RUnlock()
-	if !found {
-		return "", errors.New("account or session not found")
-	}
-	return name, nil
+	sessionsStorage = sessionMem{sync.RWMutex{}, make(map[string]*models.Session)}
 }

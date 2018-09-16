@@ -1,97 +1,144 @@
 package cityserver
 
 import (
-	"errors"
-
+	"context"
+	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/joaopedrosgs/OpenLoU/storage"
+	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
+	"strconv"
 )
 
-func (cs *cityServer) upgradeConstruction(request *models.Request) *models.Answer {
+func (cs *cityServer) upgradeConstruction(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY", "X", "Y")
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	upgrade, err := request.ToUpgrade()
+
+	x, err := strconv.Atoi(request.Data["X"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	err = storage.CreateUpgrade(cs.GetConn(), upgrade)
+	y, err := strconv.Atoi(request.Data["Y"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	answer.Data = Success
-	answer.Ok = true
+	cityX, err := strconv.Atoi(request.Data["CityX"])
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
+	}
+	cityY, err := strconv.Atoi(request.Data["CityY"])
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
+	}
+	upgrade := models.Upgrade{ConstructionX: x, ConstructionY: y, CityX: cityX, CityY: cityY, Duration: 10}
+	upgrade.Insert(context.Background(), cs.GetConn(), boil.Infer())
+	err = upgrade.Insert(context.Background(), cs.GetConn(), boil.Infer())
+	if err != nil {
+		answer.Data = err.Error()
+	}
 	return answer
 
 }
 
-func (cs *cityServer) newConstruction(request *models.Request) *models.Answer {
+func (cs *cityServer) newConstruction(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY", "X", "Y", "Type")
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	construction, err := request.ToConstruction()
+	x, err := strconv.Atoi(request.Data["X"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	err = storage.CreateConstruction(cs.GetConn(), construction)
+	y, err := strconv.Atoi(request.Data["Y"])
 	if err != nil {
-		answer.Data = errors.New(FailedNewConstruction)
+		answer.Data = err.Error()
 		return answer
 	}
-
-	answer.Data = Success
-	answer.Ok = true
+	cityX, err := strconv.Atoi(request.Data["CityX"])
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
+	}
+	cityY, err := strconv.Atoi(request.Data["CityY"])
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
+	}
+	cType, err := strconv.Atoi(request.Data["Type"])
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
+	}
+	construction := models.Construction{X: x, Y: y, CityX: cityX, CityY: cityY, Type: cType}
+	err = construction.Insert(context.Background(), cs.GetConn(), boil.Infer())
+	if err != nil {
+		answer.Data = err.Error()
+	}
 	return answer
 }
 
-func (cs *cityServer) getConstructions(request *models.Request) *models.Answer {
+func (cs *cityServer) getConstructions(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY")
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	cityCoord, err := request.ToCityCoord()
+	cityX, err := strconv.Atoi(request.Data["CityX"])
 	if err != nil {
-		answer.Data = err
+		answer.Data = err.Error()
 		return answer
 	}
-	cities, err := storage.GetAllConstructions(cs.GetConn(), *cityCoord)
+	cityY, err := strconv.Atoi(request.Data["CityY"])
 	if err != nil {
-		answer.Data = errors.New(FailedGetConstructions)
+		answer.Data = err.Error()
 		return answer
 	}
-	answer.Ok = true
-	answer.Data = cities
+	constructions, err := models.Constructions(
+		qm.Where("city_x=? AND city_y=?", cityX, cityY)).All(context.Background(), cs.GetConn())
+	if err != nil {
+		answer.Data = err.Error()
+	} else {
+		answer.Result = true
+		answer.Data = constructions
+	}
 
 	return answer
 }
-func (cs *cityServer) getUpgrades(request *models.Request) *models.Answer {
+func (cs *cityServer) getUpgrades(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
 	err := request.FieldsExist("CityX", "CityY")
 	if err != nil {
 		answer.Data = err.Error()
-	}
-	cityCoord, err := request.ToCityCoord()
-	if err != nil {
-		answer.Data = err
 		return answer
 	}
-	upgrades, err := storage.GetUpgradesFromCity(cs.GetConn(), *cityCoord)
+	cityX, err := strconv.Atoi(request.Data["CityX"])
 	if err != nil {
-		answer.Data = errors.New("Failed to get upgrades")
+		answer.Data = err.Error()
+		return answer
 	}
-	answer.Ok = true
-	answer.Data = upgrades
-
+	cityY, err := strconv.Atoi(request.Data["CityY"])
+	if err != nil {
+		answer.Data = err.Error()
+		return answer
+	}
+	upgrades, err := models.Upgrades(
+		qm.Where("city_x=? AND city_y=?", cityX, cityY)).All(context.Background(), cs.GetConn())
+	if err != nil {
+		answer.Data = err.Error()
+	} else {
+		answer.Result = true
+		answer.Data = upgrades
+	}
 	return answer
 }

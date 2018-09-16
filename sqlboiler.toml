@@ -1,0 +1,7 @@
+[psql]
+dbname  =   "openlou"
+user    =   "postgres"
+pass    =   ""
+host    =   "localhost"
+sslmode =   "disable"
+

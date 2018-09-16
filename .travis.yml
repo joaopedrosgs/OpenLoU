@@ -9,7 +9,10 @@ install:
   - go get golang.org/x/sys/windows
   - go get golang.org/x/crypto/bcrypt
   - go get github.com/sirupsen/logrus
-  - go get github.com/jackc/pgx
+  - go get github.com/spf13/viper
+  - go get github.com/lib/pq
+  - go get github.com/gorilla/websocket
+
 services:
   - postgresql
 script:

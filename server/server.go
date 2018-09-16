@@ -1,37 +1,37 @@
 package server
 
 import (
+	"database/sql"
 	"reflect"
 	"runtime"
 
-	"github.com/jackc/pgx"
-	"github.com/joaopedrosgs/OpenLoU/models"
+	"github.com/joaopedrosgs/OpenLoU/communication"
 	log "github.com/sirupsen/logrus"
 )
 
 type Server struct {
-	endPoints               map[int]func(*models.Request) *models.Answer
-	jobs                    chan *models.Request
+	endPoints               map[int]func(*communication.Request) *communication.Answer
+	jobs                    chan *communication.Request
 	name                    string
 	LogContext              *log.Entry
 	EndPointCode            int
 	internalWorkerInstances int
-	conn                    *pgx.Conn
+	conn                    *sql.DB
 }
 
 func (w *Server) Setup(name string, endPointCode int, workerInstances int) {
 	w.EndPointCode = endPointCode
 	w.name = name
 	w.LogContext = log.WithFields(log.Fields{"Entity": w.name})
-	w.jobs = make(chan *models.Request)
-	w.endPoints = make(map[int]func(*models.Request) *models.Answer)
+	w.jobs = make(chan *communication.Request)
+	w.endPoints = make(map[int]func(*communication.Request) *communication.Answer)
 	w.internalWorkerInstances = workerInstances
 
 }
-func (w *Server) SetConn(conn *pgx.Conn) {
+func (w *Server) SetConn(conn *sql.DB) {
 	w.conn = conn
 }
-func (w *Server) GetConn() *pgx.Conn {
+func (w *Server) GetConn() *sql.DB {
 	return w.conn
 }
 func (w *Server) StartListening() {
@@ -44,13 +44,13 @@ func (w *Server) Worker() {
 	for request := range w.jobs {
 		if endpoint, ok := w.endPoints[request.Type]; ok {
 			answer := endpoint(request)
-			answer.SendToUser()
+			answer.Dispatch()
 		} else {
-			request.ToAnswer().SendToUser()
+			request.ToAnswer().Dispatch()
 		}
 	}
 }
-func (w *Server) RegisterInternalEndpoint(endpoint func(*models.Request) *models.Answer, minorCode int) {
+func (w *Server) RegisterInternalEndpoint(endpoint func(*communication.Request) *communication.Answer, minorCode int) {
 	if _, exists := w.endPoints[minorCode]; !exists {
 		log.WithFields(log.Fields{"Code": minorCode, "Name": runtime.FuncForPC(reflect.ValueOf(endpoint).Pointer()).Name()}).Info("New endpoint registered!")
 		w.endPoints[minorCode] = endpoint
@@ -59,7 +59,7 @@ func (w *Server) RegisterInternalEndpoint(endpoint func(*models.Request) *models
 	}
 }
 
-func (w *Server) GetJobsChan() *chan *models.Request {
+func (w *Server) GetJobsChan() *chan *communication.Request {
 	return &w.jobs
 }
 func (w *Server) GetCode() int {

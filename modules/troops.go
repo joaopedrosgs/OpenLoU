@@ -1,8 +1,4 @@
-package models
-
-import (
-	"time"
-)
+package modules
 
 type TroopType struct {
 	ID        int    `json:"id"`
@@ -21,13 +17,10 @@ type TroopType struct {
 	Upkeep [2]int
 }
 
-type MilitaryAction struct {
-	Id     int
-	Type   int8
-	Troops []struct {
-		ID    int8
-		Quant int
-	}
-	Depart   time.Time
-	Duration time.Duration
+func (t TroopType) GetType() string {
+	return "troop"
+}
+
+func (t TroopType) GetId() int {
+	return t.ID
 }

@@ -1,21 +1,24 @@
 package hub
 
 import (
+	"context"
+	"database/sql"
 	"errors"
+	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/OpenLoU/session"
+	"github.com/spf13/viper"
 
-	"github.com/jackc/pgx"
+	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 
 	"net/http"
 
 	"github.com/gorilla/websocket"
 	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/joaopedrosgs/OpenLoU/session"
-	"github.com/joaopedrosgs/OpenLoU/storage"
 	log "github.com/sirupsen/logrus"
 )
 
-var context = log.WithFields(log.Fields{"Entity": "Hub"})
+var logger = log.WithFields(log.Fields{"Entity": "Hub"})
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -23,81 +26,64 @@ var upgrader = websocket.Upgrader{
 }
 
 type Hub struct {
-	servers  []IServer
-	workers  map[int]*chan *models.Request
-	connPool *pgx.ConnPool
-	conn     *pgx.Conn
+	servers []IServer
+	workers map[int]*chan *communication.Request
+	conn    *sql.DB
 }
 
 func New() (*Hub, error) {
 	hub := &Hub{}
-	hub.workers = make(map[int]*chan *models.Request)
-
-	poolConfig := pgx.ConnPoolConfig{
-		ConnConfig: pgx.ConnConfig{
-			Host:     "127.0.0.1",
-			Port:     5432,
-			Database: "openlou",
-			User:     "default",
-		},
-		MaxConnections: 5,
-	}
+	hub.workers = make(map[int]*chan *communication.Request)
 	var err error
-	hub.connPool, err = pgx.NewConnPool(poolConfig)
+	hub.conn, err = sql.Open("postgres", "dbname=openlou host=localhost user=postgres sslmode=disable")
 	if err != nil {
-		context.Error("Hub failed to connect to the database!")
+		logger.Error("Hub failed to connect to the database!")
 		return nil, err
 	}
-	hub.conn, err = hub.connPool.Acquire()
-	if err != nil {
-		context.Error("Hub failed to acquire connection!")
-		return nil, err
-	}
-	context.Info("Hub has been started!")
+	logger.Info("Hub has been started!")
 	return hub, nil
 
 }
 
-func (h *Hub) Start(port string) {
-	context.Info("Hub is starting")
+func (h *Hub) Start() {
+	logger.Info("Hub is starting")
 
 	for _, server := range h.servers {
 		go server.StartListening()
 	}
 
 	http.HandleFunc("/api", h.handleUser)
-	context.Info("Hub started listening on " + port)
+	logger.Info("Hub started listening on " + viper.GetString("server.port"))
 
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(viper.GetString("server.port"), nil)
 	if err != nil {
-		context.Fatal(err)
+		logger.Fatal(err)
 	}
 
 }
-func (h *Hub) Authenticate(request *models.Request, conn *websocket.Conn) error {
-	login, exists := request.Data["login"]
+func (h *Hub) Authenticate(request *communication.Request, conn *websocket.Conn) (*session.Session, error) {
+	email, exists := request.Data["email"]
 	if !exists {
-		return errors.New("empty login")
+		return nil, errors.New("empty email")
 	}
 	password, exists := request.Data["password"]
 	if !exists {
-		return errors.New("empty password")
+		return nil, errors.New("empty password")
 	}
-	user, err := storage.GetUserInfo(h.conn, login)
+	user, err := models.FindUser(context.Background(), h.conn, email, "password")
 	if err != nil {
-		return errors.New("wrong account info: " + err.Error())
+		return nil, errors.New("wrong account info: " + err.Error())
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return errors.New("wrong account info: " + err.Error())
+		return nil, errors.New("wrong account info: " + err.Error())
 	}
-	session, err := session.NewSession(user, conn)
 
+	userSession, err := session.NewSession(user, conn)
 	if err != nil {
-		return errors.New("failed to create session: " + err.Error())
+		return nil, errors.New("failed to create sesion: " + err.Error())
 	}
-	request.Session = session
-	return nil
+	return userSession, nil
 }
 
 func (h *Hub) handleUser(w http.ResponseWriter, r *http.Request) {
@@ -107,25 +93,28 @@ func (h *Hub) handleUser(w http.ResponseWriter, r *http.Request) {
 		log.Warn("Could not upgrade to Websocket because: ", err.Error())
 		return
 	}
-	request := &models.Request{}
-	err = c.ReadJSON(request)
 
+	request := &communication.Request{}
+
+	err = c.ReadJSON(request)
 	if err != nil {
 		log.Info("failed to read json: " + err.Error())
 		c.Close()
 		return
 	}
-	err = h.Authenticate(request, c)
+	userSession, err := h.Authenticate(request, c)
 	if err != nil {
 		log.Info("failed to authenticate: ", err.Error())
-
 		c.Close()
 		return
 	}
+	request.SetSession(userSession)
+
 	answer := request.ToAnswer()
 	answer.Data = "Logged in!"
-	answer.Ok = true
-	answer.SendToUser()
+	answer.Result = true
+	c.WriteJSON(answer)
+
 	for {
 		err := c.ReadJSON(request)
 		if err != nil { // if the request could not be parsed
@@ -147,13 +136,10 @@ func (h *Hub) RegisterServer(server IServer) error {
 		return errors.New("endpoint used by " + server.GetName())
 	}
 	h.workers[server.GetCode()] = server.GetJobsChan()
-	conn, err := h.connPool.Acquire()
-	if err != nil {
-		context.Error("Failed to acquire connection from connection pool: ", err.Error)
-		return err
-	}
-	server.SetConn(conn)
-	context.WithFields(log.Fields{"Name": server.GetName(), "Endpoint": server.GetCode()}).Info("A server has been registered")
+
+	server.SetConn(h.conn)
+	logger.WithFields(log.Fields{"Name": server.GetName(), "Endpoint": server.GetCode()}).Info("A server has been registered")
 	h.servers = append(h.servers, server)
+	server.AfterSetup()
 	return nil
 }

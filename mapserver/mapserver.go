@@ -8,6 +8,9 @@ type mapserver struct {
 	server.Server
 }
 
+func (ms *mapserver) AfterSetup() {
+}
+
 func New() *mapserver {
 	ms := &mapserver{}
 	ms.Setup("Map Server", 2, 4)

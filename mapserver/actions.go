@@ -1,30 +1,35 @@
 package mapserver
 
 import (
+	"context"
+	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 	"strconv"
 
 	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/joaopedrosgs/OpenLoU/storage"
 )
 
-func (ms *mapserver) createCity(request *models.Request) *models.Answer {
+func (ms *mapserver) createCity(request *communication.Request) *communication.Answer {
 	return request.ToAnswer()
 }
-func (ms *mapserver) getCitiesFromUser(request *models.Request) *models.Answer {
+func (ms *mapserver) getCitiesFromUser(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
-	cities, err := storage.GetUserCities(ms.GetConn(), request.Session.User.Name)
+
+	cities, err := models.Cities(qm.Where("user_name=?", request.GetSession().User.Name)).All(context.Background(), ms.GetConn())
 	if err != nil {
-		answer.Data = err
+		ms.LogContext.WithField("When", "Accessing database to get cities from user").Error(err.Error())
+		answer.Data = "Internal error"
 		return answer
+
 	}
 	answer.Data = cities
-	answer.Ok = true
+	answer.Result = true
 
 	return answer
 
 }
 
-func (ms *mapserver) getCities(request *models.Request) *models.Answer {
+func (ms *mapserver) getCities(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
 	if err := request.FieldsExist("X", "Y", "Range"); err != nil {
 		answer.Data = err.Error()
@@ -48,15 +53,16 @@ func (ms *mapserver) getCities(request *models.Request) *models.Answer {
 		return answer
 
 	}
-	cities, err := storage.GetAllCitiesInRange(ms.GetConn(), models.Coord{x, y}, rang)
+	cities, err := models.Cities(qm.Where(
+		"x>? AND x<? AND y>? AND y<?", x-rang, x+rang, y-rang, y+rang)).All(context.Background(), ms.GetConn())
 	if err != nil {
-		ms.LogContext.WithField("When", "Accessing database").Error(err.Error())
+		ms.LogContext.WithField("When", "Accessing database to get cities in range").Error(err.Error())
 		answer.Data = "Internal error"
 		return answer
 
 	}
 
-	answer.Ok = true
+	answer.Result = true
 	answer.Data = cities
 
 	return answer

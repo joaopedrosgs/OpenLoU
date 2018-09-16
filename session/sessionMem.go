@@ -5,24 +5,23 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/joaopedrosgs/OpenLoU/configuration"
 	"github.com/joaopedrosgs/OpenLoU/models"
 )
 
 type sessionMem struct {
 	mutex    sync.RWMutex
-	sessions map[string]*models.Session
+	sessions map[string]*Session
 }
 
 var sessionsStorage sessionMem
 
-func NewSession(usr *models.User, conn *websocket.Conn) (*models.Session, error) {
-	key, err := GenerateRandomString(configuration.GetSingleton().Parameters.Security.KeySize)
+func NewSession(usr *models.User, conn *websocket.Conn) (*Session, error) {
+	key, err := GenerateRandomString(32)
 	if err != nil {
 		return nil, err
 	}
 	sessionsStorage.mutex.Lock()
-	session := &models.Session{User: usr, LastAction: time.Now(), Conn: conn}
+	session := &Session{User: usr, LastAction: time.Now(), Conn: conn}
 	sessionsStorage.sessions[key] = session
 	sessionsStorage.mutex.Unlock()
 
@@ -35,7 +34,7 @@ func Exists(key string) bool {
 	sessionsStorage.mutex.RUnlock()
 	return ok
 }
-func GetSession(key string) (*models.Session, bool) {
+func GetSession(key string) (*Session, bool) {
 	sessionsStorage.mutex.RLock()
 	session, ok := sessionsStorage.sessions[key]
 	sessionsStorage.mutex.RUnlock()
@@ -61,5 +60,5 @@ func DeleteSessionByUser(user *models.User) {
 
 }
 func NewSessionInMemory() {
-	sessionsStorage = sessionMem{sync.RWMutex{}, make(map[string]*models.Session)}
+	sessionsStorage = sessionMem{sync.RWMutex{}, make(map[string]*Session)}
 }

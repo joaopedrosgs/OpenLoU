@@ -1,464 +1,175 @@
--- ----------------------------
--- Table structure for alliances
--- ----------------------------
-DROP TABLE IF EXISTS alliances;
+create database openlou
+with owner postgres;
 
-CREATE TABLE alliances (
-  name varchar(20) COLLATE "default" NOT NULL,
-  created_at timestamp(6) DEFAULT now() NOT NULL,
-  updated_at timestamp(6) DEFAULT now() NOT NULL
-)
-WITH (OIDS = FALSE);
+create table alliances
+(
+  name       varchar(20)                not null,
+  created_at timestamp(6) default now() not null,
+  updated_at timestamp(6) default now() not null,
+  id         serial                     not null
+    constraint alliances_pk
+    primary key
+);
 
--- ----------------------------
--- Table structure for cities
--- ----------------------------
-DROP TABLE IF EXISTS cities;
+alter table alliances
+  owner to postgres;
 
-CREATE TABLE cities (
-  x int2 CHECK (x < 600
-    AND x > - 1) NOT NULL,
-  y int2 CHECK (y < 600
-    AND y > - 1) NOT NULL,
-  continent_x int2 NOT NULL,
-  continent_y int2 NOT NULL,
-  TYPE int2 DEFAULT 1 NOT NULL,
-  created_at timestamp(6) DEFAULT now() NOT NULL,
-  updated_at timestamp(6) DEFAULT now() NOT NULL,
-  user_name varchar(20) COLLATE "default",
-  name varchar(20) COLLATE "default" DEFAULT 'New City' ::character varying NOT NULL,
-  points int2 DEFAULT 3 NOT NULL,
-  wood_production int DEFAULT 500 NOT NULL,
-  stone_production int DEFAULT 0 NOT NULL,
-  iron_production int DEFAULT 0 NOT NULL,
-  food_production int DEFAULT 0 NOT NULL,
-  gold_production int DEFAULT 0 NOT NULL,
-  wood_stored int DEFAULT 1000 CHECK (wood_stored <= wood_limit
-    AND wood_stored >= 0) NOT NULL,
-  stone_stored int DEFAULT 1000 CHECK (stone_stored <= stone_limit
-    AND stone_stored >= 0) NOT NULL,
-  iron_stored int DEFAULT 500 CHECK (iron_stored <= iron_limit
-    AND iron_stored >= 0) NOT NULL,
-  food_stored int DEFAULT 500 CHECK (food_stored <= food_limit
-    AND food_stored >= 0) NOT NULL,
-  wood_limit int DEFAULT 5000 NOT NULL,
-  stone_limit int DEFAULT 5000 NOT NULL,
-  iron_limit int DEFAULT 5000 NOT NULL,
-  food_limit int DEFAULT 5000 NOT NULL
-)
-WITH (OIDS = FALSE);
+create unique index alliances_id_uindex
+  on alliances (id);
 
--- ----------------------------
--- Table structure for constructions
--- ----------------------------
-DROP TABLE IF EXISTS constructions;
+create table cities
+(
+  x                integer                                             not null
+    constraint city_x_check
+    check ((x < 600) AND (x > '-1' :: integer)),
+  y                integer                                             not null
+    constraint city_y_check
+    check ((y < 600) AND (y > '-1' :: integer)),
+  type             integer default 1                                   not null,
+  created_at       timestamp(6) default now()                          not null,
+  updated_at       timestamp(6) default now()                          not null,
+  user_name        varchar(20),
+  city_name        varchar(20) default 'New City' :: character varying not null,
+  points           integer default 3                                   not null,
+  wood_production  integer default 500                                 not null,
+  stone_production integer default 0                                   not null,
+  iron_production  integer default 0                                   not null,
+  food_production  integer default 0                                   not null,
+  gold_production  integer default 0                                   not null,
+  wood_stored      integer default 1000                                not null,
+  stone_stored     integer default 1000                                not null,
+  iron_stored      integer default 500                                 not null,
+  food_stored      integer default 500                                 not null,
+  wood_limit       integer default 5000                                not null,
+  stone_limit      integer default 5000                                not null,
+  iron_limit       integer default 5000                                not null,
+  food_limit       integer default 5000                                not null,
+  constraint city_pkey
+  primary key (x, y),
+  constraint city_check
+  check ((wood_stored <= wood_limit) AND (wood_stored >= 0)),
+  constraint city_check1
+  check ((stone_stored <= stone_limit) AND (stone_stored >= 0)),
+  constraint city_check2
+  check ((iron_stored <= iron_limit) AND (iron_stored >= 0)),
+  constraint city_check3
+  check ((food_stored <= food_limit) AND (food_stored >= 0))
+);
 
--- auto-generated definition
-CREATE TABLE constructions (
-  x int2 CHECK (x <= 20
-    AND x >= 0) NOT NULL,
-  y int2 CHECK (y <= 20
-    AND y >= 0) NOT NULL,
-  city_x int2 CHECK (city_x <= 600
-    AND city_x >= 0) NOT NULL,
-  city_y int2 CHECK (city_y <= 600
-    AND city_y >= 0) NOT NULL,
-  created_at timestamp(6) DEFAULT now() NOT NULL,
-  updated_at timestamp(6) DEFAULT now() NOT NULL,
-  level int2 DEFAULT 0 CHECK (level >= 1
-    AND level <= 10) NOT NULL,
-  TYPE int2 NOT NULL,
-  production int2 DEFAULT 0 NOT NULL,
-  modifier int2 DEFAULT 1 NOT NULL,
-  need_refresh boolean DEFAULT TRUE NOT NULL
-)
-WITH (OIDS = FALSE);
+alter table cities
+  owner to postgres;
 
--- ----------------------------
--- Table structure for continents
--- ----------------------------
-DROP TABLE IF EXISTS continents;
+create table constructions
+(
+  x            integer                    not null
+    constraint construction_x_check
+    check ((x <= 20) AND (x >= 0)),
+  y            integer                    not null
+    constraint construction_y_check
+    check ((y <= 20) AND (y >= 0)),
+  city_x       integer                    not null
+    constraint construction_city_x_check
+    check ((city_x <= 600) AND (city_x >= 0)),
+  city_y       integer                    not null
+    constraint construction_city_y_check
+    check ((city_y <= 600) AND (city_y >= 0)),
+  created_at   timestamp(6) default now() not null,
+  updated_at   timestamp(6) default now() not null,
+  level        integer default 0          not null
+    constraint construction_level_check
+    check ((level >= 1) AND (level <= 10)),
+  type         integer                    not null,
+  production   integer default 0          not null,
+  modifier     integer default 1          not null,
+  need_refresh boolean default true       not null,
+  constraint construction_pkey
+  primary key (city_x, city_y, x, y)
+);
 
-CREATE TABLE continents (
-  x int2 NOT NULL,
-  y int2 NOT NULL,
-  created_at timestamp(6) DEFAULT now() NOT NULL,
-  updated_at timestamp(6) DEFAULT now() NOT NULL,
-  is_active bool DEFAULT FALSE NOT NULL,
-  size int2 DEFAULT 100 NOT NULL,
-  number_of_cities int2 DEFAULT 0 NOT NULL,
-  cities_limit int2 DEFAULT 1000 NOT NULL
-)
-WITH (OIDS = FALSE);
+alter table constructions
+  owner to postgres;
 
--- ----------------------------
--- Table structure for dungeons
--- ----------------------------
-DROP TABLE IF EXISTS dungeons;
+create table dungeons
+(
+  x        integer           not null
+    constraint dungeon_x_check
+    check ((x <= 600) AND (x >= 0)),
+  y        integer           not null
+    constraint dungeon_y_check
+    check ((y <= 600) AND (y >= 0)),
+  type     integer           not null,
+  level    integer default 1 not null
+    constraint dungeon_level_check
+    check ((level <= 10) AND (level >= 0)),
+  progress integer default 0 not null
+    constraint dungeon_progress_check
+    check ((progress <= 100) AND (progress >= 0)),
+  constraint dungeon_pkey
+  primary key (x, y)
+);
 
-CREATE TABLE dungeons (
-  x int2 CHECK (x <= 600
-    AND x >= 0) NOT NULL,
-  y int2 CHECK (y <= 600
-    AND y >= 0) NOT NULL,
-  continent_x int2 NOT NULL,
-  continent_y int2 NOT NULL,
-  TYPE int2 NOT NULL,
-  level int2 CHECK (level <= 10
-    AND level >= 0) DEFAULT 1 NOT NULL,
-  progress int2 CHECK (progress <= 100
-    AND progress >= 0) DEFAULT 0 NOT NULL
-)
-WITH (OIDS = FALSE);
+alter table dungeons
+  owner to postgres;
 
--- ----------------------------
--- Table structure for military_actions
--- ----------------------------
-DROP TABLE IF EXISTS military_actions;
+create table military_actions
+(
+  id        integer      not null
+    constraint military_action_pkey
+    primary key,
+  origin_id integer,
+  target_id integer,
+  arrival   timestamp(6) not null,
+  troops    json         not null
+);
 
-CREATE TABLE military_actions (
-  id int NOT NULL,
-  origin_id int,
-  target_id int,
-  arrival timestamp(6) NOT NULL,
-  troops json NOT NULL
-)
-WITH (OIDS = FALSE);
+alter table military_actions
+  owner to postgres;
 
--- ----------------------------
--- Table structure for tiles
--- ----------------------------
-DROP TABLE IF EXISTS tiles;
+create table upgrades
+(
+  construction_x integer                    not null
+    constraint upgrade_construction_x_check
+    check ((construction_x <= 20) AND (construction_x >= 0)),
+  construction_y integer                    not null
+    constraint upgrade_construction_y_check
+    check ((construction_y <= 20) AND (construction_y >= 0)),
+  city_x         integer                    not null
+    constraint upgrade_city_x_check
+    check ((city_x <= 600) AND (city_x >= 0)),
+  city_y         integer                    not null
+    constraint upgrade_city_y_check
+    check ((city_y <= 600) AND (city_y >= 0)),
+  created_at     timestamp(6) default now() not null,
+  index_at_queue integer default 0          not null,
+  duration       integer default 10         not null,
+  start          timestamp(0) default now() not null,
+  constraint upgrade_pkey
+  primary key (construction_x, construction_y, city_x, city_y)
+);
 
-CREATE TABLE tiles (
-  x int2 CHECK (x < 600
-    AND x > - 1) NOT NULL,
-  y int2 CHECK (y < 600
-    AND y > - 1) NOT NULL,
-  continent_x int2 NOT NULL,
-  continent_y int2 NOT NULL,
-  occupied_by varchar(20) COLLATE "default" DEFAULT 'land' ::character varying NOT NULL
-)
-WITH (OIDS = FALSE);
+alter table upgrades
+  owner to postgres;
 
--- ----------------------------
--- Table structure for upgrades
--- ----------------------------
-DROP TABLE IF EXISTS upgrades;
+create table users
+(
+  created_at    timestamp(6) default now() not null,
+  updated_at    timestamp(6) default now() not null,
+  name          varchar(20)                not null,
+  email         varchar(40)                not null
+    constraint user_pkey
+    primary key,
+  password      varchar(100)               not null,
+  gold          integer default 1000       not null,
+  diamonds      integer default 0          not null,
+  darkwood      integer default 0          not null,
+  runestone     integer default 0          not null,
+  veritium      integer default 0          not null,
+  trueseed      integer default 0          not null,
+  rank          integer default 0          not null,
+  alliance_name varchar(20),
+  alliance_rank varchar(15)
+);
 
-CREATE TABLE upgrades (
-  x int2 CHECK (x <= 20
-    AND x >= 0) NOT NULL,
-  y int2 CHECK (y <= 20
-    AND y >= 0) NOT NULL,
-  city_x int2 CHECK (city_x <= 600
-    AND city_x >= 0) NOT NULL,
-  city_y int2 CHECK (city_y <= 600
-    AND city_y >= 0) NOT NULL,
-  created_at timestamp(6) DEFAULT now() NOT NULL,
-  INDEX int2 DEFAULT 0 NOT NULL,
-  duration int DEFAULT 10 NOT NULL,
-  START timestamp(0) DEFAULT now() NOT NULL
-)
-WITH (OIDS = FALSE);
-
--- ----------------------------
--- Table structure for users
--- ----------------------------
-DROP TABLE IF EXISTS users;
-
-CREATE TABLE users (
-  created_at timestamp(6) DEFAULT now() NOT NULL,
-  updated_at timestamp(6) DEFAULT now() NOT NULL,
-  name varchar(20) COLLATE "default" NOT NULL,
-  email varchar(40) COLLATE "default" NOT NULL,
-  PASSWORD varchar(100) COLLATE "default" NOT NULL,
-  gold int DEFAULT 1000 NOT NULL,
-  diamonds int DEFAULT 0 NOT NULL,
-  darkwood int DEFAULT 0 NOT NULL,
-  runestone int DEFAULT 0 NOT NULL,
-  veritium int DEFAULT 0 NOT NULL,
-  trueseed int DEFAULT 0 NOT NULL,
-  rank int2 DEFAULT 0 NOT NULL,
-  alliance_name varchar(20) COLLATE "default",
-  alliance_rank varchar(15) COLLATE "default"
-)
-WITH (OIDS = FALSE);
-
--- ----------------------------
--- Alter Sequences Owned By 
--- ----------------------------
--- ----------------------------
--- Uniques structure for table alliances
--- ----------------------------
-ALTER TABLE alliances
-  ADD UNIQUE (name);
-
--- ----------------------------
--- Indexes structure for table cities
--- ----------------------------
-CREATE UNIQUE INDEX city_coord_index ON cities
-USING btree (x, y, continent_x, continent_y);
-
-ALTER TABLE cities CLUSTER ON city_coord_index;
-
-CREATE INDEX city_username_index ON cities
-USING btree (user_name);
-
--- ----------------------------
--- Uniques structure for table cities
--- ----------------------------
-ALTER TABLE cities
-  ADD UNIQUE (x,
-    y);
-
--- ----------------------------
--- Primary Key structure for table cities
--- ----------------------------
-ALTER TABLE cities
-  ADD PRIMARY KEY (x, y, continent_x, continent_y);
-
--- ----------------------------
--- Indexes structure for table constructions
--- ----------------------------
-CREATE UNIQUE INDEX city_index ON constructions
-USING btree (x, y, city_x, city_y);
-
-ALTER TABLE constructions CLUSTER ON city_index;
-
--- ----------------------------
--- Uniques structure for table constructions
--- ----------------------------
-ALTER TABLE constructions
-  ADD UNIQUE (x,
-    y,
-    city_x,
-    city_y);
-
--- ----------------------------
--- Primary Key structure for table constructions
--- ----------------------------
-ALTER TABLE constructions
-  ADD PRIMARY KEY (city_x, x, y, city_y);
-
--- ----------------------------
--- Indexes structure for table continents
--- ----------------------------
-CREATE UNIQUE INDEX xy_index ON continents
-USING btree (x, y);
-
-ALTER TABLE continents CLUSTER ON xy_index;
-
--- ----------------------------
--- Uniques structure for table continents
--- ----------------------------
-ALTER TABLE continents
-  ADD UNIQUE (x,
-    y);
-
--- ----------------------------
--- Primary Key structure for table continents
--- ----------------------------
-ALTER TABLE continents
-  ADD PRIMARY KEY (x, y);
-
--- ----------------------------
--- Indexes structure for table dungeons
--- ----------------------------
-CREATE UNIQUE INDEX coord_dungeon_index ON dungeons
-USING btree (continent_x, continent_y, x, y);
-
-ALTER TABLE dungeons CLUSTER ON coord_dungeon_index;
-
--- ----------------------------
--- Uniques structure for table dungeons
--- ----------------------------
-ALTER TABLE dungeons
-  ADD UNIQUE (x,
-    y);
-
--- ----------------------------
--- Primary Key structure for table dungeons
--- ----------------------------
-ALTER TABLE dungeons
-  ADD PRIMARY KEY (continent_x, continent_y, x, y);
-
--- ----------------------------
--- Indexes structure for table military_actions
--- ----------------------------
-CREATE INDEX origin_index ON military_actions
-USING btree (origin_id);
-
-CREATE INDEX target_index ON military_actions
-USING btree (target_id);
-
-CREATE INDEX arrival_index ON military_actions
-USING btree (arrival);
-
--- ----------------------------
--- Primary Key structure for table military_actions
--- ----------------------------
-ALTER TABLE military_actions
-  ADD PRIMARY KEY (id);
-
--- ----------------------------
--- Indexes structure for table tiles
--- ----------------------------
-CREATE UNIQUE INDEX coord_tile_index ON tiles
-USING btree (x, y, continent_x, continent_y);
-
-ALTER TABLE tiles CLUSTER ON coord_tile_index;
-
--- ----------------------------
--- Uniques structure for table tiles
--- ----------------------------
-ALTER TABLE tiles
-  ADD UNIQUE (x,
-    y);
-
--- ----------------------------
--- Primary Key structure for table tiles
--- ----------------------------
-ALTER TABLE tiles
-  ADD PRIMARY KEY (x, y, continent_x, continent_y);
-
--- ----------------------------
--- Indexes structure for table upgrades
--- ----------------------------
-CREATE INDEX order_index ON upgrades
-USING btree (INDEX);
-
-CREATE UNIQUE INDEX tile_upgrade_index ON upgrades
-USING btree (x, y, city_x, city_y, INDEX);
-
-ALTER TABLE upgrades CLUSTER ON tile_upgrade_index;
-
--- ----------------------------
--- Uniques structure for table upgrades
--- ----------------------------
-ALTER TABLE upgrades
-  ADD UNIQUE (x,
-    y,
-    city_x,
-    city_y,
-    INDEX);
-
--- ----------------------------
--- Primary Key structure for table upgrades
--- ----------------------------
-ALTER TABLE upgrades
-  ADD PRIMARY KEY (x, y, city_x, city_y);
-
--- ----------------------------
--- Indexes structure for table users
--- ----------------------------
-CREATE UNIQUE INDEX email_index ON users
-USING btree (email);
-
-CREATE UNIQUE INDEX user_name_index ON users
-USING btree (name);
-
--- ----------------------------
--- Uniques structure for table users
--- ----------------------------
-ALTER TABLE users
-  ADD UNIQUE (name);
-
-ALTER TABLE users
-  ADD UNIQUE (email);
-
--- ----------------------------
--- Primary Key structure for table users
--- ----------------------------
-ALTER TABLE users
-  ADD PRIMARY KEY (email, name);
-
--- ----------------------------
--- Foreign Key structure for table cities
--- ----------------------------
-ALTER TABLE cities
-  ADD FOREIGN KEY (x,
-    y,
-    continent_x,
-    continent_y)
-  REFERENCES tiles (x,
-    y,
-    continent_x,
-    continent_y)
-  ON DELETE CASCADE ON
-  UPDATE
-    CASCADE;
-
-ALTER TABLE cities
-  ADD FOREIGN KEY (user_name)
-  REFERENCES users (name)
-  ON DELETE SET NULL ON
-  UPDATE
-    CASCADE;
-
--- ----------------------------
--- Foreign Key structure for table constructions
--- ----------------------------
-ALTER TABLE constructions
-  ADD FOREIGN KEY (city_x,
-    city_y)
-  REFERENCES cities (x,
-    y)
-  ON DELETE CASCADE ON
-  UPDATE
-    CASCADE;
-
--- ----------------------------
--- Foreign Key structure for table dungeons
--- ----------------------------
-ALTER TABLE dungeons
-  ADD FOREIGN KEY (x,
-    y,
-    continent_x,
-    continent_y)
-  REFERENCES tiles (x,
-    y,
-    continent_x,
-    continent_y)
-  ON DELETE CASCADE ON
-  UPDATE
-    CASCADE;
-
--- ----------------------------
--- Foreign Key structure for table tiles
--- ----------------------------
-ALTER TABLE tiles
-  ADD FOREIGN KEY (continent_x,
-    continent_y)
-  REFERENCES continents (x,
-    y)
-  ON DELETE CASCADE ON
-  UPDATE
-    CASCADE;
-
--- ----------------------------
--- Foreign Key structure for table upgrades
--- ----------------------------
-ALTER TABLE upgrades
-  ADD FOREIGN KEY (x,
-    y,
-    city_x,
-    city_y)
-  REFERENCES constructions (x,
-    y,
-    city_x,
-    city_y)
-  ON DELETE CASCADE ON
-  UPDATE
-    CASCADE;
-
--- ----------------------------
--- Foreign Key structure for table users
--- ----------------------------
-ALTER TABLE users
-  ADD FOREIGN KEY (alliance_name)
-  REFERENCES alliances (name)
-  ON DELETE SET NULL ON
-  UPDATE
-    CASCADE;
+alter table users
+  owner to postgres;
 

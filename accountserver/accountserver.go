@@ -8,6 +8,9 @@ type accountServer struct {
 	server.Server
 }
 
+func (cs *accountServer) AfterSetup() {
+}
+
 func New() *accountServer {
 	cs := &accountServer{}
 	cs.Setup("Account server", 1, 10)

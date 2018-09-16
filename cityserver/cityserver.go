@@ -2,10 +2,11 @@ package cityserver
 
 import (
 	"context"
-	"time"
-
+	"github.com/joaopedrosgs/OpenLoU/models"
 	"github.com/joaopedrosgs/OpenLoU/server"
-	"github.com/joaopedrosgs/OpenLoU/storage"
+	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
+	"time"
 )
 
 type cityServer struct {
@@ -13,24 +14,48 @@ type cityServer struct {
 }
 
 func (cs *cityServer) UpgradeChecker() {
+	cs.LogContext.Info("Starting to check upgrades")
 	for {
-		upgrades, err := storage.GetAllUpgrades(cs.GetConn())
+		time.Sleep(time.Second * 4)
+
+		tx, err := cs.GetConn().Begin()
+
+		upgrades, err := models.Upgrades(qm.Where("index_at_queue=0 AND (start+duration * interval '1 second')> CURRENT_TIMESTAMP")).All(context.Background(), tx)
+
 		if err != nil {
 			cs.LogContext.Error(err.Error())
-			time.Sleep(10 * time.Second)
 			continue
 		}
-		batch := cs.GetConn().BeginBatch()
+		cs.LogContext.Infof("%d upgrades found", len(upgrades))
+		if len(upgrades) == 0 {
+			continue
+		}
+		if err != nil {
+			cs.LogContext.Error(err.Error())
+			continue
+		}
 		for _, upgrade := range upgrades {
-			upgrade.EnqueueCompletion(batch)
+
+			construction, err := models.FindConstruction(context.Background(), cs.GetConn(), upgrade.CityX, upgrade.CityY, upgrade.ConstructionX, upgrade.ConstructionY)
+			if err != nil {
+				cs.LogContext.Error(err.Error())
+				continue
+			}
+			construction.Level++
+			construction.Update(context.Background(), tx, boil.Infer())
 		}
-		err = batch.Send(context.Background(), nil)
+		_, err = upgrades.DeleteAll(context.Background(), tx)
 		if err != nil {
 			cs.LogContext.Error(err.Error())
-			time.Sleep(10 * time.Second)
-			continue
+			tx.Rollback()
+
 		}
-		time.Sleep(5 * time.Second)
+		err = tx.Commit()
+		if err != nil {
+			cs.LogContext.Error(err.Error())
+
+		}
+
 	}
 }
 
@@ -42,4 +67,7 @@ func New() *cityServer {
 	cs.RegisterInternalEndpoint(cs.getConstructions, 3)
 	cs.RegisterInternalEndpoint(cs.getUpgrades, 4)
 	return cs
+}
+func (cs *cityServer) AfterSetup() {
+	go cs.UpgradeChecker()
 }

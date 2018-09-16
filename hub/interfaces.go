@@ -1,14 +1,15 @@
 package hub
 
 import (
-	"github.com/jackc/pgx"
-	"github.com/joaopedrosgs/OpenLoU/models"
+	"database/sql"
+	"github.com/joaopedrosgs/OpenLoU/communication"
 )
 
 type IServer interface {
 	GetName() string
-	GetJobsChan() *chan *models.Request
+	GetJobsChan() *chan *communication.Request
 	GetCode() int
-	SetConn(conn *pgx.Conn)
+	SetConn(conn *sql.DB)
 	StartListening()
+	AfterSetup()
 }

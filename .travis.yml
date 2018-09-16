@@ -16,6 +16,7 @@ install:
   - go get github.com/volatiletech/null
   - go get github.com/volatiletech/sqlboiler
   - go get github.com/volatiletech/sqlboiler/drivers/sqlboiler-psql
+  - go get github.com/ericlagergren/decimal
 
 services:
   - postgresql

@@ -19,12 +19,8 @@ create unique index alliances_id_uindex
 
 create table cities
 (
-  x                integer                                             not null
-    constraint city_x_check
-    check ((x < 600) AND (x > '-1' :: integer)),
-  y                integer                                             not null
-    constraint city_y_check
-    check ((y < 600) AND (y > '-1' :: integer)),
+  x                integer                                             not null,
+  y                integer                                             not null,
   type             integer default 1                                   not null,
   created_at       timestamp(6) default now()                          not null,
   updated_at       timestamp(6) default now()                          not null,
@@ -44,16 +40,10 @@ create table cities
   stone_limit      integer default 5000                                not null,
   iron_limit       integer default 5000                                not null,
   food_limit       integer default 5000                                not null,
+  queue_time       timestamp default now()                                not null,
+  construction_speed integer default '100'                             not null,
   constraint city_pkey
-  primary key (x, y),
-  constraint city_check
-  check ((wood_stored <= wood_limit) AND (wood_stored >= 0)),
-  constraint city_check1
-  check ((stone_stored <= stone_limit) AND (stone_stored >= 0)),
-  constraint city_check2
-  check ((iron_stored <= iron_limit) AND (iron_stored >= 0)),
-  constraint city_check3
-  check ((food_stored <= food_limit) AND (food_stored >= 0))
+  primary key (x, y)
 );
 
 alter table cities
@@ -61,23 +51,13 @@ alter table cities
 
 create table constructions
 (
-  x            integer                    not null
-    constraint construction_x_check
-    check ((x <= 20) AND (x >= 0)),
-  y            integer                    not null
-    constraint construction_y_check
-    check ((y <= 20) AND (y >= 0)),
-  city_x       integer                    not null
-    constraint construction_city_x_check
-    check ((city_x <= 600) AND (city_x >= 0)),
-  city_y       integer                    not null
-    constraint construction_city_y_check
-    check ((city_y <= 600) AND (city_y >= 0)),
+  x            integer                    not null,
+  y            integer                    not null,
+  city_x       integer                    not null,
+  city_y       integer                    not null,
   created_at   timestamp(6) default now() not null,
   updated_at   timestamp(6) default now() not null,
-  level        integer default 0          not null
-    constraint construction_level_check
-    check ((level >= 1) AND (level <= 10)),
+  level        integer default 0          not null,
   type         integer                    not null,
   production   integer default 0          not null,
   modifier     integer default 1          not null,
@@ -91,19 +71,11 @@ alter table constructions
 
 create table dungeons
 (
-  x        integer           not null
-    constraint dungeon_x_check
-    check ((x <= 600) AND (x >= 0)),
-  y        integer           not null
-    constraint dungeon_y_check
-    check ((y <= 600) AND (y >= 0)),
+  x        integer           not null,
+  y        integer           not null,
   type     integer           not null,
-  level    integer default 1 not null
-    constraint dungeon_level_check
-    check ((level <= 10) AND (level >= 0)),
-  progress integer default 0 not null
-    constraint dungeon_progress_check
-    check ((progress <= 100) AND (progress >= 0)),
+  level    integer default 1 not null,
+  progress integer default 0 not null,
   constraint dungeon_pkey
   primary key (x, y)
 );
@@ -125,51 +97,46 @@ create table military_actions
 alter table military_actions
   owner to postgres;
 
-create table upgrades
+create table queue
 (
-  construction_x integer                    not null
-    constraint upgrade_construction_x_check
-    check ((construction_x <= 20) AND (construction_x >= 0)),
-  construction_y integer                    not null
-    constraint upgrade_construction_y_check
-    check ((construction_y <= 20) AND (construction_y >= 0)),
-  city_x         integer                    not null
-    constraint upgrade_city_x_check
-    check ((city_x <= 600) AND (city_x >= 0)),
-  city_y         integer                    not null
-    constraint upgrade_city_y_check
-    check ((city_y <= 600) AND (city_y >= 0)),
+  construction_x integer                    not null,
+  construction_y integer                    not null,
+  city_x         integer                    not null,
+  city_y         integer                    not null,
   created_at     timestamp(6) default now() not null,
-  index_at_queue integer default 0          not null,
-  duration       integer default 10         not null,
-  start          timestamp(0) default now() not null,
+  completion     timestamp(0) default now() not null,
+  action         integer                    not null,
   constraint upgrade_pkey
   primary key (construction_x, construction_y, city_x, city_y)
 );
 
-alter table upgrades
+alter table queue
   owner to postgres;
 
 create table users
 (
-  created_at    timestamp(6) default now() not null,
-  updated_at    timestamp(6) default now() not null,
-  name          varchar(20)                not null,
-  email         varchar(40)                not null
-    constraint user_pkey
-    primary key,
-  password      varchar(100)               not null,
-  gold          integer default 1000       not null,
-  diamonds      integer default 0          not null,
-  darkwood      integer default 0          not null,
-  runestone     integer default 0          not null,
-  veritium      integer default 0          not null,
-  trueseed      integer default 0          not null,
-  rank          integer default 0          not null,
-  alliance_name varchar(20),
-  alliance_rank varchar(15)
+    created_at    timestamp(6) default now() not null,
+    updated_at    timestamp(6) default now() not null,
+    name          varchar(20)                not null
+        constraint users_pk
+            primary key,
+    email         varchar(40)                not null
+        constraint users_email_key
+            unique,
+    password      varchar(100)               not null,
+    gold          integer      default 1000  not null,
+    diamonds      integer      default 0     not null,
+    darkwood      integer      default 0     not null,
+    runestone     integer      default 0     not null,
+    veritium      integer      default 0     not null,
+    trueseed      integer      default 0     not null,
+    rank          integer      default 0     not null,
+    alliance_name varchar(20),
+    alliance_rank varchar(15)
 );
 
 alter table users
-  owner to postgres;
+    owner to postgres;
+
+
 

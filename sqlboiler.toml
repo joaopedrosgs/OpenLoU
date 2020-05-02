@@ -1,7 +1,9 @@
 [psql]
-dbname  =   "openlou"
+dbname  =   "postgres"
 user    =   "postgres"
-pass    =   ""
+pass    =   "postgres"
 host    =   "localhost"
 sslmode =   "disable"
+port    = 5432
+
 

@@ -20,31 +20,32 @@ func (cs *cityServer) UpgradeChecker() {
 
 		tx, err := cs.GetConn().Begin()
 
-		upgrades, err := models.Upgrades(qm.Where("index_at_queue=0 AND (start+duration * interval '1 second')> CURRENT_TIMESTAMP")).All(context.Background(), tx)
+		queues, err := models.Queues(qm.Where("completion < CURRENT_TIMESTAMP")).All(context.Background(), tx)
 
 		if err != nil {
 			cs.LogContext.Error(err.Error())
 			continue
 		}
-		cs.LogContext.Infof("%d upgrades found", len(upgrades))
-		if len(upgrades) == 0 {
+		cs.LogContext.Infof("%d queue item(s) found", len(queues))
+		if len(queues) == 0 {
 			continue
 		}
 		if err != nil {
 			cs.LogContext.Error(err.Error())
 			continue
 		}
-		for _, upgrade := range upgrades {
+		for _, queue := range queues {
 
-			construction, err := models.FindConstruction(context.Background(), cs.GetConn(), upgrade.CityX, upgrade.CityY, upgrade.ConstructionX, upgrade.ConstructionY)
+			construction, err := models.FindConstruction(context.Background(), cs.GetConn(), queue.CityX, queue.CityY, queue.ConstructionX, queue.ConstructionY)
 			if err != nil {
 				cs.LogContext.Error(err.Error())
 				continue
 			}
-			construction.Level++
+			cs.LogContext.Info("Date ", queue.Completion)
+			construction.Level += queue.Action
 			construction.Update(context.Background(), tx, boil.Infer())
 		}
-		_, err = upgrades.DeleteAll(context.Background(), tx)
+		_, err = queues.DeleteAll(context.Background(), tx)
 		if err != nil {
 			cs.LogContext.Error(err.Error())
 			tx.Rollback()

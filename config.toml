@@ -1,9 +1,9 @@
 [database]
 host	    =	"localhost"
 port	    =	5432
-name	    =	"openlou"
+name	    =	"postgres"
 user	    =	"postgres"
-password	=	""
+password	=	"postgres"
 SSL	     =	"disable"
 
 [server]

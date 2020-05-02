@@ -46,42 +46,4 @@ func (cs *accountServer) CreateAdminAccount() {
 	user.Insert(context.Background(), cs.GetConn(), boil.Infer())
 	cs.LogContext.Info("Admin account created!")
 
-	city := models.City{
-		X:         0,
-		Y:         0,
-		CreatedAt: time.Time{},
-		UpdatedAt: time.Time{},
-		UserName: null.String{
-			String: user.Name,
-			Valid:  true,
-		},
-	}
-	city.Insert(context.Background(), cs.GetConn(), boil.Infer())
-	cs.LogContext.Info("Admin city created!")
-
-	cityHall := models.Construction{
-		X:         10,
-		Y:         10,
-		CityX:     city.X,
-		CityY:     city.Y,
-		CreatedAt: time.Time{},
-		UpdatedAt: time.Time{},
-		Level:     1,
-		Type:      0,
-	}
-	cityHall.Insert(context.Background(), cs.GetConn(), boil.Infer())
-	cs.LogContext.Info("Admin City Hall created!")
-
-	cityHallUpgrade := models.Upgrade{
-		ConstructionX: cityHall.X,
-		ConstructionY: cityHall.Y,
-		CityX:         cityHall.CityX,
-		CityY:         cityHall.CityY,
-		IndexAtQueue:  0,
-		Duration:      10,
-		Start:         time.Now(),
-	}
-	cityHallUpgrade.Insert(context.Background(), cs.GetConn(), boil.Infer())
-	cs.LogContext.Info("Admin City Hall upgrade created!")
-
 }

@@ -6,9 +6,8 @@ import (
 	"errors"
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/session"
-	"github.com/spf13/viper"
-
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 
 	"net/http"
@@ -35,11 +34,13 @@ func New() (*Hub, error) {
 	hub := &Hub{}
 	hub.workers = make(map[int]*chan *communication.Request)
 	var err error
-	hub.conn, err = sql.Open("postgres", "dbname=openlou host=localhost user=postgres sslmode=disable")
+	hub.conn, err = sql.Open("postgres", "dbname=postgres host=localhost user=postgres password=postgres sslmode=disable")
 	if err != nil {
 		logger.Error("Hub failed to connect to the database!")
 		return nil, err
 	}
+	hub.conn.SetMaxOpenConns(8)
+
 	logger.Info("Hub has been started!")
 	return hub, nil
 
@@ -62,15 +63,15 @@ func (h *Hub) Start() {
 
 }
 func (h *Hub) Authenticate(request *communication.Request, conn *websocket.Conn) (*session.Session, error) {
-	email, exists := request.Data["email"]
+	username, exists := request.Data["username"]
 	if !exists {
-		return nil, errors.New("empty email")
+		return nil, errors.New("empty username")
 	}
 	password, exists := request.Data["password"]
 	if !exists {
 		return nil, errors.New("empty password")
 	}
-	user, err := models.FindUser(context.Background(), h.conn, email, "password")
+	user, err := models.FindUser(context.Background(), h.conn, username)
 	if err != nil {
 		return nil, errors.New("wrong account info: " + err.Error())
 	}
@@ -116,11 +117,11 @@ func (h *Hub) handleUser(w http.ResponseWriter, r *http.Request) {
 	c.WriteJSON(answer)
 
 	for {
+
 		err := c.ReadJSON(request)
 		if err != nil { // if the request could not be parsed
-			log.Info("failed to read json")
-			continue
-
+			log.Info("failed to read json:", err.Error())
+			return
 		}
 		workerChan, ok := h.workers[request.EndPoint]
 		if ok {

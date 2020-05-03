@@ -1,7 +1,7 @@
 package mapserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/server"
+	"github.com/joaopedrosgs/openlou/server"
 )
 
 type mapserver struct {

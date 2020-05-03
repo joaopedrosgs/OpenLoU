@@ -2352,9 +2352,11 @@ type QueueMutation struct {
 	op                  Op
 	typ                 string
 	id                  *int
-	_Completion         *time.Time
-	_Action             *int
-	add_Action          *int
+	completion          *time.Time
+	action              *int
+	addaction           *int
+	order               *int
+	addorder            *int
 	clearedFields       map[string]struct{}
 	city                *int
 	clearedcity         bool
@@ -2402,62 +2404,101 @@ func (m *QueueMutation) ID() (id int, exists bool) {
 	return *m.id, true
 }
 
-// SetCompletion sets the Completion field.
+// SetCompletion sets the completion field.
 func (m *QueueMutation) SetCompletion(t time.Time) {
-	m._Completion = &t
+	m.completion = &t
 }
 
-// Completion returns the Completion value in the mutation.
+// Completion returns the completion value in the mutation.
 func (m *QueueMutation) Completion() (r time.Time, exists bool) {
-	v := m._Completion
+	v := m.completion
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetCompletion reset all changes of the Completion field.
+// ResetCompletion reset all changes of the completion field.
 func (m *QueueMutation) ResetCompletion() {
-	m._Completion = nil
+	m.completion = nil
 }
 
-// SetAction sets the Action field.
+// SetAction sets the action field.
 func (m *QueueMutation) SetAction(i int) {
-	m._Action = &i
-	m.add_Action = nil
+	m.action = &i
+	m.addaction = nil
 }
 
-// Action returns the Action value in the mutation.
+// Action returns the action value in the mutation.
 func (m *QueueMutation) Action() (r int, exists bool) {
-	v := m._Action
+	v := m.action
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// AddAction adds i to Action.
+// AddAction adds i to action.
 func (m *QueueMutation) AddAction(i int) {
-	if m.add_Action != nil {
-		*m.add_Action += i
+	if m.addaction != nil {
+		*m.addaction += i
 	} else {
-		m.add_Action = &i
+		m.addaction = &i
 	}
 }
 
-// AddedAction returns the value that was added to the Action field in this mutation.
+// AddedAction returns the value that was added to the action field in this mutation.
 func (m *QueueMutation) AddedAction() (r int, exists bool) {
-	v := m.add_Action
+	v := m.addaction
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetAction reset all changes of the Action field.
+// ResetAction reset all changes of the action field.
 func (m *QueueMutation) ResetAction() {
-	m._Action = nil
-	m.add_Action = nil
+	m.action = nil
+	m.addaction = nil
+}
+
+// SetOrder sets the order field.
+func (m *QueueMutation) SetOrder(i int) {
+	m.order = &i
+	m.addorder = nil
+}
+
+// Order returns the order value in the mutation.
+func (m *QueueMutation) Order() (r int, exists bool) {
+	v := m.order
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// AddOrder adds i to order.
+func (m *QueueMutation) AddOrder(i int) {
+	if m.addorder != nil {
+		*m.addorder += i
+	} else {
+		m.addorder = &i
+	}
+}
+
+// AddedOrder returns the value that was added to the order field in this mutation.
+func (m *QueueMutation) AddedOrder() (r int, exists bool) {
+	v := m.addorder
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOrder reset all changes of the order field.
+func (m *QueueMutation) ResetOrder() {
+	m.order = nil
+	m.addorder = nil
 }
 
 // SetCityID sets the city edge to City by id.
@@ -2552,12 +2593,15 @@ func (m *QueueMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *QueueMutation) Fields() []string {
-	fields := make([]string, 0, 2)
-	if m._Completion != nil {
+	fields := make([]string, 0, 3)
+	if m.completion != nil {
 		fields = append(fields, queue.FieldCompletion)
 	}
-	if m._Action != nil {
+	if m.action != nil {
 		fields = append(fields, queue.FieldAction)
+	}
+	if m.order != nil {
+		fields = append(fields, queue.FieldOrder)
 	}
 	return fields
 }
@@ -2571,6 +2615,8 @@ func (m *QueueMutation) Field(name string) (ent.Value, bool) {
 		return m.Completion()
 	case queue.FieldAction:
 		return m.Action()
+	case queue.FieldOrder:
+		return m.Order()
 	}
 	return nil, false
 }
@@ -2594,6 +2640,13 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAction(v)
 		return nil
+	case queue.FieldOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOrder(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Queue field %s", name)
 }
@@ -2602,8 +2655,11 @@ func (m *QueueMutation) SetField(name string, value ent.Value) error {
 // or decremented during this mutation.
 func (m *QueueMutation) AddedFields() []string {
 	var fields []string
-	if m.add_Action != nil {
+	if m.addaction != nil {
 		fields = append(fields, queue.FieldAction)
+	}
+	if m.addorder != nil {
+		fields = append(fields, queue.FieldOrder)
 	}
 	return fields
 }
@@ -2615,6 +2671,8 @@ func (m *QueueMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case queue.FieldAction:
 		return m.AddedAction()
+	case queue.FieldOrder:
+		return m.AddedOrder()
 	}
 	return nil, false
 }
@@ -2630,6 +2688,13 @@ func (m *QueueMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddAction(v)
+		return nil
+	case queue.FieldOrder:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOrder(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Queue numeric field %s", name)
@@ -2664,6 +2729,9 @@ func (m *QueueMutation) ResetField(name string) error {
 		return nil
 	case queue.FieldAction:
 		m.ResetAction()
+		return nil
+	case queue.FieldOrder:
+		m.ResetOrder()
 		return nil
 	}
 	return fmt.Errorf("unknown Queue field %s", name)

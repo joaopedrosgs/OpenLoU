@@ -2,7 +2,7 @@ package communication
 
 import (
 	"fmt"
-	"github.com/joaopedrosgs/OpenLoU/session"
+	"github.com/joaopedrosgs/openlou/session"
 	"time"
 )
 

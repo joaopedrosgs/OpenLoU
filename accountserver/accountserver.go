@@ -1,7 +1,7 @@
 package accountserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/server"
+	"github.com/joaopedrosgs/openlou/server"
 )
 
 type accountServer struct {
@@ -15,6 +15,8 @@ func New() *accountServer {
 	cs := &accountServer{}
 	cs.Setup("Account server", 1, 10)
 	cs.RegisterInternalEndpoint(cs.GetUserInfo, 1)
+	cs.RegisterInternalEndpoint(cs.CreateAccount, 2)
+	cs.RegisterInternalEndpoint(cs.Login, 3)
 
 	return cs
 }

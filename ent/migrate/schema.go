@@ -45,6 +45,13 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "city_x_y",
+				Unique:  true,
+				Columns: []*schema.Column{CitiesColumns[1], CitiesColumns[2]},
+			},
+		},
 	}
 	// ConstructionsColumns holds the columns for the "constructions" table.
 	ConstructionsColumns = []*schema.Column{
@@ -72,12 +79,20 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "construction_x_y_city_constructions",
+				Unique:  true,
+				Columns: []*schema.Column{ConstructionsColumns[1], ConstructionsColumns[2], ConstructionsColumns[8]},
+			},
+		},
 	}
 	// QueuesColumns holds the columns for the "queues" table.
 	QueuesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "completion", Type: field.TypeTime},
 		{Name: "action", Type: field.TypeInt},
+		{Name: "order", Type: field.TypeInt},
 		{Name: "city_queue", Type: field.TypeInt, Nullable: true},
 		{Name: "construction_queue", Type: field.TypeInt, Nullable: true},
 	}
@@ -89,17 +104,24 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "queues_cities_queue",
-				Columns: []*schema.Column{QueuesColumns[3]},
+				Columns: []*schema.Column{QueuesColumns[4]},
 
 				RefColumns: []*schema.Column{CitiesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:  "queues_constructions_queue",
-				Columns: []*schema.Column{QueuesColumns[4]},
+				Columns: []*schema.Column{QueuesColumns[5]},
 
 				RefColumns: []*schema.Column{ConstructionsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "queue_order_city_queue",
+				Unique:  true,
+				Columns: []*schema.Column{QueuesColumns[3], QueuesColumns[4]},
 			},
 		},
 	}

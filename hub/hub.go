@@ -3,15 +3,12 @@ package hub
 import (
 	"context"
 	"errors"
-	"github.com/joaopedrosgs/OpenLoU/communication"
-	"github.com/joaopedrosgs/OpenLoU/session"
+	"github.com/joaopedrosgs/openlou/communication"
 	"github.com/joaopedrosgs/openlou/ent"
-	"github.com/joaopedrosgs/openlou/ent/user"
+	"github.com/joaopedrosgs/openlou/session"
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
-	"golang.org/x/crypto/bcrypt"
-
 	"net/http"
 
 	"github.com/gorilla/websocket"
@@ -65,35 +62,6 @@ func (h *Hub) Start() {
 	}
 
 }
-func (h *Hub) Authenticate(request *communication.Request, conn *websocket.Conn) (*session.Session, error) {
-
-	username, exists := request.Data["username"]
-	if !exists {
-		return nil, errors.New("empty username")
-	}
-
-	password, exists := request.Data["password"]
-	if !exists {
-		return nil, errors.New("empty password")
-	}
-
-	user, err := h.client.User.Query().Where(user.NameEQ(username)).Only(context.Background())
-	if err != nil {
-		return nil, errors.New("wrong account info: " + err.Error())
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
-	if err != nil {
-		return nil, errors.New("wrong account info: " + err.Error())
-	}
-
-	userSession, err := session.NewSession(user, conn)
-	if err != nil {
-		return nil, errors.New("failed to create sesion: " + err.Error())
-	}
-
-	return userSession, nil
-}
 
 func (h *Hub) handleUser(w http.ResponseWriter, r *http.Request) {
 	log.Info("User connected")
@@ -105,24 +73,13 @@ func (h *Hub) handleUser(w http.ResponseWriter, r *http.Request) {
 
 	request := &communication.Request{}
 
-	err = c.ReadJSON(request)
+	userSession, err := session.NewSession(nil, c)
 	if err != nil {
-		log.Info("failed to read json: " + err.Error())
-		c.Close()
-		return
-	}
-	userSession, err := h.Authenticate(request, c)
-	if err != nil {
-		log.Info("failed to authenticate: ", err.Error())
+		log.Info("failed to create session ", err.Error())
 		c.Close()
 		return
 	}
 	request.SetSession(userSession)
-
-	answer := request.ToAnswer()
-	answer.Data = "Logged in!"
-	answer.Result = true
-	c.WriteJSON(answer)
 
 	for {
 

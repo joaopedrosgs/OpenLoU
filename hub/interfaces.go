@@ -1,7 +1,7 @@
 package hub
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/openlou/communication"
 	"github.com/joaopedrosgs/openlou/ent"
 )
 

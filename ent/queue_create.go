@@ -22,15 +22,21 @@ type QueueCreate struct {
 	hooks    []Hook
 }
 
-// SetCompletion sets the Completion field.
+// SetCompletion sets the completion field.
 func (qc *QueueCreate) SetCompletion(t time.Time) *QueueCreate {
 	qc.mutation.SetCompletion(t)
 	return qc
 }
 
-// SetAction sets the Action field.
+// SetAction sets the action field.
 func (qc *QueueCreate) SetAction(i int) *QueueCreate {
 	qc.mutation.SetAction(i)
+	return qc
+}
+
+// SetOrder sets the order field.
+func (qc *QueueCreate) SetOrder(i int) *QueueCreate {
+	qc.mutation.SetOrder(i)
 	return qc
 }
 
@@ -75,10 +81,13 @@ func (qc *QueueCreate) SetConstruction(c *Construction) *QueueCreate {
 // Save creates the Queue in the database.
 func (qc *QueueCreate) Save(ctx context.Context) (*Queue, error) {
 	if _, ok := qc.mutation.Completion(); !ok {
-		return nil, errors.New("ent: missing required field \"Completion\"")
+		return nil, errors.New("ent: missing required field \"completion\"")
 	}
 	if _, ok := qc.mutation.Action(); !ok {
-		return nil, errors.New("ent: missing required field \"Action\"")
+		return nil, errors.New("ent: missing required field \"action\"")
+	}
+	if _, ok := qc.mutation.Order(); !ok {
+		return nil, errors.New("ent: missing required field \"order\"")
 	}
 	var (
 		err  error
@@ -141,6 +150,14 @@ func (qc *QueueCreate) sqlSave(ctx context.Context) (*Queue, error) {
 			Column: queue.FieldAction,
 		})
 		q.Action = value
+	}
+	if value, ok := qc.mutation.Order(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: queue.FieldOrder,
+		})
+		q.Order = value
 	}
 	if nodes := qc.mutation.CityIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

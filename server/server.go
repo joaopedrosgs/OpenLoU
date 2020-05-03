@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/openlou/communication"
 	log "github.com/sirupsen/logrus"
 )
 

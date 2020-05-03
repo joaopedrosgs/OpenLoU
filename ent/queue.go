@@ -18,10 +18,12 @@ type Queue struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Completion holds the value of the "Completion" field.
-	Completion time.Time `json:"Completion,omitempty"`
-	// Action holds the value of the "Action" field.
-	Action int `json:"Action,omitempty"`
+	// Completion holds the value of the "completion" field.
+	Completion time.Time `json:"completion,omitempty"`
+	// Action holds the value of the "action" field.
+	Action int `json:"action,omitempty"`
+	// Order holds the value of the "order" field.
+	Order int `json:"order,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the QueueQuery when eager-loading is set.
 	Edges              QueueEdges `json:"edges"`
@@ -72,8 +74,9 @@ func (e QueueEdges) ConstructionOrErr() (*Construction, error) {
 func (*Queue) scanValues() []interface{} {
 	return []interface{}{
 		&sql.NullInt64{}, // id
-		&sql.NullTime{},  // Completion
-		&sql.NullInt64{}, // Action
+		&sql.NullTime{},  // completion
+		&sql.NullInt64{}, // action
+		&sql.NullInt64{}, // order
 	}
 }
 
@@ -98,16 +101,21 @@ func (q *Queue) assignValues(values ...interface{}) error {
 	q.ID = int(value.Int64)
 	values = values[1:]
 	if value, ok := values[0].(*sql.NullTime); !ok {
-		return fmt.Errorf("unexpected type %T for field Completion", values[0])
+		return fmt.Errorf("unexpected type %T for field completion", values[0])
 	} else if value.Valid {
 		q.Completion = value.Time
 	}
 	if value, ok := values[1].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field Action", values[1])
+		return fmt.Errorf("unexpected type %T for field action", values[1])
 	} else if value.Valid {
 		q.Action = int(value.Int64)
 	}
-	values = values[2:]
+	if value, ok := values[2].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field order", values[2])
+	} else if value.Valid {
+		q.Order = int(value.Int64)
+	}
+	values = values[3:]
 	if len(values) == len(queue.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field city_queue", value)
@@ -158,10 +166,12 @@ func (q *Queue) String() string {
 	var builder strings.Builder
 	builder.WriteString("Queue(")
 	builder.WriteString(fmt.Sprintf("id=%v", q.ID))
-	builder.WriteString(", Completion=")
+	builder.WriteString(", completion=")
 	builder.WriteString(q.Completion.Format(time.ANSIC))
-	builder.WriteString(", Action=")
+	builder.WriteString(", action=")
 	builder.WriteString(fmt.Sprintf("%v", q.Action))
+	builder.WriteString(", order=")
+	builder.WriteString(fmt.Sprintf("%v", q.Order))
 	builder.WriteByte(')')
 	return builder.String()
 }

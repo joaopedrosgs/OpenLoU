@@ -5,12 +5,12 @@ import (
 	"github.com/spf13/viper"
 	"os"
 
-	"github.com/joaopedrosgs/OpenLoU/accountserver"
-	"github.com/joaopedrosgs/OpenLoU/cityserver"
-	"github.com/joaopedrosgs/OpenLoU/hub"
-	"github.com/joaopedrosgs/OpenLoU/mapserver"
-	"github.com/joaopedrosgs/OpenLoU/modules"
-	"github.com/joaopedrosgs/OpenLoU/session"
+	"github.com/joaopedrosgs/openlou/accountserver"
+	"github.com/joaopedrosgs/openlou/cityserver"
+	"github.com/joaopedrosgs/openlou/hub"
+	"github.com/joaopedrosgs/openlou/mapserver"
+	"github.com/joaopedrosgs/openlou/modules"
+	"github.com/joaopedrosgs/openlou/session"
 )
 
 func Run() {
@@ -45,7 +45,7 @@ func Run() {
 
 	}
 	if viper.GetBool("server.debug") {
-		AccountServer.CreateAdminAccount()
+		AccountServer.CreateAdminAccountAction()
 	}
 	Hub.Start()
 }

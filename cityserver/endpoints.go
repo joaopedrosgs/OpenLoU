@@ -1,7 +1,7 @@
 package cityserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/openlou/communication"
 	"strconv"
 )
 
@@ -77,7 +77,7 @@ func (cs *cityServer) newConstruction(request *communication.Request) *communica
 		return answer
 	}
 
-	construction, err := cs.newConstructionAction(cityX, cityY, x, y, cType)
+	construction, err := cs.newConstructionAction(cityX, cityY, x, y, cType, request.GetSession())
 	if err != nil {
 		answer.Data = err.Error()
 	} else {
@@ -104,14 +104,14 @@ func (cs *cityServer) getConstructions(request *communication.Request) *communic
 		answer.Data = err.Error()
 		return answer
 	}
-	constructions, err := cs.getConstructionsAction(cityX, cityY)
+	constructions, err := cs.getConstructionsAction(cityX, cityY, request.GetSession())
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
 
 	if len(constructions) == 0 {
-		townHall, _ := cs.newConstructionAction(cityX, cityY, 10, 10, 0)
+		townHall, _ := cs.newConstructionAction(cityX, cityY, 10, 10, 0, request.GetSession())
 		constructions = append(constructions, townHall)
 	}
 
@@ -138,7 +138,7 @@ func (cs *cityServer) getUpgrades(request *communication.Request) *communication
 		answer.Data = err.Error()
 		return answer
 	}
-	upgrades, err := cs.getUpgradesAction(cityX, cityY)
+	upgrades, err := cs.getUpgradesAction(cityX, cityY, request.GetSession())
 	if err != nil {
 		answer.Data = err.Error()
 	} else {

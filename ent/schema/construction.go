@@ -4,6 +4,7 @@ import (
 	"github.com/facebookincubator/ent"
 	"github.com/facebookincubator/ent/schema/edge"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/facebookincubator/ent/schema/index"
 )
 
 // Construction holds the schema definition for the Construction entity.
@@ -29,5 +30,12 @@ func (Construction) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("city", City.Type).Ref("constructions").Unique(),
 		edge.To("queue", Queue.Type),
+	}
+}
+func (Construction) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("x", "y").
+			Edges("city").
+			Unique(),
 	}
 }

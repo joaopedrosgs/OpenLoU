@@ -8,7 +8,8 @@ const (
 	// FieldID holds the string denoting the id field in the database.
 	FieldID         = "id"         // FieldCompletion holds the string denoting the completion vertex property in the database.
 	FieldCompletion = "completion" // FieldAction holds the string denoting the action vertex property in the database.
-	FieldAction     = "action"
+	FieldAction     = "action"     // FieldOrder holds the string denoting the order vertex property in the database.
+	FieldOrder      = "order"
 
 	// EdgeCity holds the string denoting the city edge name in mutations.
 	EdgeCity = "city"
@@ -38,6 +39,7 @@ var Columns = []string{
 	FieldID,
 	FieldCompletion,
 	FieldAction,
+	FieldOrder,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Queue type.

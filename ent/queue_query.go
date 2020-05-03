@@ -301,7 +301,7 @@ func (qq *QueueQuery) WithConstruction(opts ...func(*ConstructionQuery)) *QueueQ
 // Example:
 //
 //	var v []struct {
-//		Completion time.Time `json:"Completion,omitempty"`
+//		Completion time.Time `json:"completion,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -327,7 +327,7 @@ func (qq *QueueQuery) GroupBy(field string, fields ...string) *QueueGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Completion time.Time `json:"Completion,omitempty"`
+//		Completion time.Time `json:"completion,omitempty"`
 //	}
 //
 //	client.Queue.Query().

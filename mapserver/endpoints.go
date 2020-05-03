@@ -1,7 +1,7 @@
 package mapserver
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/openlou/communication"
 	"strconv"
 )
 

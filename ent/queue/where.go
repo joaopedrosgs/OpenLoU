@@ -93,35 +93,42 @@ func IDLTE(id int) predicate.Queue {
 	})
 }
 
-// Completion applies equality check predicate on the "Completion" field. It's identical to CompletionEQ.
+// Completion applies equality check predicate on the "completion" field. It's identical to CompletionEQ.
 func Completion(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCompletion), v))
 	})
 }
 
-// Action applies equality check predicate on the "Action" field. It's identical to ActionEQ.
+// Action applies equality check predicate on the "action" field. It's identical to ActionEQ.
 func Action(v int) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldAction), v))
 	})
 }
 
-// CompletionEQ applies the EQ predicate on the "Completion" field.
+// Order applies equality check predicate on the "order" field. It's identical to OrderEQ.
+func Order(v int) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldOrder), v))
+	})
+}
+
+// CompletionEQ applies the EQ predicate on the "completion" field.
 func CompletionEQ(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCompletion), v))
 	})
 }
 
-// CompletionNEQ applies the NEQ predicate on the "Completion" field.
+// CompletionNEQ applies the NEQ predicate on the "completion" field.
 func CompletionNEQ(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldCompletion), v))
 	})
 }
 
-// CompletionIn applies the In predicate on the "Completion" field.
+// CompletionIn applies the In predicate on the "completion" field.
 func CompletionIn(vs ...time.Time) predicate.Queue {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -138,7 +145,7 @@ func CompletionIn(vs ...time.Time) predicate.Queue {
 	})
 }
 
-// CompletionNotIn applies the NotIn predicate on the "Completion" field.
+// CompletionNotIn applies the NotIn predicate on the "completion" field.
 func CompletionNotIn(vs ...time.Time) predicate.Queue {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -155,49 +162,49 @@ func CompletionNotIn(vs ...time.Time) predicate.Queue {
 	})
 }
 
-// CompletionGT applies the GT predicate on the "Completion" field.
+// CompletionGT applies the GT predicate on the "completion" field.
 func CompletionGT(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldCompletion), v))
 	})
 }
 
-// CompletionGTE applies the GTE predicate on the "Completion" field.
+// CompletionGTE applies the GTE predicate on the "completion" field.
 func CompletionGTE(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldCompletion), v))
 	})
 }
 
-// CompletionLT applies the LT predicate on the "Completion" field.
+// CompletionLT applies the LT predicate on the "completion" field.
 func CompletionLT(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldCompletion), v))
 	})
 }
 
-// CompletionLTE applies the LTE predicate on the "Completion" field.
+// CompletionLTE applies the LTE predicate on the "completion" field.
 func CompletionLTE(v time.Time) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCompletion), v))
 	})
 }
 
-// ActionEQ applies the EQ predicate on the "Action" field.
+// ActionEQ applies the EQ predicate on the "action" field.
 func ActionEQ(v int) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldAction), v))
 	})
 }
 
-// ActionNEQ applies the NEQ predicate on the "Action" field.
+// ActionNEQ applies the NEQ predicate on the "action" field.
 func ActionNEQ(v int) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldAction), v))
 	})
 }
 
-// ActionIn applies the In predicate on the "Action" field.
+// ActionIn applies the In predicate on the "action" field.
 func ActionIn(vs ...int) predicate.Queue {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -214,7 +221,7 @@ func ActionIn(vs ...int) predicate.Queue {
 	})
 }
 
-// ActionNotIn applies the NotIn predicate on the "Action" field.
+// ActionNotIn applies the NotIn predicate on the "action" field.
 func ActionNotIn(vs ...int) predicate.Queue {
 	v := make([]interface{}, len(vs))
 	for i := range v {
@@ -231,31 +238,107 @@ func ActionNotIn(vs ...int) predicate.Queue {
 	})
 }
 
-// ActionGT applies the GT predicate on the "Action" field.
+// ActionGT applies the GT predicate on the "action" field.
 func ActionGT(v int) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldAction), v))
 	})
 }
 
-// ActionGTE applies the GTE predicate on the "Action" field.
+// ActionGTE applies the GTE predicate on the "action" field.
 func ActionGTE(v int) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldAction), v))
 	})
 }
 
-// ActionLT applies the LT predicate on the "Action" field.
+// ActionLT applies the LT predicate on the "action" field.
 func ActionLT(v int) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldAction), v))
 	})
 }
 
-// ActionLTE applies the LTE predicate on the "Action" field.
+// ActionLTE applies the LTE predicate on the "action" field.
 func ActionLTE(v int) predicate.Queue {
 	return predicate.Queue(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldAction), v))
+	})
+}
+
+// OrderEQ applies the EQ predicate on the "order" field.
+func OrderEQ(v int) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldOrder), v))
+	})
+}
+
+// OrderNEQ applies the NEQ predicate on the "order" field.
+func OrderNEQ(v int) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldOrder), v))
+	})
+}
+
+// OrderIn applies the In predicate on the "order" field.
+func OrderIn(vs ...int) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(vs) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldOrder), v...))
+	})
+}
+
+// OrderNotIn applies the NotIn predicate on the "order" field.
+func OrderNotIn(vs ...int) predicate.Queue {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Queue(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(vs) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldOrder), v...))
+	})
+}
+
+// OrderGT applies the GT predicate on the "order" field.
+func OrderGT(v int) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldOrder), v))
+	})
+}
+
+// OrderGTE applies the GTE predicate on the "order" field.
+func OrderGTE(v int) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldOrder), v))
+	})
+}
+
+// OrderLT applies the LT predicate on the "order" field.
+func OrderLT(v int) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldOrder), v))
+	})
+}
+
+// OrderLTE applies the LTE predicate on the "order" field.
+func OrderLTE(v int) predicate.Queue {
+	return predicate.Queue(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldOrder), v))
 	})
 }
 

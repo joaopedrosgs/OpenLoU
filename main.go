@@ -1,6 +1,6 @@
 package main
 
-//go:generate sqlboiler --wipe psql
+//go:generate go generate ./ent
 
 import (
 	"flag"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/joaopedrosgs/OpenLoU/app"
+	"github.com/joaopedrosgs/openlou/app"
 	_ "github.com/lib/pq"
 )
 

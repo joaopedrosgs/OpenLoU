@@ -30,22 +30,35 @@ func (qu *QueueUpdate) Where(ps ...predicate.Queue) *QueueUpdate {
 	return qu
 }
 
-// SetCompletion sets the Completion field.
+// SetCompletion sets the completion field.
 func (qu *QueueUpdate) SetCompletion(t time.Time) *QueueUpdate {
 	qu.mutation.SetCompletion(t)
 	return qu
 }
 
-// SetAction sets the Action field.
+// SetAction sets the action field.
 func (qu *QueueUpdate) SetAction(i int) *QueueUpdate {
 	qu.mutation.ResetAction()
 	qu.mutation.SetAction(i)
 	return qu
 }
 
-// AddAction adds i to Action.
+// AddAction adds i to action.
 func (qu *QueueUpdate) AddAction(i int) *QueueUpdate {
 	qu.mutation.AddAction(i)
+	return qu
+}
+
+// SetOrder sets the order field.
+func (qu *QueueUpdate) SetOrder(i int) *QueueUpdate {
+	qu.mutation.ResetOrder()
+	qu.mutation.SetOrder(i)
+	return qu
+}
+
+// AddOrder adds i to order.
+func (qu *QueueUpdate) AddOrder(i int) *QueueUpdate {
+	qu.mutation.AddOrder(i)
 	return qu
 }
 
@@ -189,6 +202,20 @@ func (qu *QueueUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: queue.FieldAction,
 		})
 	}
+	if value, ok := qu.mutation.Order(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: queue.FieldOrder,
+		})
+	}
+	if value, ok := qu.mutation.AddedOrder(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: queue.FieldOrder,
+		})
+	}
 	if qu.mutation.CityCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -277,22 +304,35 @@ type QueueUpdateOne struct {
 	mutation *QueueMutation
 }
 
-// SetCompletion sets the Completion field.
+// SetCompletion sets the completion field.
 func (quo *QueueUpdateOne) SetCompletion(t time.Time) *QueueUpdateOne {
 	quo.mutation.SetCompletion(t)
 	return quo
 }
 
-// SetAction sets the Action field.
+// SetAction sets the action field.
 func (quo *QueueUpdateOne) SetAction(i int) *QueueUpdateOne {
 	quo.mutation.ResetAction()
 	quo.mutation.SetAction(i)
 	return quo
 }
 
-// AddAction adds i to Action.
+// AddAction adds i to action.
 func (quo *QueueUpdateOne) AddAction(i int) *QueueUpdateOne {
 	quo.mutation.AddAction(i)
+	return quo
+}
+
+// SetOrder sets the order field.
+func (quo *QueueUpdateOne) SetOrder(i int) *QueueUpdateOne {
+	quo.mutation.ResetOrder()
+	quo.mutation.SetOrder(i)
+	return quo
+}
+
+// AddOrder adds i to order.
+func (quo *QueueUpdateOne) AddOrder(i int) *QueueUpdateOne {
+	quo.mutation.AddOrder(i)
 	return quo
 }
 
@@ -432,6 +472,20 @@ func (quo *QueueUpdateOne) sqlSave(ctx context.Context) (q *Queue, err error) {
 			Type:   field.TypeInt,
 			Value:  value,
 			Column: queue.FieldAction,
+		})
+	}
+	if value, ok := quo.mutation.Order(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: queue.FieldOrder,
+		})
+	}
+	if value, ok := quo.mutation.AddedOrder(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: queue.FieldOrder,
 		})
 	}
 	if quo.mutation.CityCleared() {

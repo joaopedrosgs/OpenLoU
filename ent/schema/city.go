@@ -4,6 +4,7 @@ import (
 	"github.com/facebookincubator/ent"
 	"github.com/facebookincubator/ent/schema/edge"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/facebookincubator/ent/schema/index"
 	"time"
 )
 
@@ -37,6 +38,12 @@ func (City) Fields() []ent.Field {
 
 		field.Time("queue_time").Default(time.Now),
 		field.Int("construction_speed").Default(1),
+	}
+}
+func (City) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("x", "y").
+			Unique(),
 	}
 }
 

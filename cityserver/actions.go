@@ -15,43 +15,36 @@ func (cs *cityServer) upgradeConstructionAction(cityX int, cityY int, x int, y i
 
 }
 
-func (cs *cityServer) newConstructionAction(cityX int, cityY int, x int, y int, cType int) error {
+func (cs *cityServer) newConstructionAction(cityX int, cityY int, x int, y int, cType int) (construction models.Construction, err error) {
 
-	city, err := models.FindCity(context.Background(), cs.GetConn(), cityX, cityY, "QueueTime")
+	city, err := models.FindCity(context.Background(), cs.GetConn(), cityX, cityY)
 
 	if err != nil {
-		return err
+		return
 	}
 
-	construction := models.Construction{X: x, Y: y, CityX: cityX, CityY: cityY, Type: cType, Level: 0}
+	construction = models.Construction{X: x, Y: y, CityX: cityX, CityY: cityY, Type: cType, Level: 0}
 	err = construction.Insert(context.Background(), cs.GetConn(), boil.Infer())
 
 	if err != nil {
-		return err
-
+		return
 	}
 
 	if city.QueueTime.Before(time.Now()) {
 		city.QueueTime = time.Now()
 		city.Update(context.Background(), cs.GetConn(), boil.Infer())
 	}
-	queueItem := models.Queue{ConstructionX: x, ConstructionY: y, CityX: cityX, CityY: cityY, Action: 1, Completion: city.QueueTime.Add(time.Second * 10)}
-	return queueItem.Insert(context.Background(), cs.GetConn(), boil.Infer())
+
+	queue := &models.Queue{ConstructionX: x, ConstructionY: y, CityX: cityX, CityY: cityY, Action: 1, Completion: city.QueueTime.Add(time.Second * 10)}
+	err = queue.Insert(context.Background(), cs.GetConn(), boil.Infer())
+
+	return
 }
 
 func (cs *cityServer) getConstructionsAction(cityX int, cityY int) (constructions models.ConstructionSlice, err error) {
 
 	constructions, err = models.Constructions(
 		qm.Where("city_x=? AND city_y=?", cityX, cityY)).All(context.Background(), cs.GetConn())
-	if err != nil {
-		return
-	}
-	if len(constructions) > 0 {
-		return
-	}
-	err = cs.newConstructionAction(cityX, cityY, 10, 10, 0)
-	constructions = append(constructions, &models.Construction{X: 10, Y: 10, CityX: cityX, CityY: cityY, Type: 0, Level: 1})
-
 	return
 }
 

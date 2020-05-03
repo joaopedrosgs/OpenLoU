@@ -77,10 +77,11 @@ func (cs *cityServer) newConstruction(request *communication.Request) *communica
 		return answer
 	}
 
-	err = cs.newConstructionAction(cityX, cityY, x, y, cType)
+	construction, err := cs.newConstructionAction(cityX, cityY, x, y, cType)
 	if err != nil {
 		answer.Data = err.Error()
 	} else {
+		answer.Data = construction
 		answer.Result = true
 	}
 	return answer
@@ -105,13 +106,19 @@ func (cs *cityServer) getConstructions(request *communication.Request) *communic
 	}
 
 	constructions, err := cs.getConstructionsAction(cityX, cityY)
-
 	if err != nil {
 		answer.Data = err.Error()
-	} else {
-		answer.Result = true
-		answer.Data = constructions
+		return answer
 	}
+
+	if len(constructions) == 0 {
+		townHall, _ := cs.newConstructionAction(cityX, cityY, 10, 10, 0)
+		constructions = append(constructions, &townHall)
+	}
+
+	answer.Result = true
+	answer.Data = constructions
+
 	return answer
 }
 

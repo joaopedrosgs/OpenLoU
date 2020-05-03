@@ -2,10 +2,8 @@ package cityserver
 
 import (
 	"context"
-	"github.com/joaopedrosgs/OpenLoU/models"
 	"github.com/joaopedrosgs/OpenLoU/server"
-	"github.com/volatiletech/sqlboiler/boil"
-	"github.com/volatiletech/sqlboiler/queries/qm"
+	"github.com/joaopedrosgs/openlou/ent/queue"
 	"time"
 )
 
@@ -16,11 +14,16 @@ type cityServer struct {
 func (cs *cityServer) UpgradeChecker() {
 	cs.LogContext.Info("Starting to check upgrades")
 	for {
+
 		time.Sleep(time.Second * 4)
+		time := time.Now()
 
-		tx, err := cs.GetConn().Begin()
-
-		queues, err := models.Queues(qm.Where("completion < CURRENT_TIMESTAMP")).All(context.Background(), tx)
+		queues, err := cs.GetClient().Queue.Query().WithConstruction().Where(queue.CompletionLTE(time)).All(context.Background())
+		if err != nil {
+			cs.LogContext.Error(err.Error())
+			continue
+		}
+		_, err = cs.GetClient().Queue.Delete().Where(queue.CompletionLTE(time)).Exec(context.Background())
 
 		if err != nil {
 			cs.LogContext.Error(err.Error())
@@ -35,28 +38,12 @@ func (cs *cityServer) UpgradeChecker() {
 			continue
 		}
 		for _, queue := range queues {
-
-			construction, err := models.FindConstruction(context.Background(), cs.GetConn(), queue.CityX, queue.CityY, queue.ConstructionX, queue.ConstructionY)
 			if err != nil {
 				cs.LogContext.Error(err.Error())
 				continue
 			}
-			cs.LogContext.Info("Date ", queue.Completion)
-			construction.Level += queue.Action
-			construction.Update(context.Background(), tx, boil.Infer())
+			queue.Edges.Construction.Update().AddLevel(queue.Action).Save(context.Background())
 		}
-		_, err = queues.DeleteAll(context.Background(), tx)
-		if err != nil {
-			cs.LogContext.Error(err.Error())
-			tx.Rollback()
-
-		}
-		err = tx.Commit()
-		if err != nil {
-			cs.LogContext.Error(err.Error())
-
-		}
-
 	}
 }
 

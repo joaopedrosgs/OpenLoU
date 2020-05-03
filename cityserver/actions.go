@@ -2,56 +2,76 @@ package cityserver
 
 import (
 	"context"
-	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/volatiletech/sqlboiler/boil"
-	"github.com/volatiletech/sqlboiler/queries/qm"
+	"github.com/joaopedrosgs/openlou/ent"
+	"github.com/joaopedrosgs/openlou/ent/city"
+	"github.com/joaopedrosgs/openlou/ent/construction"
+	"github.com/joaopedrosgs/openlou/ent/queue"
 	"time"
 )
 
-func (cs *cityServer) upgradeConstructionAction(cityX int, cityY int, x int, y int) error {
-	queueItem := models.Queue{ConstructionX: x, ConstructionY: y, CityX: cityX, CityY: cityY}
-	queueItem.Insert(context.Background(), cs.GetConn(), boil.Infer())
-	return queueItem.Insert(context.Background(), cs.GetConn(), boil.Infer())
+func (cs *cityServer) upgradeConstructionAction(cityX int, cityY int, x int, y int) (*ent.Queue, error) {
+	city, err := cs.GetClient().
+		City.
+		Query().
+		Where(city.And(
+			city.XEQ(cityX),
+			city.YEQ(cityY))).
+		Only(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	construction, err := city.QueryConstructions().Where(construction.And(construction.XEQ(x), construction.YEQ(y))).Only(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return cs.GetClient().Queue.Create().SetAction(1).SetConstruction(construction).SetCity(city).SetCompletion(city.QueueTime.Add(time.Second * 10)).Save(context.Background())
 
 }
 
-func (cs *cityServer) newConstructionAction(cityX int, cityY int, x int, y int, cType int) (construction models.Construction, err error) {
+func (cs *cityServer) newConstructionAction(cityX int, cityY int, x int, y int, cType int) (construction *ent.Construction, err error) {
 
-	city, err := models.FindCity(context.Background(), cs.GetConn(), cityX, cityY)
+	city, err := cs.GetClient().
+		City.
+		Query().
+		Where(city.And(
+			city.XEQ(cityX),
+			city.YEQ(cityY))).First(context.Background())
 
 	if err != nil {
 		return
 	}
 
-	construction = models.Construction{X: x, Y: y, CityX: cityX, CityY: cityY, Type: cType, Level: 0}
-	err = construction.Insert(context.Background(), cs.GetConn(), boil.Infer())
+	construction, err = cs.GetClient().Construction.Create().
+		SetCity(city).
+		SetLevel(0).
+		SetX(x).SetY(y).
+		SetType(cType).
+		Save(context.Background())
 
 	if err != nil {
 		return
 	}
 
 	if city.QueueTime.Before(time.Now()) {
-		city.QueueTime = time.Now()
-		city.Update(context.Background(), cs.GetConn(), boil.Infer())
+		city.Update().SetQueueTime(time.Now()).Save(context.Background())
 	}
 
-	queue := &models.Queue{ConstructionX: x, ConstructionY: y, CityX: cityX, CityY: cityY, Action: 1, Completion: city.QueueTime.Add(time.Second * 10)}
-	err = queue.Insert(context.Background(), cs.GetConn(), boil.Infer())
+	_, err = cs.GetClient().Queue.Create().
+		SetCity(city).
+		SetConstruction(construction).
+		SetAction(1).
+		SetCompletion(city.QueueTime.Add(time.Second * 10)).
+		Save(context.Background())
 
 	return
 }
 
-func (cs *cityServer) getConstructionsAction(cityX int, cityY int) (constructions models.ConstructionSlice, err error) {
-
-	constructions, err = models.Constructions(
-		qm.Where("city_x=? AND city_y=?", cityX, cityY)).All(context.Background(), cs.GetConn())
+func (cs *cityServer) getConstructionsAction(cityX int, cityY int) (constructions []*ent.Construction, err error) {
+	constructions, err = cs.GetClient().Construction.Query().Where(construction.HasCityWith(city.And(city.XEQ(cityX), city.YEQ(cityY)))).All(context.Background())
 	return
 }
 
-func (cs *cityServer) getUpgradesAction(cityX int, cityY int) (queueItems models.QueueSlice, err error) {
-
-	queueItems, err = models.Queues(
-		qm.Where("city_x=? AND city_y=?", cityX, cityY)).All(context.Background(), cs.GetConn())
-
+func (cs *cityServer) getUpgradesAction(cityX int, cityY int) (queueItems []*ent.Queue, err error) {
+	queueItems, err = cs.GetClient().Queue.Query().Where(queue.HasCityWith(city.And(city.XEQ(cityX), city.YEQ(cityY)))).All(context.Background())
 	return
 }

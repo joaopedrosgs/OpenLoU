@@ -11,15 +11,18 @@ func (ms *mapserver) createCity(request *communication.Request) *communication.A
 func (ms *mapserver) getCitiesFromUser(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
 
-	cities, err := ms.getCitiesFromUserAction(request.GetSession().User.Name)
+	cities, err := ms.getCitiesFromUserAction(request.GetSession().User)
 	if err != nil {
-		answer.Data = "Failed to get cities from user"
+		answer.Data = "Failed to get cities from user:" + err.Error()
 		return answer
 	}
-
 	if len(cities) == 0 {
-		firstCity, _ := ms.createCityAction(0, 0, request.GetSession().User)
-		cities = append(cities, &firstCity)
+		firstCity, err := ms.createCityAction(10, 10, request.GetSession().User)
+		if err != nil {
+			answer.Data = "Failed to get cities from user:" + err.Error()
+			return answer
+		}
+		cities = append(cities, firstCity)
 	}
 	answer.Data = cities
 	answer.Result = true

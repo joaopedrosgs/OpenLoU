@@ -1,15 +1,15 @@
 package hub
 
 import (
-	"database/sql"
 	"github.com/joaopedrosgs/OpenLoU/communication"
+	"github.com/joaopedrosgs/openlou/ent"
 )
 
 type IServer interface {
 	GetName() string
 	GetJobsChan() *chan *communication.Request
 	GetCode() int
-	SetConn(conn *sql.DB)
+	SetClient(conn *ent.Client)
 	StartListening()
 	AfterSetup()
 }

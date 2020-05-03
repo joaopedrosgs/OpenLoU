@@ -2,10 +2,12 @@ package hub
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"github.com/joaopedrosgs/OpenLoU/communication"
 	"github.com/joaopedrosgs/OpenLoU/session"
+	"github.com/joaopedrosgs/openlou/ent"
+	"github.com/joaopedrosgs/openlou/ent/user"
+
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
@@ -13,7 +15,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/joaopedrosgs/OpenLoU/models"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,19 +28,21 @@ var upgrader = websocket.Upgrader{
 type Hub struct {
 	servers []IServer
 	workers map[int]*chan *communication.Request
-	conn    *sql.DB
+	client  *ent.Client
 }
 
 func New() (*Hub, error) {
 	hub := &Hub{}
 	hub.workers = make(map[int]*chan *communication.Request)
 	var err error
-	hub.conn, err = sql.Open("postgres", "dbname=postgres host=localhost user=postgres password=postgres sslmode=disable")
+	hub.client, err = ent.Open("postgres", "dbname=postgres host=localhost user=postgres password=postgres sslmode=disable")
 	if err != nil {
 		logger.Error("Hub failed to connect to the database!")
 		return nil, err
 	}
-	hub.conn.SetMaxOpenConns(8)
+	if err := hub.client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("failed creating schema resources: %v", err)
+	}
 
 	logger.Info("Hub has been started!")
 	return hub, nil
@@ -63,19 +66,23 @@ func (h *Hub) Start() {
 
 }
 func (h *Hub) Authenticate(request *communication.Request, conn *websocket.Conn) (*session.Session, error) {
+
 	username, exists := request.Data["username"]
 	if !exists {
 		return nil, errors.New("empty username")
 	}
+
 	password, exists := request.Data["password"]
 	if !exists {
 		return nil, errors.New("empty password")
 	}
-	user, err := models.FindUser(context.Background(), h.conn, username)
+
+	user, err := h.client.User.Query().Where(user.NameEQ(username)).Only(context.Background())
 	if err != nil {
 		return nil, errors.New("wrong account info: " + err.Error())
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		return nil, errors.New("wrong account info: " + err.Error())
 	}
@@ -84,6 +91,7 @@ func (h *Hub) Authenticate(request *communication.Request, conn *websocket.Conn)
 	if err != nil {
 		return nil, errors.New("failed to create sesion: " + err.Error())
 	}
+
 	return userSession, nil
 }
 
@@ -138,7 +146,7 @@ func (h *Hub) RegisterServer(server IServer) error {
 	}
 	h.workers[server.GetCode()] = server.GetJobsChan()
 
-	server.SetConn(h.conn)
+	server.SetClient(h.client)
 	logger.WithFields(log.Fields{"Name": server.GetName(), "Endpoint": server.GetCode()}).Info("A server has been registered")
 	h.servers = append(h.servers, server)
 	server.AfterSetup()

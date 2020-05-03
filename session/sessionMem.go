@@ -1,11 +1,11 @@
 package session
 
 import (
+	"github.com/joaopedrosgs/openlou/ent"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/joaopedrosgs/OpenLoU/models"
 )
 
 type sessionMem struct {
@@ -15,7 +15,7 @@ type sessionMem struct {
 
 var sessionsStorage sessionMem
 
-func NewSession(usr *models.User, conn *websocket.Conn) (*Session, error) {
+func NewSession(usr *ent.User, conn *websocket.Conn) (*Session, error) {
 	key, err := GenerateRandomString(32)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func CloseSession(key string) {
 
 }
 
-func DeleteSessionByUser(user *models.User) {
+func DeleteSessionByUser(user *ent.User) {
 	sessionsStorage.mutex.Lock()
 	for key, session := range sessionsStorage.sessions {
 		if session.User == user {

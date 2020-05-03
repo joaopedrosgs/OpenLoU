@@ -2,41 +2,20 @@ package mapserver
 
 import (
 	"context"
-	"github.com/joaopedrosgs/OpenLoU/models"
-	"github.com/volatiletech/null"
-	"github.com/volatiletech/sqlboiler/boil"
-	"github.com/volatiletech/sqlboiler/queries/qm"
-	"time"
+	"github.com/joaopedrosgs/openlou/ent"
+	"github.com/joaopedrosgs/openlou/ent/city"
+	"github.com/joaopedrosgs/openlou/ent/user"
 )
 
-func (ms *mapserver) createCityAction(x int, y int, user *models.User) (city models.City, err error) {
-	city = models.City{
-		X:         x,
-		Y:         y,
-		Type:      0,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		UserName:  null.NewString(user.Name, true),
-		CityName:  "New City",
-	}
-	err = city.Insert(context.Background(), ms.GetConn(), boil.Infer())
-	return
+func (ms *mapserver) createCityAction(x int, y int, user *ent.User) (*ent.City, error) {
+	return ms.GetClient().City.Create().SetY(y).SetX(x).SetOwnerID(user.ID).Save(context.Background())
 }
 
-func (ms *mapserver) getCitiesFromUserAction(name string) (cities models.CitySlice, err error) {
-	cities, err = models.Cities(qm.Where("user_name=?", name)).All(context.Background(), ms.GetConn())
-	if err != nil {
-		ms.LogContext.WithField("When", "getCitiesFromUserAction").Error(err.Error())
-	}
-	return
+func (ms *mapserver) getCitiesFromUserAction(u *ent.User) ([]*ent.City, error) {
+	return ms.GetClient().City.Query().Where(city.HasOwnerWith(user.IDEQ(u.ID))).All(context.Background())
 }
 
-func (ms *mapserver) getCitiesAction(x int, y int, rang int) (cities models.CitySlice, err error) {
-	cities, err = models.Cities(qm.Where(
-		"x>? AND x<? AND y>? AND y<?", x-rang, x+rang, y-rang, y+rang)).All(context.Background(), ms.GetConn())
-	if err != nil {
-		ms.LogContext.WithField("When", "getCitiesAction").Error(err.Error())
-	}
-	return
+func (ms *mapserver) getCitiesAction(x int, y int, rang int) ([]*ent.City, error) {
+	return ms.GetClient().City.Query().Where(city.And(city.XGTE(x-rang), city.XLTE(x+rang), city.YGTE(y-rang), city.YLTE(y+rang))).All(context.Background())
 
 }

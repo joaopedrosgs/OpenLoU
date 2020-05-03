@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/joaopedrosgs/OpenLoU/models"
+	"github.com/joaopedrosgs/openlou/ent"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -11,7 +11,7 @@ type Session struct {
 	LastAction time.Time
 	tries      int
 	Conn       *websocket.Conn
-	User       *models.User
+	User       *ent.User
 }
 
 func (s *Session) NewTry() {

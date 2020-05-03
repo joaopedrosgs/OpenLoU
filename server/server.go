@@ -1,7 +1,7 @@
 package server
 
 import (
-	"database/sql"
+	"github.com/joaopedrosgs/openlou/ent"
 	"reflect"
 	"runtime"
 
@@ -16,7 +16,7 @@ type Server struct {
 	LogContext              *log.Entry
 	EndPointCode            int
 	internalWorkerInstances int
-	conn                    *sql.DB
+	client                  *ent.Client
 }
 
 func (w *Server) Setup(name string, endPointCode int, workerInstances int) {
@@ -28,11 +28,11 @@ func (w *Server) Setup(name string, endPointCode int, workerInstances int) {
 	w.internalWorkerInstances = workerInstances
 
 }
-func (w *Server) SetConn(conn *sql.DB) {
-	w.conn = conn
+func (w *Server) SetClient(client *ent.Client) {
+	w.client = client
 }
-func (w *Server) GetConn() *sql.DB {
-	return w.conn
+func (w *Server) GetClient() *ent.Client {
+	return w.client
 }
 func (w *Server) StartListening() {
 	w.LogContext.Info(w.name + " started listening")

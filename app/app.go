@@ -1,15 +1,14 @@
 package app
 
 import (
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/joaopedrosgs/openlou/accountserver"
 	"github.com/joaopedrosgs/openlou/cityserver"
 	"github.com/joaopedrosgs/openlou/hub"
 	"github.com/joaopedrosgs/openlou/mapserver"
-	"github.com/joaopedrosgs/openlou/modules"
 	"github.com/joaopedrosgs/openlou/session"
 )
 
@@ -27,8 +26,6 @@ func Run() {
 		context.Fatal(err.Error())
 		return
 	}
-	modules.RegisterAllTroops()
-	modules.RegisterAllConstructions()
 	session.NewSessionInMemory()
 
 	err = Hub.RegisterServer(CityServer)
@@ -43,9 +40,6 @@ func Run() {
 	if err != nil {
 		context.Error(err.Error())
 
-	}
-	if viper.GetBool("server.debug") {
-		AccountServer.CreateAdminAccountAction()
 	}
 	Hub.Start()
 }

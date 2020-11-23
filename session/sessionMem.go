@@ -1,11 +1,11 @@
 package session
 
 import (
-	"github.com/joaopedrosgs/openlou/ent"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/joaopedrosgs/loucore/ent"
 )
 
 type sessionMem struct {

@@ -1,9 +1,10 @@
 package server
 
 import (
-	"github.com/joaopedrosgs/openlou/ent"
 	"reflect"
 	"runtime"
+
+	"github.com/joaopedrosgs/loucore/ent"
 
 	"github.com/joaopedrosgs/openlou/communication"
 	log "github.com/sirupsen/logrus"

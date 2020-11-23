@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+
 type Request struct {
 	receivedAt time.Time
 	EndPoint   int

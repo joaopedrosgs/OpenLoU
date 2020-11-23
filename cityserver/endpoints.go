@@ -1,43 +1,36 @@
 package cityserver
 
 import (
+	core "github.com/joaopedrosgs/loucore/pkg"
 	"github.com/joaopedrosgs/openlou/communication"
 	"strconv"
 )
 
 func (cs *cityServer) upgradeConstruction(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
-	err := request.FieldsExist("CityX", "CityY", "X", "Y")
+	err := request.FieldsExist("ConstructionID", "CityID")
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
 
-	x, err := strconv.Atoi(request.Data["X"])
+	cityId, err := strconv.Atoi(request.Data["CityID"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	y, err := strconv.Atoi(request.Data["Y"])
+	constructionID, err := strconv.Atoi(request.Data["ConstructionID"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	cityX, err := strconv.Atoi(request.Data["CityX"])
-	if err != nil {
-		answer.Data = err.Error()
-		return answer
-	}
-	cityY, err := strconv.Atoi(request.Data["CityY"])
-	if err != nil {
-		answer.Data = err.Error()
-		return answer
-	}
-	_, err = cs.upgradeConstructionAction(cityX, cityY, x, y)
+
+	qi, err := core.CreateQueueItem(request.GetSession().User.ID,cityId, constructionID,1)
 
 	if err != nil {
 		answer.Data = err.Error()
 	} else {
+		answer.Data = qi
 		answer.Result = true
 	}
 	return answer
@@ -46,7 +39,7 @@ func (cs *cityServer) upgradeConstruction(request *communication.Request) *commu
 
 func (cs *cityServer) newConstruction(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
-	err := request.FieldsExist("CityX", "CityY", "X", "Y", "Type")
+	err := request.FieldsExist("CityID", "X", "Y", "Type")
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
@@ -61,12 +54,7 @@ func (cs *cityServer) newConstruction(request *communication.Request) *communica
 		answer.Data = err.Error()
 		return answer
 	}
-	cityX, err := strconv.Atoi(request.Data["CityX"])
-	if err != nil {
-		answer.Data = err.Error()
-		return answer
-	}
-	cityY, err := strconv.Atoi(request.Data["CityY"])
+	cityId, err := strconv.Atoi(request.Data["CityID"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
@@ -77,7 +65,7 @@ func (cs *cityServer) newConstruction(request *communication.Request) *communica
 		return answer
 	}
 
-	construction, err := cs.newConstructionAction(cityX, cityY, x, y, cType, request.GetSession())
+	construction, err := core.CreateConstruction(cityId, x, y, cType)
 	if err != nil {
 		answer.Data = err.Error()
 	} else {
@@ -89,30 +77,20 @@ func (cs *cityServer) newConstruction(request *communication.Request) *communica
 
 func (cs *cityServer) getConstructions(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
-	err := request.FieldsExist("CityX", "CityY")
+	err := request.FieldsExist("CityID")
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	cityX, err := strconv.Atoi(request.Data["CityX"])
+	cityId, err := strconv.Atoi(request.Data["CityID"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	cityY, err := strconv.Atoi(request.Data["CityY"])
+	constructions, err := core.GetStructuresFromCity(cityId)
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
-	}
-	constructions, err := cs.getConstructionsAction(cityX, cityY, request.GetSession())
-	if err != nil {
-		answer.Data = err.Error()
-		return answer
-	}
-
-	if len(constructions) == 0 {
-		townHall, _ := cs.newConstructionAction(cityX, cityY, 10, 10, 0, request.GetSession())
-		constructions = append(constructions, townHall)
 	}
 
 	answer.Result = true
@@ -123,22 +101,18 @@ func (cs *cityServer) getConstructions(request *communication.Request) *communic
 
 func (cs *cityServer) getUpgrades(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
-	err := request.FieldsExist("CityX", "CityY")
+	err := request.FieldsExist("CityID")
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	cityX, err := strconv.Atoi(request.Data["CityX"])
+	cityId, err := strconv.Atoi(request.Data["CityID"])
 	if err != nil {
 		answer.Data = err.Error()
 		return answer
 	}
-	cityY, err := strconv.Atoi(request.Data["CityY"])
-	if err != nil {
-		answer.Data = err.Error()
-		return answer
-	}
-	upgrades, err := cs.getUpgradesAction(cityX, cityY, request.GetSession())
+
+	upgrades, err := core.GetCityQueue(cityId)
 	if err != nil {
 		answer.Data = err.Error()
 	} else {

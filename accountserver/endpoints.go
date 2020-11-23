@@ -1,6 +1,7 @@
 package accountserver
 
 import (
+	core "github.com/joaopedrosgs/loucore/pkg"
 	"github.com/joaopedrosgs/openlou/communication"
 )
 
@@ -19,7 +20,7 @@ func (cs *accountServer) CreateAccount(request *communication.Request) *communic
 	if err != nil {
 		return answer
 	}
-	user, err := cs.CreateAccountAction(request.Data["email"], request.Data["name"], request.Data["password"])
+	user, err := core.CreateAccount(request.Data["email"], request.Data["name"], request.Data["password"])
 	if err != nil {
 		return answer
 	}
@@ -36,7 +37,7 @@ func (cs *accountServer) Login(request *communication.Request) *communication.An
 	if err != nil {
 		return answer
 	}
-	user, err := cs.CheckAccountAction(request.Data["email"], request.Data["password"])
+	user, err := core.Authentication(request.Data["email"], request.Data["password"])
 	if err != nil {
 		return answer
 	}

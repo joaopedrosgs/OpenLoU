@@ -1,9 +1,0 @@
-[psql]
-dbname  =   "postgres"
-user    =   "postgres"
-pass    =   "postgres"
-host    =   "localhost"
-sslmode =   "disable"
-port    = 5432
-
-

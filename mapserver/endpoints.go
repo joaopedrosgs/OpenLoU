@@ -1,8 +1,10 @@
 package mapserver
 
 import (
-	"github.com/joaopedrosgs/openlou/communication"
 	"strconv"
+
+	core "github.com/joaopedrosgs/loucore/pkg"
+	"github.com/joaopedrosgs/openlou/communication"
 )
 
 func (ms *mapserver) createCity(request *communication.Request) *communication.Answer {
@@ -11,13 +13,13 @@ func (ms *mapserver) createCity(request *communication.Request) *communication.A
 func (ms *mapserver) getCitiesFromUser(request *communication.Request) *communication.Answer {
 	answer := request.ToAnswer()
 
-	cities, err := ms.getCitiesFromUserAction(request.GetSession().User)
+	cities, err := core.GetCitiesUserByID(request.GetSession().User.ID)
 	if err != nil {
 		answer.Data = "Failed to get cities from user:" + err.Error()
 		return answer
 	}
 	if len(cities) == 0 {
-		firstCity, err := ms.createCityAction(10, 10, request.GetSession().User)
+		firstCity, err := core.CreateCityWithOwner(10, 10, request.GetSession().User.ID)
 		if err != nil {
 			answer.Data = "Failed to get cities from user:" + err.Error()
 			return answer
@@ -55,7 +57,7 @@ func (ms *mapserver) getCities(request *communication.Request) *communication.An
 		return answer
 	}
 
-	cities, err := ms.getCitiesAction(x, y, rang)
+	cities, err := core.GetCitiesInRange(x, y, rang)
 
 	if err != nil {
 		answer.Data = "Failed to get cities"

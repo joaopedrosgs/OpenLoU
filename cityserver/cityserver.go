@@ -1,8 +1,6 @@
 package cityserver
 
 import (
-	"context"
-	"github.com/joaopedrosgs/openlou/ent/queue"
 	"github.com/joaopedrosgs/openlou/server"
 	"time"
 )
@@ -16,34 +14,8 @@ func (cs *cityServer) UpgradeChecker() {
 	for {
 
 		time.Sleep(time.Second * 4)
-		time := time.Now()
 
-		queues, err := cs.GetClient().Queue.Query().WithConstruction().Where(queue.CompletionLTE(time)).All(context.Background())
-		if err != nil {
-			cs.LogContext.Error(err.Error())
-			continue
-		}
-		_, err = cs.GetClient().Queue.Delete().Where(queue.CompletionLTE(time)).Exec(context.Background())
 
-		if err != nil {
-			cs.LogContext.Error(err.Error())
-			continue
-		}
-		cs.LogContext.Infof("%d queue item(s) found", len(queues))
-		if len(queues) == 0 {
-			continue
-		}
-		if err != nil {
-			cs.LogContext.Error(err.Error())
-			continue
-		}
-		for _, queue := range queues {
-			if err != nil {
-				cs.LogContext.Error(err.Error())
-				continue
-			}
-			queue.Edges.Construction.Update().AddLevel(queue.Action).Save(context.Background())
-		}
 	}
 }
 

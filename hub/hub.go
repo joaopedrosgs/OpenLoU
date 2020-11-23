@@ -1,10 +1,9 @@
 package hub
 
 import (
-	"context"
 	"errors"
+	core "github.com/joaopedrosgs/loucore/pkg"
 	"github.com/joaopedrosgs/openlou/communication"
-	"github.com/joaopedrosgs/openlou/ent"
 	"github.com/joaopedrosgs/openlou/session"
 
 	_ "github.com/lib/pq"
@@ -24,21 +23,16 @@ var upgrader = websocket.Upgrader{
 
 type Hub struct {
 	servers []IServer
-	workers map[int]*chan *communication.Request
-	client  *ent.Client
-}
+	workers map[int]*chan *communication.Request}
 
 func New() (*Hub, error) {
 	hub := &Hub{}
 	hub.workers = make(map[int]*chan *communication.Request)
 	var err error
-	hub.client, err = ent.Open("postgres", "dbname=postgres host=localhost user=postgres password=postgres sslmode=disable")
+	err = core.SetupStorage()
 	if err != nil {
 		logger.Error("Hub failed to connect to the database!")
 		return nil, err
-	}
-	if err := hub.client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
 	}
 
 	logger.Info("Hub has been started!")
@@ -103,7 +97,6 @@ func (h *Hub) RegisterServer(server IServer) error {
 	}
 	h.workers[server.GetCode()] = server.GetJobsChan()
 
-	server.SetClient(h.client)
 	logger.WithFields(log.Fields{"Name": server.GetName(), "Endpoint": server.GetCode()}).Info("A server has been registered")
 	h.servers = append(h.servers, server)
 	server.AfterSetup()

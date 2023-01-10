@@ -5,12 +5,12 @@ import (
 	"github.com/spf13/viper"
 	"os"
 
-	"github.com/joaopedrosgs/openlou/accountserver"
-	"github.com/joaopedrosgs/openlou/cityserver"
-	"github.com/joaopedrosgs/openlou/hub"
-	"github.com/joaopedrosgs/openlou/mapserver"
-	"github.com/joaopedrosgs/openlou/modules"
-	"github.com/joaopedrosgs/openlou/session"
+	"openlou/accountserver"
+	"openlou/cityserver"
+	"openlou/hub"
+	"openlou/mapserver"
+	"openlou/modules"
+	"openlou/session"
 )
 
 func Run() {

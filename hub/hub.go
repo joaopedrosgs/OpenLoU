@@ -3,9 +3,9 @@ package hub
 import (
 	"context"
 	"errors"
-	"github.com/joaopedrosgs/openlou/communication"
-	"github.com/joaopedrosgs/openlou/ent"
-	"github.com/joaopedrosgs/openlou/session"
+	"openlou/communication"
+	"openlou/ent"
+	"openlou/session"
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"

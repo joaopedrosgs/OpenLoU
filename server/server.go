@@ -1,12 +1,12 @@
 package server
 
 import (
-	"github.com/joaopedrosgs/openlou/ent"
+	"openlou/ent"
 	"reflect"
 	"runtime"
 
-	"github.com/joaopedrosgs/openlou/communication"
 	log "github.com/sirupsen/logrus"
+	"openlou/communication"
 )
 
 type Server struct {

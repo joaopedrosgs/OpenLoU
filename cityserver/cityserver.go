@@ -2,8 +2,8 @@ package cityserver
 
 import (
 	"context"
-	"github.com/joaopedrosgs/openlou/ent/queue"
-	"github.com/joaopedrosgs/openlou/server"
+	"openlou/ent/queue"
+	"openlou/server"
 	"time"
 )
 

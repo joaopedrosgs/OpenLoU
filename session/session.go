@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/joaopedrosgs/openlou/ent"
+	"openlou/ent"
 	"time"
 
 	"github.com/gorilla/websocket"

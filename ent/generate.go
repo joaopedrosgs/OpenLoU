@@ -1,3 +1,3 @@
 package ent
 
-//go:generate go run github.com/facebookincubator/ent/cmd/entc generate ./schema
+//go:generate go run -mod=mod entgo.io/ent/cmd/ent generate ./schema

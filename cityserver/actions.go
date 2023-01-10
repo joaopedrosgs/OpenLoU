@@ -2,12 +2,12 @@ package cityserver
 
 import (
 	"context"
-	"github.com/joaopedrosgs/openlou/ent"
-	"github.com/joaopedrosgs/openlou/ent/city"
-	"github.com/joaopedrosgs/openlou/ent/construction"
-	"github.com/joaopedrosgs/openlou/ent/queue"
-	"github.com/joaopedrosgs/openlou/ent/user"
-	"github.com/joaopedrosgs/openlou/session"
+	"openlou/ent"
+	"openlou/ent/city"
+	"openlou/ent/construction"
+	"openlou/ent/queue"
+	"openlou/ent/user"
+	"openlou/session"
 	"time"
 )
 

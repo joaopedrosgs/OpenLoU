@@ -3,9 +3,9 @@ package accountserver
 import (
 	"context"
 	"errors"
-	"github.com/joaopedrosgs/openlou/ent"
-	"github.com/joaopedrosgs/openlou/ent/user"
 	"golang.org/x/crypto/bcrypt"
+	"openlou/ent"
+	"openlou/ent/user"
 )
 
 func (cs *accountServer) CreateAdminAccountAction() {

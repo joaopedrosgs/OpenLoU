@@ -1,7 +1,7 @@
 package accountserver
 
 import (
-	"github.com/joaopedrosgs/openlou/server"
+	"openlou/server"
 )
 
 type accountServer struct {

@@ -1,7 +1,7 @@
 package accountserver
 
 import (
-	"github.com/joaopedrosgs/openlou/communication"
+	"openlou/communication"
 )
 
 func (cs *accountServer) GetUserInfo(request *communication.Request) *communication.Answer {

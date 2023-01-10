@@ -2,9 +2,9 @@ package mapserver
 
 import (
 	"context"
-	"github.com/joaopedrosgs/openlou/ent"
-	"github.com/joaopedrosgs/openlou/ent/city"
-	"github.com/joaopedrosgs/openlou/ent/user"
+	"openlou/ent"
+	"openlou/ent/city"
+	"openlou/ent/user"
 )
 
 func (ms *mapserver) createCityAction(x int, y int, user *ent.User) (*ent.City, error) {

@@ -1,7 +1,7 @@
 package communication
 
 import (
-	"github.com/joaopedrosgs/openlou/session"
+	"openlou/session"
 )
 
 type Answer struct {

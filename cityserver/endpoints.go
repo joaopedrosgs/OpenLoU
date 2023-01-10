@@ -1,7 +1,7 @@
 package cityserver
 
 import (
-	"github.com/joaopedrosgs/openlou/communication"
+	"openlou/communication"
 	"strconv"
 )
 

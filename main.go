@@ -1,15 +1,13 @@
 package main
 
-//go:generate go generate ./ent
-
 import (
 	"flag"
 	"fmt"
 
 	"github.com/spf13/viper"
 
-	"github.com/joaopedrosgs/openlou/app"
 	_ "github.com/lib/pq"
+	"openlou/app"
 )
 
 func main() {
